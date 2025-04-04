@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-cblas = "0.5.0"
+cblas-sys = "0.2.0"
 mdarray = "0.7.0"
 
 [dev-dependencies]

@@ -1,7 +1,7 @@
 /// Simple function-based interface to linear algebra libraries
 
 use mdarray::DSlice;
-use cblas;
+use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 
 #[inline]
 pub fn gemm(alpha: f64, a: &DSlice<f64, 2>, b: &DSlice<f64, 2>, beta: f64, c: &mut DSlice<f64, 2>) {
@@ -17,12 +17,14 @@ pub fn gemm(alpha: f64, a: &DSlice<f64, 2>, b: &DSlice<f64, 2>, beta: f64, c: &m
 
     // SAFETY: is assured by the complete checks just above.
     unsafe {
-        cblas::dgemm(
-            cblas::Layout::RowMajor, cblas::Transpose::None, cblas::Transpose::None,
+        cblas_sys::cblas_dgemm(
+            CBLAS_LAYOUT::CblasRowMajor,
+            CBLAS_TRANSPOSE::CblasNoTrans,
+            CBLAS_TRANSPOSE::CblasNoTrans,
             m, n, k,
-            alpha, &a[..], k,
-            &b[..], n, beta,
-            &mut c[..], n,
+            alpha, a.as_ptr(), k,
+            b.as_ptr(), n, beta,
+            c.as_mut_ptr(), n,
         );
     }
 }
