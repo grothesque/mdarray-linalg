@@ -3,6 +3,8 @@
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{DSlice, Layout};
 
+use crate::BlasScalar;
+
 fn into_i32<T>(x: T) -> i32
 where
     T: TryInto<i32>,
@@ -12,13 +14,14 @@ where
 }
 
 #[inline]
-pub fn gemm<La, Lb, Lc>(
-    alpha: f64,
-    a: &DSlice<f64, 2, La>,
-    b: &DSlice<f64, 2, Lb>,
-    beta: f64,
-    c: &mut DSlice<f64, 2, Lc>,
+pub fn gemm<T, La, Lb, Lc>(
+    alpha: T,
+    a: &DSlice<T, 2, La>,
+    b: &DSlice<T, 2, Lb>,
+    beta: T,
+    c: &mut DSlice<T, 2, Lc>,
 ) where
+    T: BlasScalar,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
@@ -62,7 +65,7 @@ pub fn gemm<La, Lb, Lc>(
 
     // SAFETY: All assumptions have been verified above.
     unsafe {
-        cblas_sys::cblas_dgemm(
+        T::cblas_gemm(
             if row_major {
                 CBLAS_LAYOUT::CblasRowMajor
             } else {
