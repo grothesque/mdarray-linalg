@@ -1,4 +1,4 @@
-/// Simple function-based interface to linear algebra libraries
+//! Simple function-based interface to linear algebra libraries
 
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{DSlice, Layout};
