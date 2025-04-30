@@ -1,42 +1,52 @@
-use mdarray::{tensor, view};
+use mdarray::{Tensor, expr::Expression as _};
 use mdarray_linalg_prototype::gemm;
 
 extern crate openblas_src;
 
-// By activating any combination of the three commented-out blocks, we obtain 8 different tests
-// (with different types).  Not sure how to automatize this without writing 8 functions, since the
-// types are differnt in each case.
+mod common;
+use common::{example_matrix, naive_matmul};
+
 #[test]
 fn test_gemm() {
-    let a = view![
-        [1.0, 2.0, 3.0],
-        [4.0, 5.0, 6.0],
-    ];
-    // // Swap between row-major and column-major:
-    // let a = a.transpose().to_tensor();
-    // let a = a.transpose();
+    let a = example_matrix([2, 3]).eval();
+    let b = example_matrix([3, 4]).eval();
+    let c_expr = || example_matrix([2, 4]);
+    let mut c = c_expr().eval();
+    let ab_plus_c = {
+        let mut ab = Tensor::from_elem([a.dim(0), b.dim(1)], 0.0);
+        naive_matmul(&a, &b, &mut ab);
+        ab + &c
+    };
 
-    let b = view![
-        [1.0,  2.0,  3.0,  4.0],
-        [5.0,  6.0,  7.0,  8.0],
-        [9.0, 10.0, 11.0, 12.0],
-    ];
-    // // Swap between row-major and column-major:
-    // let b = b.transpose().to_tensor();
-    // let b = b.transpose();
-
-    let mut c = tensor![
-        [2.0, 6.0, 0.0, 4.0],
-        [7.0, 2.0, 7.0, 2.0],
-    ];
-    // // Swap between row-major and column-major:
-    // let mut c = c.transpose().to_tensor();
-    // let mut c = c.transpose_mut();
-
+    // Test vanilla gemm with all matrices in column major order and Dense mapping.
     gemm(1.0, &a, &b, 1.0, &mut c);
+    assert!(c == ab_plus_c);
 
-    assert!(c == view![
-        [40.0,  50.0,  50.0,  60.0],
-        [90.0, 100.0, 120.0, 130.0],
-    ]);
+    ////////////////
+    // Test all combinations of row- and column major for the three matrices A, B, and C.  The
+    // layout is always ‘Strided’ here, so we never test calling gemm with mixed layout, but we
+    // know anyway statically that this must work.
+
+    let a_cmajor = a.transpose().to_tensor();
+    let a_cmajor = a_cmajor.transpose();
+    let b_cmajor = b.transpose().to_tensor();
+    let b_cmajor = b_cmajor.transpose();
+
+    // Convert to a ‘Strided’ layout (still row major) so that ‘a’ has the same type as ‘a_cmajor’.
+    let a = a.remap();
+    let b = b.remap();
+    let mut c = c.remap_mut();
+
+    let mut c_cmajor = c.transpose().to_tensor();
+    let mut c_cmajor = c_cmajor.transpose_mut();
+
+    for a in [&a, &a_cmajor] {
+        for b in [&b, &b_cmajor] {
+            for c in [&mut c, &mut c_cmajor] {
+                c.assign(c_expr());
+                gemm(1.0, a, &b, 1.0, c);
+                assert!(*c == ab_plus_c);
+            }
+        }
+    }
 }
