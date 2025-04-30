@@ -1,7 +1,10 @@
 //! Simple function-based interface to linear algebra libraries
 
+use std::mem::MaybeUninit;
+
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, DTensor, Layout};
+use num_complex::ComplexFloat;
 
 use crate::BlasScalar;
 
@@ -89,5 +92,49 @@ pub fn gemm<T, La, Lb, Lc>(
             beta,
             c.as_mut_ptr(), c_stride,
         );
+    }
+}
+
+#[inline]
+pub fn gemm_uninit<T, La, Lb>(
+    alpha: T,
+    a: &DSlice<T, 2, La>,
+    b: &DSlice<T, 2, Lb>,
+    mut c: DTensor<MaybeUninit<T>, 2>,
+) -> DTensor<T, 2>
+where
+    T: BlasScalar + ComplexFloat,
+    La: Layout,
+    Lb: Layout,
+    i8: Into<T::Real>,
+    T::Real: Into<T>,
+{
+    let (m, n, k) = dims(a.shape(), b.shape(), c.shape());
+
+    debug_assert!(c.stride(1) == 1);
+    let same_order = CBLAS_TRANSPOSE::CblasNoTrans;
+    let other_order = CBLAS_TRANSPOSE::CblasTrans;
+
+    let (a_trans, a_stride) = trans_stride!(a, same_order, other_order);
+    let (b_trans, b_stride) = trans_stride!(b, same_order, other_order);
+
+    let c_stride = into_i32(c.stride(0));
+
+    // SAFETY: All assumptions have been verified above.  The uninitialized array `c` is (a) never
+    // read from, and (b) fully overwritten.
+    unsafe {
+        T::cblas_gemm(
+            CBLAS_LAYOUT::CblasRowMajor,
+            a_trans,
+            b_trans,
+            m, n, k,
+            alpha,
+            a.as_ptr(), a_stride,
+            b.as_ptr(), b_stride,
+            0.into().into(),
+            c.as_mut_ptr() as *mut T, c_stride,
+        );
+
+        c.assume_init()
     }
 }
