@@ -12,10 +12,9 @@ fn test_gemm() {
         [1.0, 2.0, 3.0],
         [4.0, 5.0, 6.0],
     ];
-
     // // Swap between row-major and column-major:
-    // let a = a.reorder().to_tensor();
-    // let a = a.reorder();
+    // let a = a.transpose().to_tensor();
+    // let a = a.transpose();
 
     let b = view![
         [1.0,  2.0,  3.0,  4.0],
@@ -23,16 +22,16 @@ fn test_gemm() {
         [9.0, 10.0, 11.0, 12.0],
     ];
     // // Swap between row-major and column-major:
-    // let b = b.reorder().to_tensor();
-    // let b = b.reorder();
+    // let b = b.transpose().to_tensor();
+    // let b = b.transpose();
 
     let mut c = tensor![
         [2.0, 6.0, 0.0, 4.0],
         [7.0, 2.0, 7.0, 2.0],
     ];
     // // Swap between row-major and column-major:
-    // let mut c = c.reorder().to_tensor();
-    // let mut c = c.reorder_mut();
+    // let mut c = c.transpose().to_tensor();
+    // let mut c = c.transpose_mut();
 
     gemm(1.0, &a, &b, 1.0, &mut c);
 
