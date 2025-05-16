@@ -13,6 +13,37 @@ where
     x.try_into().expect("dimension must fit into i32")
 }
 
+// Make sure that matrix shapes are compatible with C = A * B, and return the dimensions (m, n, k)
+// where C is (m x n), and k is the common dimension of A and B.
+fn dims(
+    a_shape: &(usize, usize),
+    b_shape: &(usize, usize),
+    c_shape: &(usize, usize),
+) -> (i32, i32, i32) {
+    let (m, k) = *a_shape;
+    let (k2, n) = *b_shape;
+    let (m2, n2) = *c_shape;
+
+    assert!(m == m2, "a and c must agree in number of rows");
+    assert!(n == n2, "b and c must agree in number of columns");
+    assert!(k == k2, "a's number of columns must be equal to b's number of rows");
+
+    (into_i32(m), into_i32(n), into_i32(k))
+}
+
+macro_rules! trans_stride {
+    ($x:expr, $same_order:expr, $other_order:expr) => {{
+        if $x.stride(1) == 1 {
+            ($same_order, into_i32($x.stride(0)))
+        } else {
+            {
+                assert!($x.stride(0) == 1, stringify!($x must be contiguous in one dimension));
+                ($other_order, into_i32($x.stride(1)))
+            }
+        }
+    }};
+}
+
 #[inline]
 pub fn gemm<T, La, Lb, Lc>(
     alpha: T,
@@ -26,17 +57,7 @@ pub fn gemm<T, La, Lb, Lc>(
     Lb: Layout,
     Lc: Layout,
 {
-    let (m, k) = *a.shape();
-    let (k2, n) = *b.shape();
-    let (m2, n2) = *c.shape();
-
-    assert!(m == m2, "a and c must agree in number of rows");
-    assert!(n == n2, "b and c must agree in number of columns");
-    assert!(k == k2, "a's number of columns must be equal to b's number of rows");
-
-    let m: i32 = into_i32(m);
-    let n: i32 = into_i32(n);
-    let k: i32 = into_i32(k);
+    let (m, n, k) = dims(a.shape(), b.shape(), c.shape());
 
     let row_major = c.stride(1) == 1;
     assert!(row_major || c.stride(0) == 1, "c must be contiguous in one dimension");
@@ -46,20 +67,8 @@ pub fn gemm<T, La, Lb, Lc>(
     } else {
         (CBLAS_TRANSPOSE::CblasTrans, CBLAS_TRANSPOSE::CblasNoTrans)
     };
-
-    let (a_trans, a_stride) = if a.stride(1) == 1 {
-        (same_order, into_i32(a.stride(0)))
-    } else {
-        assert!(a.stride(0) == 1, "a must be contiguous in one dimension");
-        (other_order, into_i32(a.stride(1)))
-    };
-
-    let (b_trans, b_stride) = if b.stride(1) == 1 {
-        (same_order, into_i32(b.stride(0)))
-    } else {
-        assert!(b.stride(0) == 1, "b must be contiguous in one dimension");
-        (other_order, into_i32(b.stride(1)))
-    };
+    let (a_trans, a_stride) = trans_stride!(a, same_order, other_order);
+    let (b_trans, b_stride) = trans_stride!(b, same_order, other_order);
 
     let c_stride = into_i32(c.stride(if row_major { 0 } else { 1 } ));
 
