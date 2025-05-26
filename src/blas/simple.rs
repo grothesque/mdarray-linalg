@@ -6,7 +6,7 @@ use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{DSlice, DTensor, Layout};
 use num_complex::ComplexFloat;
 
-use crate::BlasScalar;
+use super::scalar::BlasScalar;
 
 fn into_i32<T>(x: T) -> i32
 where

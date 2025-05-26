@@ -1,5 +1,5 @@
 use mdarray::{Tensor, expr::Expression as _};
-use mdarray_linalg_prototype::gemm;
+use mdarray_linalg_prototype::blas::gemm;
 
 extern crate openblas_src;
 

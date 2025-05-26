@@ -1,5 +1,5 @@
 use mdarray::{Tensor, expr, expr::Expression as _};
-use mdarray_linalg_prototype::{context::Blas, traits::{MatMul, MatMulBuilder}};
+use mdarray_linalg_prototype::{prelude::*, blas::Blas};
 
 extern crate openblas_src;
 
