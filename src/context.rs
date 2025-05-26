@@ -9,7 +9,7 @@ use crate::traits::MatMul;
 
 pub struct Blas;
 
-pub struct MatMulBuilder<'a, T, La, Lb>
+pub struct BlasMatMulBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -19,7 +19,7 @@ where
     b: &'a DSlice<T, 2, Lb>,
 }
 
-impl<T, La, Lb> MatMulBuilder<'_, T, La, Lb>
+impl<T, La, Lb> BlasMatMulBuilder<'_, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -54,7 +54,7 @@ where
 
 impl MatMul for Blas {
     type MatMulBuilder<'a, T, La, Lb>
-        = MatMulBuilder<'a, T, La, Lb>
+        = BlasMatMulBuilder<'a, T, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -74,6 +74,6 @@ impl MatMul for Blas {
         i8: Into<T::Real>,
         T::Real: Into<T>,
     {
-        MatMulBuilder { alpha: 1.into().into(), a, b }
+        BlasMatMulBuilder { alpha: 1.into().into(), a, b }
     }
 }
