@@ -5,11 +5,11 @@ use num_complex::ComplexFloat;
 
 use crate::BlasScalar;
 use crate::simple::{gemm, gemm_uninit};
-use crate::traits::MatMul;
+use crate::traits::{MatMul, MatMulBuilder};
 
 pub struct Blas;
 
-pub struct BlasMatMulBuilder<'a, T, La, Lb>
+struct BlasMatMulBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -19,7 +19,7 @@ where
     b: &'a DSlice<T, 2, Lb>,
 }
 
-impl<T, La, Lb> BlasMatMulBuilder<'_, T, La, Lb>
+impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for BlasMatMulBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -27,52 +27,45 @@ where
     i8: Into<T::Real>,
     T::Real: Into<T>,
 {
-    pub fn scale(mut self, factor: T) -> Self {
+    fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
         self
     }
 
-    pub fn to_owned(self) -> DTensor<T, 2> {
+    fn to_owned(self) -> DTensor<T, 2> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
         let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
         gemm_uninit(self.alpha, self.a, self.b, c)
     }
 
-    pub fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
         gemm(self.alpha, self.a, self.b, 0.into().into(), c);
     }
 
-    pub fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
         gemm(self.alpha, self.a, self.b, 1.into().into(), c);
     }
 
-    pub fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
         gemm(self.alpha, self.a, self.b, beta, c);
     }
 }
 
-impl MatMul for Blas {
-    type MatMulBuilder<'a, T, La, Lb>
-        = BlasMatMulBuilder<'a, T, La, Lb>
-    where
-        La: Layout,
-        Lb: Layout,
-        T: 'a,
-        La: 'a,
-        Lb: 'a;
-
-    fn matmul<'a, T, La, Lb>(
+impl<T> MatMul<T> for Blas
+where
+    T: BlasScalar + ComplexFloat,
+    i8: Into<T::Real>,
+    T::Real: Into<T>,
+{
+    fn matmul<'a, La, Lb>(
         &self,
         a: &'a DSlice<T, 2, La>,
         b: &'a DSlice<T, 2, Lb>,
-    ) -> Self::MatMulBuilder<'a, T, La, Lb>
+    ) -> impl MatMulBuilder<'a, T, La, Lb>
     where
         La: Layout,
         Lb: Layout,
-        T: ComplexFloat,
-        i8: Into<T::Real>,
-        T::Real: Into<T>,
     {
         BlasMatMulBuilder { alpha: 1.into().into(), a, b }
     }
