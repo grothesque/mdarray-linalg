@@ -1,13 +1,12 @@
 use mdarray::{Tensor, expr, expr::Expression as _};
-use mdarray_linalg_prototype::{prelude::*, blas::Blas};
+use mdarray_linalg_prototype::{prelude::*, MatMul, blas::Blas};
 
 extern crate openblas_src;
 
 mod common;
 use common::{example_matrix, naive_matmul};
 
-#[test]
-fn test_context() {
+fn test_backend(bd: &impl MatMul<f64>) {
     let a = example_matrix([2, 3]).eval();
     let b = example_matrix([3, 4]).eval();
     let c_expr = || example_matrix([2, 4]);
@@ -16,16 +15,21 @@ fn test_context() {
     naive_matmul(&a, &b, &mut ab);
     let ab = ab;
 
-    assert!(Blas.matmul(&a, &b).scale(3.0).to_owned() == (expr::fill(3.0) * &ab).eval());
+    assert!(bd.matmul(&a, &b).scale(3.0).to_owned() == (expr::fill(3.0) * &ab).eval());
 
     c.assign(c_expr());
-    Blas.matmul(&a, &b).add_to(&mut c);
+    bd.matmul(&a, &b).add_to(&mut c);
     assert!(c == ab.clone() + c_expr());
 
     c.assign(c_expr());
-    Blas.matmul(&a, &b).add_to_scaled(&mut c, 2.0);
+    bd.matmul(&a, &b).add_to_scaled(&mut c, 2.0);
     assert!(c == ab.clone() + expr::fill(2.0) * c_expr());
 
-    Blas.matmul(&a, &b).overwrite(&mut c);
+    bd.matmul(&a, &b).overwrite(&mut c);
     assert!(c == ab);
+}
+
+#[test]
+fn test_backends() {
+    test_backend(&Blas);
 }
