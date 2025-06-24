@@ -1,7 +1,7 @@
 use mdarray::{Tensor, expr::Expression as _};
 use mdarray_linalg_prototype::blas::gemm;
 
-extern crate openblas_src;
+use openblas_src as _;
 
 mod common;
 use common::{example_matrix, naive_matmul};
