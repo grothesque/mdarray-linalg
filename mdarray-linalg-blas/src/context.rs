@@ -3,9 +3,10 @@ use std::mem::MaybeUninit;
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use num_complex::ComplexFloat;
 
+use mdarray_linalg::{MatMul, MatMulBuilder};
+
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit};
-use crate::traits::{MatMul, MatMulBuilder};
 
 pub struct Blas;
 

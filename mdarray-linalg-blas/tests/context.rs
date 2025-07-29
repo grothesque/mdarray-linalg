@@ -1,7 +1,9 @@
 use mdarray::{Tensor, expr, expr::Expression as _};
-use mdarray_linalg_prototype::{prelude::*, MatMul, blas::Blas};
-
 use openblas_src as _;
+
+use mdarray_linalg::{prelude::*, MatMul};
+
+use mdarray_linalg_blas::Blas;
 
 mod common;
 use common::{example_matrix, naive_matmul};

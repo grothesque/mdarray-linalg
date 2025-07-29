@@ -1,16 +1,19 @@
-# Experimental linear algebra bindings for Rust mdarray
+# mdarray-linalg: linear algebra bindings for Rust mdarray
 
-This is the begin of an effort to add linear algebra bindings (BLAS, LAPACK, etc.) to the Rust [mdarray](https://github.com/fre-hu/mdarray) crate.
-This library is not intended to be ever published on crates.io.
-Rather, if the experiment is successful, the experience gained here will be used in creating real binding crates.
+Efficient, flexible, and idiomatic linear algebra bindings (BLAS, LAPACK, etc.)
+to the Rust [mdarray](https://github.com/fre-hu/mdarray) crate.
 
 ## Usage
+These crates are not yet released on crates.io. To depend on the main crate
+and one of the backends (for example `mdarray-linalg-blas`) add the following
+to your `Cargo.toml`:
 ```
-cargo add --git https://git.grothesque.org/mdarray-linalg-prototype
+[dependencies]
+mdarray-linalg = { git = "https://github.com/grothesque/mdarray-linalg" }
+mdarray-linalg-blas = { git = "https://github.com/grothesque/mdarray-linalg" }
 ```
-You may also use the [GitHub mirror](https://github.com/grothesque/mdarray-linalg-prototype).
 
-See the tests for usage examples.
+See the tests for a “tutorial”.
 
 ## License
 Dual-licensed (Apache and MIT) to be compatible with the Rust project.
