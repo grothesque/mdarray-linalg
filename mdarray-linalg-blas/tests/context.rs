@@ -17,7 +17,7 @@ fn test_backend(bd: &impl MatMul<f64>) {
     naive_matmul(&a, &b, &mut ab);
     let ab = ab;
 
-    assert!(bd.matmul(&a, &b).scale(3.0).to_owned() == (expr::fill(3.0) * &ab).eval());
+    assert!(bd.matmul(&a, &b).scale(3.0).eval() == (expr::fill(3.0) * &ab).eval());
 
     c.assign(c_expr());
     bd.matmul(&a, &b).add_to(&mut c);

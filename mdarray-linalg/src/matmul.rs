@@ -23,7 +23,7 @@ where
     fn scale(self, factor: T) -> Self;
 
     /// Returns a new owned tensor containing the result.
-    fn to_owned(self) -> DTensor<T, 2>;
+    fn eval(self) -> DTensor<T, 2>;
 
     /// Overwrites the provided slice with the result.
     fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);

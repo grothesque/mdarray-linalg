@@ -33,7 +33,7 @@ where
         self
     }
 
-    fn to_owned(self) -> DTensor<T, 2> {
+    fn eval(self) -> DTensor<T, 2> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
         let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
