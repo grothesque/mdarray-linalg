@@ -1,7 +1,7 @@
 use mdarray::{Tensor, expr, expr::Expression as _};
 use openblas_src as _;
 
-use mdarray_linalg::{prelude::*, MatMul};
+use mdarray_linalg::{MatMul, prelude::*};
 
 use mdarray_linalg_blas::Blas;
 
@@ -34,4 +34,9 @@ fn test_backend(bd: &impl MatMul<f64>) {
 #[test]
 fn test_backends() {
     test_backend(&Blas);
+}
+
+#[test]
+fn test_backend_default() {
+    let blas = Blas::default();
 }

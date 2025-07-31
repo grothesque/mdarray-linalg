@@ -8,6 +8,7 @@ use mdarray_linalg::{MatMul, MatMulBuilder};
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit};
 
+#[derive(Default)]
 pub struct Blas;
 
 struct BlasMatMulBuilder<'a, T, La, Lb>
@@ -68,6 +69,10 @@ where
         La: Layout,
         Lb: Layout,
     {
-        BlasMatMulBuilder { alpha: 1.into().into(), a, b }
+        BlasMatMulBuilder {
+            alpha: 1.into().into(),
+            a,
+            b,
+        }
     }
 }
