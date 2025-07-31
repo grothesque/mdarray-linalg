@@ -38,5 +38,5 @@ fn test_backends() {
 
 #[test]
 fn test_backend_default() {
-    let blas = Blas::default();
+    let _blas = Blas::default();
 }
