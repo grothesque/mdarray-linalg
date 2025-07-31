@@ -10,3 +10,6 @@ pub use matmul::*;
 
 mod svd;
 pub use svd::*;
+
+mod utils;
+pub use utils::*;
