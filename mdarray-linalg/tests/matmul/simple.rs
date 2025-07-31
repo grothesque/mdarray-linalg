@@ -3,8 +3,7 @@ use mdarray_linalg_blas::gemm;
 
 use openblas_src as _;
 
-mod common;
-use common::{example_matrix, naive_matmul};
+use crate::common::{example_matrix, naive_matmul};
 
 #[test]
 fn test_gemm() {

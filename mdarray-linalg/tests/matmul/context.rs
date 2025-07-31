@@ -5,8 +5,7 @@ use mdarray_linalg::{MatMul, prelude::*};
 
 use mdarray_linalg_blas::Blas;
 
-mod common;
-use common::{example_matrix, naive_matmul};
+use crate::common::{example_matrix, naive_matmul};
 
 fn test_backend(bd: &impl MatMul<f64>) {
     let a = example_matrix([2, 3]).eval();
