@@ -1,4 +1,4 @@
 pub mod matmul;
 
 pub use matmul::Blas;
-pub use matmul::gemm;
+pub use matmul::{gemm, gemm_uninit};
