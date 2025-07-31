@@ -1,0 +1,18 @@
+[package]
+name = "mdarray-linalg-lapack"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
+cblas-sys = "0.2.0"
+mdarray = { git = "https://github.com/fre-hu/mdarray.git", rev = "2a67f2ec7ed326fad9dc95a94f772b7e2140c8eb" }
+num-complex = "0.4.6"
+paste = "1.0.15"
+lapack-sys = "0.15.0"
+thiserror = "2.0.12"
+
+[dev-dependencies]
+lapack-src = { version = "0.11", features = ["openblas"] }
+
+

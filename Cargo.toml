@@ -2,5 +2,6 @@
 members = [
   "mdarray-linalg",
   "mdarray-linalg-blas",
+  "mdarray-linalg-lapack",  
 ]
 resolver = "3"

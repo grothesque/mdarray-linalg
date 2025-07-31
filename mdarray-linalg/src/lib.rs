@@ -7,3 +7,6 @@ pub mod prelude;
 
 mod matmul;
 pub use matmul::*;
+
+mod svd;
+pub use svd::*;

@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 mdarray = { git = "https://github.com/fre-hu/mdarray.git", rev = "2a67f2ec7ed326fad9dc95a94f772b7e2140c8eb" }
+thiserror = "2.0.12"
