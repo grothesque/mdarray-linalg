@@ -8,10 +8,10 @@
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
 use super::simple::{dgesdd, dgesdd_uninit};
-use crate::get_dims;
+use mdarray_linalg::{get_dims, into_i32};
 
-use super::simple::into_i32;
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+
 use mdarray_linalg::{SVD, SVDBuilder, SVDError};
 use num_complex::ComplexFloat;
 use std::mem::MaybeUninit;

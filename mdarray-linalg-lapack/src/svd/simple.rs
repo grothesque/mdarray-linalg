@@ -1,31 +1,10 @@
 use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use mdarray_linalg::{SVDError, SVDResult};
+use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
-
-pub fn into_i32<T>(x: T) -> i32
-where
-    T: TryInto<i32>,
-    <T as TryInto<i32>>::Error: std::fmt::Debug,
-{
-    x.try_into().expect("dimension must fit into i32")
-}
-
-#[macro_export]
-macro_rules! get_dims {
-    ( $( $matrix:expr ),+ ) => {
-        (
-            $(
-                {
-                    let shape = $matrix.shape();
-                    (into_i32(shape.0), into_i32(shape.1))
-                }
-            ),*
-        )
-    };
-}
 
 fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
 where
