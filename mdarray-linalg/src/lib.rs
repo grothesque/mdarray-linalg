@@ -1,4 +1,4 @@
-//! Linear algebra (BLAS, LAPACK, etc.) bindings for mdarray.
+//! Linear algebra (BLAS, LAPACK, Faer, etc.) bindings for mdarray.
 //!
 //! This is the main crate that contains the traits that are implemented by some mdarray-linalg-*
 //! crates, e.g. mdarray-linalg.blas.

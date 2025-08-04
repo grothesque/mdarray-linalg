@@ -12,11 +12,13 @@ use mdarray_linalg::{get_dims, into_i32};
 
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 
+use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray_linalg::{SVD, SVDBuilder, SVDError};
 use num_complex::ComplexFloat;
 use std::mem::MaybeUninit;
+
+#[derive(Debug)]
 pub struct Lapack;
-use super::scalar::{LapackScalar, NeedsRwork};
 
 struct LapackSVDBuilder<'a, T, L>
 where
@@ -48,7 +50,8 @@ where
         &mut self,
     ) -> Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError> {
         let (m, n) = get_dims!(self.a);
-        let s = tensor![[MaybeUninit::<T>::uninit(); n as usize]; m as usize];
+        let min_mn = m.min(n);
+        let s = tensor![[MaybeUninit::<T>::uninit(); min_mn as usize]; min_mn as usize];
         let u = tensor![[MaybeUninit::<T>::uninit(); m as usize]; m as usize];
         let vt = tensor![[MaybeUninit::<T>::uninit(); n as usize]; n as usize];
         dgesdd_uninit::<_, Lu, Ls, Lvt, T>(self.a, s, Some(u), Some(vt))
@@ -69,6 +72,9 @@ where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
     T::Real: Into<T>,
 {
+    fn print_name(&self) {
+        println!("Backend: LAPACK");
+    }
     fn svd<'a, L: Layout>(&self, a: &'a mut DSlice<T, 2, L>) -> impl SVDBuilder<'a, T, L> {
         LapackSVDBuilder { a }
     }
