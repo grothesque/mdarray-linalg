@@ -16,6 +16,8 @@ pub enum SVDError {
 pub type SVDResult<T> = Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
 
 pub trait SVD<T> {
+    /// Print the name of the current Backend for debug purpose.
+    fn print_name(&self);
     fn svd<'a, L: Layout>(&self, a: &'a mut DSlice<T, 2, L>) -> impl SVDBuilder<'a, T, L>;
 }
 
