@@ -3,6 +3,7 @@ use num_complex::Complex;
 
 use mdarray::{DSlice, DTensor, Dense, tensor};
 use mdarray_linalg::{SVD, SVDBuilder, naive_matmul, pretty_print};
+use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
 use num_complex::ComplexFloat;
@@ -60,7 +61,7 @@ where
         panic!("SVD failed");
     };
 
-    assert_eq!(*s.shape(), (m, n));
+    assert_eq!(*s.shape(), (n, n));
     assert_eq!(*u.shape(), (m, m));
     assert_eq!(*vt.shape(), (n, n));
 
@@ -73,6 +74,7 @@ where
     let mut usvt = DTensor::<T, 2>::zeros([m, n]);
 
     if debug_print {
+        bd.print_name();
         println!("=== Σ (Sigma) ===");
         pretty_print(&sigma);
         println!("=== U ===");
@@ -101,6 +103,7 @@ where
 #[test]
 fn test_backend_svd_square_matrix() {
     test_svd_square_matrix(&Lapack);
+    test_svd_square_matrix(&Faer);
 }
 
 fn test_svd_square_matrix(bd: &impl SVD<f64>) {
@@ -112,6 +115,7 @@ fn test_svd_square_matrix(bd: &impl SVD<f64>) {
 #[test]
 fn test_backend_svd_rectangular_m_gt_n() {
     test_svd_rectangular_m_gt_n(&Lapack);
+    test_svd_rectangular_m_gt_n(&Faer);
 }
 
 fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64>) {
@@ -123,6 +127,7 @@ fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64>) {
 #[test]
 fn test_backend_big_square_matrix() {
     test_svd_big_square_matrix(&Lapack);
+    test_svd_big_square_matrix(&Faer);
 }
 
 fn test_svd_big_square_matrix(bd: &impl SVD<f64>) {
@@ -134,6 +139,7 @@ fn test_svd_big_square_matrix(bd: &impl SVD<f64>) {
 #[test]
 fn test_backend_svd_random_matrix() {
     test_svd_random_matrix(&Lapack);
+    test_svd_random_matrix(&Faer);
 }
 
 fn test_svd_random_matrix(bd: &impl SVD<f64>) {
@@ -144,13 +150,17 @@ fn test_svd_random_matrix(bd: &impl SVD<f64>) {
 }
 
 #[test]
-fn test_svd_cplx_square_matrix() {
+fn test_backend_svd_cplx_square_matrix() {
+    test_svd_cplx_square_matrix(&Lapack);
+}
+
+fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>>) {
     let n = 3;
     let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] * i[1]) as f64, i[1] as f64)
     });
 
-    let Ok((s, u, vt)) = Lapack.svd(&mut a.clone()).eval::<Dense, Dense, Dense>() else {
+    let Ok((s, u, vt)) = bd.svd(&mut a.clone()).eval::<Dense, Dense, Dense>() else {
         panic!("SVD failed");
     };
 
