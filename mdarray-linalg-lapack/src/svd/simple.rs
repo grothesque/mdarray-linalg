@@ -68,7 +68,7 @@ where
     let u_ptr: *mut T = u.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
     let vt_ptr: *mut T = vt.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
 
-    let mut work = T::create_work();
+    let mut work = T::allocate(1);
 
     let lwork = -1i32;
     let mut iwork = vec![0i32; 8 * min_mn as usize];
@@ -106,7 +106,7 @@ where
         );
     }
 
-    let lwork = T::lwork_from_query(&work[0]);
+    let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
     let mut work = T::allocate(lwork);
 
     let lwork = lwork as usize;
@@ -173,7 +173,7 @@ where
         _ => return Err(SVDError::InconsistentUV),
     };
 
-    let mut work = T::create_work();
+    let mut work = T::allocate(1);
     let lwork = -1i32;
     let mut iwork = vec![0i32; 8 * m.min(n) as usize];
     let mut info = 0;
@@ -213,7 +213,7 @@ where
         );
     }
 
-    let lwork = T::lwork_from_query(&work[0]);
+    let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
     let mut work = T::allocate(lwork);
 
     unsafe {

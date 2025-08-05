@@ -145,83 +145,51 @@ pub trait NeedsRwork {
     type RworkType;
     type Elem;
     fn rwork_len(m: i32, n: i32) -> usize;
-    fn create_work() -> Vec<Self::Elem>;
     fn lwork_from_query(query: &Self::Elem) -> i32;
     fn allocate(lwork: i32) -> Vec<Self::Elem>;
 }
 
-impl NeedsRwork for f32 {
-    type RworkType = ();
-    type Elem = f32;
-    fn rwork_len(_: i32, _: i32) -> usize {
-        0 as usize
-    }
+macro_rules! impl_needs_rwork {
+    ($type:ty, $elem:ty, no_rwork) => {
+        impl NeedsRwork for $type {
+            type RworkType = ();
+            type Elem = $elem;
 
-    fn create_work() -> Vec<Self::Elem> {
-        vec![0f32; 1]
-    }
+            fn rwork_len(_: i32, _: i32) -> usize {
+                0
+            }
 
-    fn lwork_from_query(query: &Self::Elem) -> i32 {
-        *query as i32
-    }
+            fn lwork_from_query(query: &Self::Elem) -> i32 {
+                *query as i32
+            }
 
-    fn allocate(lwork: i32) -> Vec<Self::Elem> {
-        vec![0.0; lwork as usize]
-    }
+            fn allocate(lwork: i32) -> Vec<Self::Elem> {
+                vec![<$elem>::default(); lwork as usize]
+            }
+        }
+    };
+
+    ($type:ty, $elem:ty, $rwork:ty) => {
+        impl NeedsRwork for $type {
+            type RworkType = $rwork;
+            type Elem = $elem;
+
+            fn rwork_len(m: i32, n: i32) -> usize {
+                5 * (m + n) as usize
+            }
+
+            fn lwork_from_query(query: &Self::Elem) -> i32 {
+                query.re as i32
+            }
+
+            fn allocate(lwork: i32) -> Vec<Self::Elem> {
+                vec![<$elem>::default(); lwork as usize]
+            }
+        }
+    };
 }
 
-impl NeedsRwork for f64 {
-    type RworkType = ();
-    type Elem = f64;
-    fn rwork_len(_: i32, _: i32) -> usize {
-        0_usize
-    }
-    fn create_work() -> Vec<Self::Elem> {
-        vec![0f64; 1]
-    }
-    fn lwork_from_query(query: &Self::Elem) -> i32 {
-        *query as i32
-    }
-
-    fn allocate(lwork: i32) -> Vec<Self::Elem> {
-        vec![0.0; lwork as usize]
-    }
-}
-
-impl NeedsRwork for num_complex::Complex<f32> {
-    type RworkType = f32;
-    type Elem = num_complex::Complex<f32>;
-    fn rwork_len(m: i32, n: i32) -> usize {
-        5 * (m + n) as usize
-    }
-    fn create_work() -> Vec<Self::Elem> {
-        vec![Complex::<f32>::default(); 1]
-    }
-    fn lwork_from_query(query: &Self::Elem) -> i32 {
-        query.re as i32
-    }
-
-    fn allocate(lwork: i32) -> Vec<Self::Elem> {
-        vec![num_complex::Complex::<f32>::default(); lwork as usize]
-    }
-}
-
-impl NeedsRwork for num_complex::Complex<f64> {
-    type RworkType = f64;
-    type Elem = num_complex::Complex<f64>;
-
-    fn rwork_len(m: i32, n: i32) -> usize {
-        5 * (m + n) as usize
-    }
-    fn create_work() -> Vec<Self::Elem> {
-        vec![Complex::<f64>::default(); 1]
-    }
-
-    fn lwork_from_query(query: &Self::Elem) -> i32 {
-        query.re as i32
-    }
-
-    fn allocate(lwork: i32) -> Vec<Self::Elem> {
-        vec![num_complex::Complex::<f64>::default(); lwork as usize]
-    }
-}
+impl_needs_rwork!(f32, f32, no_rwork);
+impl_needs_rwork!(f64, f64, no_rwork);
+impl_needs_rwork!(Complex<f32>, Complex<f32>, f32);
+impl_needs_rwork!(Complex<f64>, Complex<f64>, f64);
