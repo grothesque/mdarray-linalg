@@ -4,6 +4,7 @@ use openblas_src as _;
 use mdarray_linalg::{MatMul, prelude::*};
 
 use mdarray_linalg_blas::Blas;
+use mdarray_linalg_faer::matmul::Faer;
 
 use crate::common::example_matrix;
 
@@ -35,6 +36,7 @@ fn test_backend(bd: &impl MatMul<f64>) {
 #[test]
 fn test_backends() {
     test_backend(&Blas);
+    test_backend(&Faer); // expected to fail because of add_to_scaled
 }
 
 #[test]

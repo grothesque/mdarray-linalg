@@ -29,6 +29,10 @@ where
     i8: Into<T::Real>,
     T::Real: Into<T>,
 {
+    fn parallelize(self) -> Self {
+        self
+    }
+
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
         self

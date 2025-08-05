@@ -19,6 +19,9 @@ where
     La: 'a,
     Lb: 'a,
 {
+    /// Enable parallelization.
+    fn parallelize(self) -> Self;
+
     /// Multiplies the result by a scalar factor.
     fn scale(self, factor: T) -> Self;
 

@@ -13,6 +13,8 @@ thiserror = "2.0.12"
 faer = "0.22.6"
 faer-traits = "0.22.1"
 dyn-stack = "0.13.0"
+num-traits = "0.2.19"
+num_cpus = "1.17.0"
 
 
 

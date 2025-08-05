@@ -3,7 +3,7 @@ use num_complex::Complex;
 
 use mdarray::{DSlice, DTensor, Dense, tensor};
 use mdarray_linalg::{SVD, SVDBuilder, naive_matmul, pretty_print};
-use mdarray_linalg_faer::Faer;
+use mdarray_linalg_faer::svd::Faer;
 use mdarray_linalg_lapack::Lapack;
 
 use num_complex::ComplexFloat;
