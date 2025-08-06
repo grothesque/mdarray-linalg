@@ -8,6 +8,9 @@ pub mod prelude;
 mod matmul;
 pub use matmul::*;
 
+mod qr;
+pub use qr::*;
+
 mod svd;
 pub use svd::*;
 
