@@ -1,47 +1,14 @@
 use approx::assert_relative_eq;
 use num_complex::Complex;
 
+use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DSlice, DTensor, Dense, tensor};
 use mdarray_linalg::{SVD, SVDBuilder, naive_matmul, pretty_print};
 use mdarray_linalg_faer::svd::Faer;
-use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_lapack::svd::Lapack;
 
 use num_complex::ComplexFloat;
 use rand::Rng;
-
-macro_rules! assert_matrix_eq {
-    ($a:expr, $b:expr) => {
-        assert_matrix_eq!($a, $b, 1e-8f64)
-    };
-    ($a:expr, $b:expr, $epsilon:expr) => {
-        assert_eq!($a.shape(), $b.shape(), "Matrix shapes don't match");
-        let shape = $a.shape();
-        for i in 0..shape.0 {
-            for j in 0..shape.1 {
-                assert_relative_eq!($a[[i, j]], $b[[i, j]], epsilon = $epsilon);
-            }
-        }
-    };
-}
-
-macro_rules! assert_complex_matrix_eq {
-    ($a:expr, $b:expr) => {
-        assert_complex_matrix_eq!($a, $b, 1e-8)
-    };
-    ($a:expr, $b:expr, $epsilon:expr) => {
-        assert_eq!($a.shape(), $b.shape(), "Matrix shapes don't match");
-        let shape = $a.shape();
-        for i in 0..shape.0 {
-            for j in 0..shape.1 {
-                assert_relative_eq!(
-                    Complex::norm($a[[i, j]]),
-                    Complex::norm($b[[i, j]]),
-                    epsilon = $epsilon
-                );
-            }
-        }
-    };
-}
 
 fn test_svd_reconstruction<T>(bd: &impl SVD<T>, a: &DTensor<T, 2>, debug_print: bool)
 where
