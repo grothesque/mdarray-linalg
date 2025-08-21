@@ -1,18 +1,14 @@
 use std::mem::ManuallyDrop;
-use std::mem::MaybeUninit;
 use std::num::NonZero;
-
-use std::time::Instant;
 
 use faer::Mat;
 use faer::linalg::matmul::matmul;
 use faer_traits::ComplexField;
 
-use faer::{Accum, Conj, Par, mat, unzip, zip};
-use mdarray::Mapping;
+use faer::{Accum, Par};
 use mdarray::StridedMapping;
 use mdarray::View;
-use mdarray::{DSlice, DTensor, Dense, DenseMapping, Layout, Strided, tensor};
+use mdarray::{DSlice, DTensor, Layout, Strided};
 use num_complex::ComplexFloat;
 
 use num_traits::One;
@@ -97,6 +93,7 @@ where
     Lb: Layout,
     T: ComplexFloat + ComplexField + One + 'static,
 {
+    #[allow(dead_code)]
     pub fn parallelize(mut self) -> Self {
         // Alternative ??? : use faer::get_global_parallelism()
         self.par = Par::Rayon(NonZero::new(num_cpus::get()).unwrap());
@@ -166,7 +163,7 @@ where
         );
     }
 
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, _beta: T) {
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,

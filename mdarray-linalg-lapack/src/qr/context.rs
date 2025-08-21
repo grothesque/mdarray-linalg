@@ -44,7 +44,7 @@ where
         let (m, n) = get_dims!(self.a);
         let q = tensor![[MaybeUninit::<T>::uninit(); m as usize]; m as usize];
         let r = tensor![[MaybeUninit::<T>::uninit(); n as usize]; m as usize];
-        geqrf_uninit::<L, Lq, Lr, T>(self.a, q, r)
+        geqrf_uninit::<L, T>(self.a, q, r)
     }
 }
 

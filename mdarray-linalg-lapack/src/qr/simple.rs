@@ -1,7 +1,7 @@
 use super::scalar::LapackScalar;
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::get_dims;
-use num_complex::{Complex, ComplexFloat};
+use num_complex::ComplexFloat;
 use std::mem::MaybeUninit;
 
 pub fn into_i32<T>(x: T) -> i32
@@ -10,26 +10,6 @@ where
     <T as TryInto<i32>>::Error: std::fmt::Debug,
 {
     x.try_into().expect("dimension must fit into i32")
-}
-
-fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
-where
-    T: ComplexFloat + Default,
-    T::Real: Into<T>,
-{
-    let (rows, cols) = (a.shape().0, a.shape().1);
-    let mut result = tensor![[T::default(); rows];cols];
-    for j in 0..cols {
-        for i in 0..rows {
-            result[j * rows + i] = a[i * cols + j];
-        }
-    }
-
-    for j in 0..cols {
-        for i in 0..rows {
-            a[j * rows + i] = result[j * rows + i];
-        }
-    }
 }
 
 pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + LapackScalar>(
@@ -117,7 +97,7 @@ pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + Lap
     }
 }
 
-pub fn geqrf_uninit<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + LapackScalar>(
+pub fn geqrf_uninit<La: Layout, T: ComplexFloat + Default + LapackScalar>(
     a: &mut DSlice<T, 2, La>,
     mut q: DTensor<MaybeUninit<T>, 2>,
     mut r: DTensor<MaybeUninit<T>, 2>,
@@ -208,7 +188,7 @@ where
     T: ComplexFloat,
     L: Layout,
 {
-    let (m, n) = (*c.shape()).into();
+    let (m, n) = *c.shape();
 
     assert_eq!(
         m, n,
@@ -217,8 +197,8 @@ where
 
     for i in 0..m {
         for j in (i + 1)..n {
-            let tmp = c[[i, j]].clone();
-            c[[i, j]] = c[[j, i]].clone();
+            let tmp = c[[i, j]];
+            c[[i, j]] = c[[j, i]];
             c[[j, i]] = tmp;
         }
     }

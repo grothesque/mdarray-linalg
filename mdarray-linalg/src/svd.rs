@@ -40,6 +40,7 @@ pub trait SVDBuilder<'a, T, L> {
 
     /// Returns new owned tensors containing the complete SVD decomposition result.
     /// Returns a tuple (S, U, V^T) where the matrix A = U * S * V^T.
+    #[allow(clippy::type_complexity)]
     fn eval<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &mut self,
     ) -> Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
