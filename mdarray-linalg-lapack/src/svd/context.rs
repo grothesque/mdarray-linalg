@@ -1,81 +1,74 @@
 //! Singular Value Decomposition (SVD):
-//!     A = U * Σ * Vᵀ
+//!     A = U * Σ * V^T
 //! where:
 //!     - A is m × n         (input matrix)
 //!     - U is m × m         (left singular vectors, orthogonal)
 //!     - Σ is m × n         (diagonal matrix with singular values on the diagonal)
-//!     - Vᵀ is n × n        (transpose of right singular vectors, orthogonal)
+//!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use super::simple::{dgesdd, dgesdd_uninit};
+use super::simple::gsvd;
 use mdarray_linalg::{get_dims, into_i32};
 
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray_linalg::{SVD, SVDBuilder, SVDError};
+use mdarray_linalg::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
-use std::mem::MaybeUninit;
 
-#[derive(Debug)]
-pub struct Lapack;
-
-struct LapackSVDBuilder<'a, T, L>
-where
-    L: Layout,
-{
-    a: &'a mut DSlice<T, 2, L>,
-}
-
-impl<'a, T, L> SVDBuilder<'a, T, L> for LapackSVDBuilder<'a, T, L>
-where
-    T: ComplexFloat + Default + LapackScalar + NeedsRwork,
-    T::Real: Into<T>,
-    L: Layout,
-{
-    fn overwrite_suvt<Ls: Layout, Lu: Layout, Lvt: Layout>(
-        &mut self,
-        s: &mut DSlice<T, 2, Ls>,
-        u: &mut DSlice<T, 2, Lu>,
-        vt: &mut DSlice<T, 2, Lvt>,
-    ) -> Result<(), SVDError> {
-        dgesdd(self.a, s, Some(u), Some(vt))
-    }
-
-    fn overwrite_s<Ls: Layout>(&mut self, s: &mut DSlice<T, 2, Ls>) -> Result<(), SVDError> {
-        dgesdd::<L, Ls, Dense, Dense, T>(self.a, s, None, None)
-    }
-
-    fn eval<Ls: Layout, Lu: Layout, Lvt: Layout>(
-        &mut self,
-    ) -> Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError> {
-        let (m, n) = get_dims!(self.a);
-        let min_mn = m.min(n);
-        let s = tensor![[MaybeUninit::<T>::uninit(); min_mn as usize]; min_mn as usize];
-        let u = tensor![[MaybeUninit::<T>::uninit(); m as usize]; m as usize];
-        let vt = tensor![[MaybeUninit::<T>::uninit(); n as usize]; n as usize];
-        dgesdd_uninit::<_, Lu, Ls, Lvt, T>(self.a, s, Some(u), Some(vt))
-    }
-
-    fn eval_s<Ls: Layout, Lu: Layout, Lvt: Layout>(&mut self) -> Result<DTensor<T, 2>, SVDError> {
-        let (m, n) = get_dims!(self.a);
-        let s = tensor![[MaybeUninit::<T>::uninit(); n as usize]; m as usize];
-        match dgesdd_uninit::<_, Lu, Ls, Lvt, T>(self.a, s, None, None) {
-            Ok((s, _, _)) => Ok(s),
-            Err(err) => Err(err),
-        }
-    }
-}
+use crate::Lapack;
 
 impl<T> SVD<T> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
     T::Real: Into<T>,
 {
-    fn print_name(&self) {
-        println!("Backend: LAPACK");
+    // Computes full SVD with new allocated matrices
+    fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<SVDDecomp<T>, SVDError> {
+        let (m, n) = get_dims!(a);
+        let min_mn = m.min(n);
+
+        let mut s = tensor![[T::default(); min_mn as usize]; min_mn as usize];
+        let mut u = tensor![[T::default(); m as usize]; m as usize];
+        let mut vt = tensor![[T::default(); n as usize]; n as usize];
+
+        match gsvd(a, &mut s, Some(&mut u), Some(&mut vt), self.svd_config) {
+            Ok(_) => Ok(SVDDecomp { s, u, vt }),
+            Err(e) => Err(e),
+        }
     }
-    fn svd<'a, L: Layout>(&self, a: &'a mut DSlice<T, 2, L>) -> impl SVDBuilder<'a, T, L> {
-        LapackSVDBuilder { a }
+
+    // Computes only singular values with new allocated matrix
+    fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError> {
+        let (m, n) = get_dims!(a);
+        let min_mn = m.min(n);
+
+        // Only allocate space for singular values
+        let mut s = tensor![[T::default(); min_mn as usize]; min_mn as usize];
+
+        match gsvd::<L, Dense, Dense, Dense, T>(a, &mut s, None, None, self.svd_config) {
+            Ok(_) => Ok(s),
+            Err(err) => Err(err),
+        }
+    }
+
+    // Computes full SVD, overwriting existing matrices
+    fn svd_overwrite<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        s: &mut DSlice<T, 2, Ls>,
+        u: &mut DSlice<T, 2, Lu>,
+        vt: &mut DSlice<T, 2, Lvt>,
+    ) -> Result<(), SVDError> {
+        gsvd(a, s, Some(u), Some(vt), self.svd_config)
+    }
+
+    // Computes only singular values, overwriting existing matrix
+    fn svd_overwrite_s<L: Layout, Ls: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        s: &mut DSlice<T, 2, Ls>,
+    ) -> Result<(), SVDError> {
+        gsvd::<L, Ls, Dense, Dense, T>(a, s, None, None, self.svd_config)
     }
 }

@@ -20,6 +20,24 @@ pub trait LapackScalar {
         iwork: *mut i32,
         info: *mut i32,
     );
+
+    unsafe fn lapack_gesvd(
+        jobu: i8,
+        jobvt: i8,
+        m: i32,
+        n: i32,
+        a: *mut Self,
+        lda: i32,
+        s: *mut Self,
+        u: *mut Self,
+        ldu: i32,
+        vt: *mut Self,
+        ldvt: i32,
+        work: *mut Self,
+        lwork: i32,
+        rwork: *mut Self,
+        info: *mut i32,
+    );
 }
 
 macro_rules! impl_lapack_scalar_real {
@@ -62,6 +80,46 @@ macro_rules! impl_lapack_scalar_real {
                             info as *mut i32,
                         );
                     }
+                }
+            }
+
+            #[inline]
+            unsafe fn lapack_gesvd(
+                jobu: i8,
+                jobvt: i8,
+                m: i32,
+                n: i32,
+                a: *mut Self,
+                lda: i32,
+                s: *mut Self,
+                u: *mut Self,
+                ldu: i32,
+                vt: *mut Self,
+                ldvt: i32,
+                work: *mut Self,
+                lwork: i32,
+                _rwork: *mut Self,
+                info: *mut i32,
+            ) {
+                unsafe {
+                    paste! {
+                            lapack_sys::[<$prefix gesvd_>](
+                                &jobu as *const i8,
+                    &jobvt as *const i8,
+                                &m as *const i32,
+                                &n as *const i32,
+                                a as *mut _,
+                                &lda as *const i32,
+                                s as *mut _,
+                                u as *mut _,
+                                &ldu as *const i32,
+                                vt as *mut _,
+                                &ldvt as *const i32,
+                                work as *mut _,
+                                &lwork as *const i32,
+                                info as *mut i32,
+                            );
+                        }
                 }
             }
         }
@@ -130,6 +188,47 @@ macro_rules! impl_lapack_scalar_cplx {
                     );
 
                     }
+                }
+            }
+
+            #[inline]
+            unsafe fn lapack_gesvd(
+                jobu: i8,
+                jobvt: i8,
+                m: i32,
+                n: i32,
+                a: *mut Self,
+                lda: i32,
+                s: *mut Self,
+                u: *mut Self,
+                ldu: i32,
+                vt: *mut Self,
+                ldvt: i32,
+                work: *mut Self,
+                lwork: i32,
+                rwork: *mut Self,
+                info: *mut i32,
+            ) {
+                unsafe {
+                    paste! {
+                            lapack_sys::[<$prefix gesvd_>](
+                                &jobu as *const i8,
+                    &jobvt as *const i8,
+                                &m as *const i32,
+                                &n as *const i32,
+                                a as *mut _,
+                                &lda as *const i32,
+                                s as *mut _,
+                                u as *mut _,
+                                &ldu as *const i32,
+                                vt as *mut _,
+                                &ldvt as *const i32,
+                                work as *mut _,
+                                &lwork as *const i32,
+                                        rwork as *mut _,
+                                info as *mut i32,
+                            );
+                        }
                 }
             }
         }

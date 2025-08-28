@@ -2,7 +2,7 @@ use mdarray::{DTensor, Strided};
 
 use mdarray_linalg::{QR, QRBuilder};
 // use qr::faer::Faer;
-use mdarray_linalg_lapack::qr::Lapack;
+use mdarray_linalg_lapack::Lapack;
 
 use approx::assert_relative_eq;
 use num_complex::Complex;
@@ -13,7 +13,7 @@ use mdarray_linalg::{naive_matmul, pretty_print};
 
 #[test]
 fn test_backend_qr_random_matrix() {
-    test_qr_random_matrix(&Lapack);
+    test_qr_random_matrix(&Lapack::default());
     // test_qr_random_matrix(&Faer);
 }
 
@@ -27,7 +27,7 @@ fn test_qr_random_matrix(bd: &impl QR<f64>) {
 
 #[test]
 fn test_backend_qr_structured_matrix() {
-    test_qr_structured_matrix(&Lapack);
+    test_qr_structured_matrix(&Lapack::default());
     // test_qr_structured_matrix(&Faer);
 }
 
@@ -40,7 +40,7 @@ fn test_qr_structured_matrix(bd: &impl QR<f64>) {
 
 #[test]
 fn test_backend_qr_complex_matrix() {
-    test_qr_complex_matrix(&Lapack);
+    test_qr_complex_matrix(&Lapack::default());
     // test_qr_complex_matrix(&Faer);
 }
 

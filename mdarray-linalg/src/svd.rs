@@ -13,39 +13,41 @@ pub enum SVDError {
     BackendDidNotConverge { superdiagonals: i32 },
 }
 
-pub type SVDResult<T> = Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
+// pub type SVDResult<T> = Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
 
-pub trait SVD<T> {
-    /// Print the name of the current Backend for debug purpose.
-    fn print_name(&self);
-    fn svd<'a, L: Layout>(&self, a: &'a mut DSlice<T, 2, L>) -> impl SVDBuilder<'a, T, L>;
+pub struct SVDDecomp<T> {
+    pub s: DTensor<T, 2>,
+    pub u: DTensor<T, 2>,
+    pub vt: DTensor<T, 2>,
 }
 
-pub trait SVDBuilder<'a, T, L> {
-    /// Overwrites the provided slices with the complete SVD decomposition result.
+pub type SVDResult<T> = Result<SVDDecomp<T>, SVDError>;
+
+pub trait SVD<T> {
+    /// Compute full SVD with new allocated matrices
+    fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SVDResult<T>;
+
+    /// Compute only singular values with new allocated matrix
+    fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError>;
+
+    /// Compute full SVD, overwriting existing matrices
     /// The matrix A is decomposed as A = U * S * V^T where:
     /// - `s` contains the singular values (diagonal matrix S)
     /// - `u` contains the left singular vectors (matrix U)
     /// - `vt` contains the transposed right singular vectors (matrix V^T)
-    fn overwrite_suvt<Ls: Layout, Lu: Layout, Lvt: Layout>(
-        &mut self,
-        s: &'a mut DSlice<T, 2, Ls>,
-        u: &'a mut DSlice<T, 2, Lu>,
-        vt: &'a mut DSlice<T, 2, Lvt>,
+    fn svd_overwrite<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        s: &mut DSlice<T, 2, Ls>,
+        u: &mut DSlice<T, 2, Lu>,
+        vt: &mut DSlice<T, 2, Lvt>,
     ) -> Result<(), SVDError>;
 
-    /// Overwrites the provided slice with only the singular values.
+    /// Compute only singular values, overwriting existing matrix
     /// Computes only the diagonal elements of the S matrix from the SVD decomposition.
-    fn overwrite_s<Ls: Layout>(&mut self, s: &'a mut DSlice<T, 2, Ls>) -> Result<(), SVDError>;
-
-    /// Returns new owned tensors containing the complete SVD decomposition result.
-    /// Returns a tuple (S, U, V^T) where the matrix A = U * S * V^T.
-    #[allow(clippy::type_complexity)]
-    fn eval<Ls: Layout, Lu: Layout, Lvt: Layout>(
-        &mut self,
-    ) -> Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
-
-    /// Returns a new owned tensor containing only the singular values.
-    /// Computes and returns only the diagonal elements of the S matrix.
-    fn eval_s<Ls: Layout, Lu: Layout, Lvt: Layout>(&mut self) -> Result<DTensor<T, 2>, SVDError>;
+    fn svd_overwrite_s<L: Layout, Ls: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        s: &mut DSlice<T, 2, Ls>,
+    ) -> Result<(), SVDError>;
 }

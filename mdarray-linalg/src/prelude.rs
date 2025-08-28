@@ -2,4 +2,4 @@
 //! namespace.
 
 pub use super::{MatMul as _, MatMulBuilder as _};
-pub use super::{SVD as _, SVDBuilder as _, SVDError, SVDResult};
+pub use super::{SVD as _, SVDError, SVDResult};

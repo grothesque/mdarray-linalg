@@ -1,9 +1,10 @@
 use super::scalar::{LapackScalar, NeedsRwork};
+use crate::svd::SVDConfig;
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use mdarray_linalg::{SVDError, SVDResult};
+
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
-use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 
 fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
@@ -26,7 +27,7 @@ where
     }
 }
 
-pub fn dgesdd<
+pub fn gsvd<
     La: Layout,
     Ls: Layout,
     Lu: Layout,
@@ -37,12 +38,24 @@ pub fn dgesdd<
     s: &mut DSlice<T, 2, Ls>,
     mut u: Option<&mut DSlice<T, 2, Lu>>,
     mut vt: Option<&mut DSlice<T, 2, Lvt>>,
+    config: SVDConfig,
 ) -> Result<(), SVDError>
 where
     T::Real: Into<T>,
 {
     let (m, n) = get_dims!(a);
     let min_mn = m.min(n);
+
+    // Determine which algorithm to use
+    let use_divide_conquer = match config {
+        SVDConfig::Auto => {
+            // Auto: use divide and conquer for larger matrices, Jacobi for smaller ones
+            min_mn > 100
+        }
+        SVDConfig::DivideConquer => true,
+        SVDConfig::Jacobi => false,
+    };
+
     let job = match (&u, &vt) {
         (Some(x), Some(y)) => {
             let ((mu, nu), (ms, ns), (mvt, nvt)) = get_dims!(x, s, y);
@@ -60,7 +73,6 @@ where
             );
             'A'
         }
-
         (None, None) => 'N',
         _ => return Err(SVDError::InconsistentUV),
     };
@@ -68,16 +80,97 @@ where
     let u_ptr: *mut T = u.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
     let vt_ptr: *mut T = vt.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
 
+    // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer
+    // This allows fallback to gesvd with the original matrix if gesdd fails
+    let a_backup = if use_divide_conquer && matches!(config, SVDConfig::Auto) {
+        let mut ab = DTensor::<T, 2>::from_elem([m as usize, n as usize], T::default());
+        for i in 0..(m as usize) {
+            for j in 0..(n as usize) {
+                ab[[i, j]] = a[[i, j]];
+            }
+        }
+        Some(ab)
+    } else {
+        None
+    };
+
+    let info = if use_divide_conquer {
+        call_gesdd(a, m, n, s.as_mut_ptr(), Some(u_ptr), Some(vt_ptr), job)
+    } else {
+        call_gesvd(a, m, n, s.as_mut_ptr(), Some(u_ptr), Some(vt_ptr), job)
+    };
+
+    if info < 0 {
+        panic!(
+            "Invalid argument to SVD: the {}-th parameter had an illegal value.",
+            -info
+        );
+    } else if info > 0 && use_divide_conquer && (config == SVDConfig::Auto) {
+        // If divide-and-conquer failed and the user asked for "Auto", fallback to Jacobi (gesvd).
+        // This provides robustness since gesvd is generally more stable but slower than gesdd.
+        // We restore the original matrix A from our backup since gesdd may have corrupted it.
+        let mut backup = a_backup.unwrap();
+        let info = call_gesvd(
+            &mut backup,
+            m,
+            n,
+            s.as_mut_ptr(),
+            Some(u_ptr),
+            Some(vt_ptr),
+            job,
+        );
+
+        if info < 0 {
+            panic!(
+                "Invalid argument to fallback SVD: the {}-th parameter had an illegal value.",
+                -info
+            );
+        } else if info > 0 {
+            Err(SVDError::BackendDidNotConverge {
+                superdiagonals: (info),
+            })
+        } else {
+            if job == 'A' {
+                math_transpose(u.unwrap());
+                math_transpose(vt.unwrap());
+            }
+            Ok(())
+        }
+    } else if info > 0 {
+        Err(SVDError::BackendDidNotConverge {
+            superdiagonals: (info),
+        })
+    } else {
+        if job == 'A' {
+            math_transpose(u.unwrap());
+            math_transpose(vt.unwrap());
+        }
+        Ok(())
+    }
+}
+
+fn call_gesdd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, La: Layout>(
+    a: &mut DSlice<T, 2, La>,
+    m: i32,
+    n: i32,
+    s_ptr: *mut T,
+    u_ptr: Option<*mut T>,
+    vt_ptr: Option<*mut T>,
+    job: char,
+) -> i32
+where
+    T::Real: Into<T>,
+{
     let mut work = T::allocate(1);
 
     let lwork = -1i32;
-    let mut iwork = vec![0i32; 8 * min_mn as usize];
+    let mut iwork = vec![0i32; 8 * m.min(n) as usize];
     let mut info = 0;
 
     let row_major = a.stride(1) == 1;
     assert!(
         row_major || a.stride(0) == 1,
-        "c must be contiguous in one dimension"
+        "a must be contiguous in one dimension"
     );
 
     if row_major {
@@ -93,10 +186,10 @@ where
             n,
             a.as_mut_ptr() as *mut _,
             m,
-            s.as_mut_ptr() as *mut _,
-            u_ptr as *mut _,
+            s_ptr as *mut _,
+            u_ptr.unwrap() as *mut _,
             m,
-            vt_ptr as *mut _,
+            vt_ptr.unwrap() as *mut _,
             n,
             work.as_mut_ptr() as *mut _,
             lwork,
@@ -118,10 +211,10 @@ where
             n,
             a.as_mut_ptr() as *mut _,
             m,
-            s.as_mut_ptr() as *mut _,
-            u_ptr as *mut _,
+            s_ptr as *mut _,
+            u_ptr.unwrap() as *mut _,
             m,
-            vt_ptr as *mut _,
+            vt_ptr.unwrap() as *mut _,
             n,
             work.as_mut_ptr() as *mut _,
             lwork as i32,
@@ -131,57 +224,29 @@ where
         );
     }
 
-    if job == 'A' {
-        math_transpose(u.unwrap());
-        math_transpose(vt.unwrap());
-    }
-
-    if info < 0 {
-        panic!(
-            "Invalid argument to dgesdd: the {}-th parameter had an illegal value.",
-            -info
-        );
-    } else if info > 0 {
-        Err(SVDError::BackendDidNotConverge {
-            superdiagonals: (info),
-        })
-    } else {
-        Ok(())
-    }
+    info
 }
 
-pub fn dgesdd_uninit<
-    La: Layout,
-    Lu: Layout,
-    Ls: Layout,
-    Lvt: Layout,
-    T: ComplexFloat + Default + LapackScalar + NeedsRwork,
->(
+fn call_gesvd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, La: Layout>(
     a: &mut DSlice<T, 2, La>,
-    mut s: DTensor<MaybeUninit<T>, 2>,
-    mut u: Option<DTensor<MaybeUninit<T>, 2>>,
-    mut vt: Option<DTensor<MaybeUninit<T>, 2>>,
-) -> SVDResult<T>
+    m: i32,
+    n: i32,
+    s_ptr: *mut T,
+    u_ptr: Option<*mut T>,
+    vt_ptr: Option<*mut T>,
+    job: char,
+) -> i32
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
-
-    let job = match (&u, &vt) {
-        (Some(_), Some(_)) => 'A',
-        (None, None) => 'N',
-        _ => return Err(SVDError::InconsistentUV),
-    };
-
     let mut work = T::allocate(1);
     let lwork = -1i32;
-    let mut iwork = vec![0i32; 8 * m.min(n) as usize];
     let mut info = 0;
 
     let row_major = a.stride(1) == 1;
     assert!(
         row_major || a.stride(0) == 1,
-        "c must be contiguous in one dimension"
+        "a must be contiguous in one dimension"
     );
 
     if row_major {
@@ -190,84 +255,52 @@ where
 
     let mut rwork = vec![0.0; T::rwork_len(m, n)];
 
-    let u_ptr: *mut MaybeUninit<T> = u.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
-    let vt_ptr: *mut MaybeUninit<T> = vt.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
-
+    // First call to query optimal workspace size
     unsafe {
-        T::lapack_gesdd(
+        T::lapack_gesvd(
+            job as i8,
             job as i8,
             m,
             n,
             a.as_mut_ptr() as *mut _,
             m,
-            s.as_mut_ptr() as *mut _,
-            u_ptr as *mut _,
+            s_ptr as *mut _,
+            u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
-            vt_ptr as *mut _,
+            vt_ptr.unwrap_or(null_mut()) as *mut _,
             n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
-            iwork.as_mut_ptr() as *mut _,
             &mut info,
         );
     }
 
-    let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
+    let lwork = T::lwork_from_query(&work[0]);
     let mut work = T::allocate(lwork);
 
+    // Second call with optimal workspace
     unsafe {
-        T::lapack_gesdd(
+        T::lapack_gesvd(
+            job as i8,
             job as i8,
             m,
             n,
             a.as_mut_ptr() as *mut _,
             m,
-            s.as_mut_ptr() as *mut _,
-            u_ptr as *mut _,
+            s_ptr as *mut _,
+            u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
-            vt_ptr as *mut _,
+            vt_ptr.unwrap_or(null_mut()) as *mut _,
             n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
-            iwork.as_mut_ptr() as *mut _,
             &mut info,
         );
     }
 
-    if info < 0 {
-        panic!(
-            "Invalid argument to dgesdd: the {}-th parameter had an illegal value.",
-            -info
-        );
-    } else if info > 0 {
-        Err(SVDError::BackendDidNotConverge {
-            superdiagonals: (info),
-        })
-    } else {
-        Ok((
-            unsafe { s.assume_init() },
-            unsafe {
-                if !u_ptr.is_null() {
-                    let mut u = u.unwrap().assume_init();
-                    math_transpose(&mut u);
-                    u
-                } else {
-                    tensor![[T::default();1];1]
-                }
-            },
-            unsafe {
-                if !vt_ptr.is_null() {
-                    let mut vt = vt.unwrap().assume_init();
-                    math_transpose(&mut vt);
-                    vt
-                } else {
-                    tensor![[T::default();1];1]
-                }
-            },
-        ))
-    }
+    info
 }
 
 pub fn math_transpose<T, L>(c: &mut DSlice<T, 2, L>)

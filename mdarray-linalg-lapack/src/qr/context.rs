@@ -11,13 +11,14 @@
 use super::simple::{geqrf, geqrf_uninit};
 use mdarray_linalg::get_dims;
 
+use super::scalar::LapackScalar;
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use mdarray_linalg::into_i32;
 use mdarray_linalg::{QR, QRBuilder};
 use num_complex::ComplexFloat;
 use std::mem::MaybeUninit;
-pub struct Lapack;
-use super::scalar::LapackScalar;
+
+use crate::Lapack;
 
 struct LapackQRBuilder<'a, T, L>
 where

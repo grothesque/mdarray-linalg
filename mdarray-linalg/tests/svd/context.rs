@@ -3,9 +3,10 @@ use num_complex::Complex;
 
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, Dense, tensor};
-use mdarray_linalg::{SVD, SVDBuilder, naive_matmul, pretty_print};
+use mdarray_linalg::{SVD, SVDDecomp, naive_matmul, pretty_print};
 use mdarray_linalg_faer::svd::Faer;
-use mdarray_linalg_lapack::svd::Lapack;
+use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_lapack::svd::SVDConfig;
 
 use num_complex::ComplexFloat;
 use rand::Rng;
@@ -24,9 +25,7 @@ where
     let (m, n) = (a.shape().0, a.shape().1);
     let min_dim = m.min(n);
 
-    let Ok((s, u, vt)) = bd.svd(&mut a.clone()).eval::<Dense, Dense, Dense>() else {
-        panic!("SVD failed");
-    };
+    let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 
     assert_eq!(*s.shape(), (n, n));
     assert_eq!(*u.shape(), (m, m));
@@ -41,7 +40,6 @@ where
     let mut usvt = DTensor::<T, 2>::zeros([m, n]);
 
     if debug_print {
-        bd.print_name();
         println!("=== Σ (Sigma) ===");
         pretty_print(&sigma);
         println!("=== U ===");
@@ -69,7 +67,7 @@ where
 
 #[test]
 fn test_backend_svd_square_matrix() {
-    test_svd_square_matrix(&Lapack);
+    test_svd_square_matrix(&Lapack::default().config_svd(SVDConfig::DivideConquer));
     test_svd_square_matrix(&Faer);
 }
 
@@ -81,7 +79,7 @@ fn test_svd_square_matrix(bd: &impl SVD<f64>) {
 
 #[test]
 fn test_backend_svd_rectangular_m_gt_n() {
-    test_svd_rectangular_m_gt_n(&Lapack);
+    test_svd_rectangular_m_gt_n(&Lapack::default().config_svd(SVDConfig::Auto));
     test_svd_rectangular_m_gt_n(&Faer);
 }
 
@@ -93,7 +91,7 @@ fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64>) {
 
 #[test]
 fn test_backend_big_square_matrix() {
-    test_svd_big_square_matrix(&Lapack);
+    test_svd_big_square_matrix(&Lapack::default().config_svd(SVDConfig::Jacobi));
     test_svd_big_square_matrix(&Faer);
 }
 
@@ -105,7 +103,7 @@ fn test_svd_big_square_matrix(bd: &impl SVD<f64>) {
 
 #[test]
 fn test_backend_svd_random_matrix() {
-    test_svd_random_matrix(&Lapack);
+    test_svd_random_matrix(&Lapack::default());
     test_svd_random_matrix(&Faer);
 }
 
@@ -118,7 +116,7 @@ fn test_svd_random_matrix(bd: &impl SVD<f64>) {
 
 #[test]
 fn test_backend_svd_cplx_square_matrix() {
-    test_svd_cplx_square_matrix(&Lapack);
+    test_svd_cplx_square_matrix(&Lapack::default());
 }
 
 fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>>) {
@@ -127,9 +125,7 @@ fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>>) {
         Complex::new((i[0] * i[1]) as f64, i[1] as f64)
     });
 
-    let Ok((s, u, vt)) = bd.svd(&mut a.clone()).eval::<Dense, Dense, Dense>() else {
-        panic!("SVD failed");
-    };
+    let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 
     assert_eq!(*s.shape(), (n, n));
     assert_eq!(*u.shape(), (n, n));

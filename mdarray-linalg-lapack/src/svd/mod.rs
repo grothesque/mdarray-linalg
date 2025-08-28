@@ -2,5 +2,15 @@ mod context;
 mod scalar;
 mod simple;
 
-pub use context::Lapack;
-pub use simple::{dgesdd, dgesdd_uninit};
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SVDConfig {
+    Auto,
+    DivideConquer,
+    Jacobi,
+}
+
+impl Default for SVDConfig {
+    fn default() -> Self {
+        SVDConfig::Auto
+    }
+}
