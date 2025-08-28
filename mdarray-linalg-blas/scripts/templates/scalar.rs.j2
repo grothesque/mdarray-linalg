@@ -1,0 +1,30 @@
+// This file is auto-generated. Do not edit manually.
+//! Abstracting the BLAS scalar types
+{% for import in imports %}use {{ import }};
+{% endfor %}
+
+#[allow(clippy::too_many_arguments, unused_variables)]
+pub trait BlasScalar {
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    {% for func in functions_generic %}
+    unsafe fn {{ func.name }}(
+        {% for arg in func.args %} {{ arg.name }}: {{ arg.type }}{% if not loop.last %},{% endif %}
+        {% endfor %} ){% if func.return_type %} -> {{ func.return_type }}{% endif %} where Self: Sized {unimplemented!("")}{% endfor %}
+}
+
+{% for rtype in functions.keys() %}
+impl BlasScalar for {{ rtype }} {
+    {% for func in functions[rtype] %}
+    unsafe fn {{ func.generic_name }}(
+        {% for arg in func.args %}{{ arg.name }}: {{ arg.type }}{% if not loop.last %},{% endif %}
+        {% endfor %}){% if func.return_type %} -> {{ func.return_type }}{% endif %} {
+        unsafe {
+            cblas_sys::cblas_{{ functions_call[rtype][loop.index0].name }}(
+                {% for arg in functions_call[rtype][loop.index0].args %}{{ arg.type }}{% if not loop.last %},{% endif %}
+                {% endfor %})
+        }
+    }
+    {% endfor %}
+}
+{% endfor %}
