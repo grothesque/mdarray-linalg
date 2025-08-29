@@ -1,12 +1,15 @@
 use std::mem::MaybeUninit;
 
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
+use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatMul, MatMulBuilder};
+use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
+
+use crate::matmul::simple::trmm_uninit;
 
 use super::scalar::BlasScalar;
-use super::simple::{gemm, gemm_uninit};
+use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};
 
 #[derive(Default)]
 pub struct Blas;
@@ -42,7 +45,7 @@ where
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
         let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
-        gemm_uninit(self.alpha, self.a, self.b, c)
+        gemm_uninit::<T, La, Lb, Dense>(self.alpha, self.a, self.b, 0.into().into(), c)
     }
 
     fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
@@ -55,6 +58,46 @@ where
 
     fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
         gemm(self.alpha, self.a, self.b, beta, c);
+    }
+
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2> {
+        let (m, _) = *self.a.shape();
+        let (_, n) = *self.b.shape();
+        let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
+        let cblas_side = match lr {
+            Side::Left => CBLAS_SIDE::CblasLeft,
+            Side::Right => CBLAS_SIDE::CblasRight,
+        };
+        let cblas_triangle = match tr {
+            Triangle::Lower => CBLAS_UPLO::CblasLower,
+            Triangle::Upper => CBLAS_UPLO::CblasUpper,
+        };
+        match type_of_matrix {
+            Type::Her => hemm_uninit::<T, La, Lb, Dense>(
+                self.alpha,
+                self.a,
+                self.b,
+                0.into().into(),
+                c,
+                cblas_side,
+                cblas_triangle,
+            ),
+            Type::Sym => symm_uninit::<T, La, Lb, Dense>(
+                self.alpha,
+                self.a,
+                self.b,
+                0.into().into(),
+                c,
+                cblas_side,
+                cblas_triangle,
+            ),
+            Type::Tri => {
+                let mut b_copy = DTensor::<T, 2>::from_elem(*self.b.shape(), 0.into().into());
+                b_copy.assign(self.b);
+                trmm(self.alpha, self.a, &mut b_copy, cblas_side, cblas_triangle);
+                b_copy
+            }
+        }
     }
 }
 

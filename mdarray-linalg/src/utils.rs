@@ -47,3 +47,50 @@ macro_rules! get_dims {
         )
     };
 }
+
+// Make sure that matrix shapes are compatible with C = A * B, and return the dimensions (m, n, k)
+// where C is (m x n), and k is the common dimension of A and B.
+pub fn dims3(
+    a_shape: &(usize, usize),
+    b_shape: &(usize, usize),
+    c_shape: &(usize, usize),
+) -> (i32, i32, i32) {
+    let (m, k) = *a_shape;
+    let (k2, n) = *b_shape;
+    let (m2, n2) = *c_shape;
+
+    assert!(m == m2, "a and c must agree in number of rows");
+    assert!(n == n2, "b and c must agree in number of columns");
+    assert!(
+        k == k2,
+        "a's number of columns must be equal to b's number of rows"
+    );
+
+    (into_i32(m), into_i32(n), into_i32(k))
+}
+
+pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
+    let (m, k) = *a_shape;
+    let (k2, n) = *b_shape;
+    println!("{},{},{},{}", m, k, k2, n);
+    assert!(
+        k == k2,
+        "a's number of columns must be equal to b's number of rows"
+    );
+
+    (into_i32(m), into_i32(n))
+}
+
+#[macro_export]
+macro_rules! trans_stride {
+    ($x:expr, $same_order:expr, $other_order:expr) => {{
+        if $x.stride(1) == 1 {
+            ($same_order, into_i32($x.stride(0)))
+        } else {
+            {
+                assert!($x.stride(0) == 1, stringify!($x must be contiguous in one dimension));
+                ($other_order, into_i32($x.stride(1)))
+            }
+        }
+    }};
+}

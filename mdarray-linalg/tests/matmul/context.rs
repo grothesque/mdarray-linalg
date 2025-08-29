@@ -1,9 +1,9 @@
-use mdarray::{Tensor, expr, expr::Expression as _, tensor};
+use mdarray::{DTensor, Tensor, expr, expr::Expression as _, tensor};
 use num_complex::Complex64;
 use openblas_src as _;
 
 use mdarray_linalg::naive_matmul;
-use mdarray_linalg::{MatMul, prelude::*};
+use mdarray_linalg::{MatMul, Side, Triangle, Type, prelude::*};
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_faer::matmul::Faer;
 
@@ -319,4 +319,262 @@ fn test_chained_operations() {
 fn test_backend_defaults() {
     let _blas = Blas::default();
     let _faer = Faer::default();
+}
+
+// Tests pour la fonction special - à ajouter dans votre fichier de test
+
+// Helper functions pour créer des matrices spéciales
+
+fn create_symmetric_matrix_f64(size: usize) -> DTensor<f64, 2> {
+    let mut matrix = Tensor::from_elem([size, size], 0.0);
+    for i in 0..size {
+        for j in 0..size {
+            let value = ((i + 1) * (j + 1)) as f64;
+            matrix[[i, j]] = value;
+            matrix[[j, i]] = value; // Assurer la symétrie
+        }
+    }
+    matrix
+}
+
+fn create_upper_triangular_f64(size: usize) -> DTensor<f64, 2> {
+    let mut matrix = Tensor::from_elem([size, size], 0.0);
+    for i in 0..size {
+        for j in i..size {
+            matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
+        }
+    }
+    matrix
+}
+
+fn create_lower_triangular_f64(size: usize) -> DTensor<f64, 2> {
+    let mut matrix = Tensor::from_elem([size, size], 0.0);
+    for i in 0..size {
+        for j in 0..=i {
+            matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
+        }
+    }
+    matrix
+}
+
+fn create_hermitian_matrix_complex(size: usize) -> DTensor<Complex64, 2> {
+    let mut matrix = Tensor::from_elem([size, size], Complex64::new(0.0, 0.0));
+    for i in 0..size {
+        for j in 0..size {
+            if i == j {
+                matrix[[i, j]] = Complex64::new((i + 1) as f64, 0.0);
+            } else if i < j {
+                let real = ((i + 1) * (j + 1)) as f64;
+                let imag = (i + j + 1) as f64;
+                matrix[[i, j]] = Complex64::new(real, imag);
+                matrix[[j, i]] = Complex64::new(real, -imag);
+            }
+        }
+    }
+    matrix
+}
+
+#[test]
+fn test_special_symmetric_left_upper() {
+    let a_sym = create_symmetric_matrix_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_sym, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (3, 4));
+
+    // Vérifier que le résultat est différent de zéro
+    assert!(result.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_special_symmetric_left_lower() {
+    let a_sym = create_symmetric_matrix_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_sym, &b)
+        .special(Side::Left, Type::Sym, Triangle::Lower);
+
+    assert_eq!(*result.shape(), (3, 4));
+
+    // Pour une matrice symétrique, le résultat devrait être le même
+    // peu importe si on utilise la partie supérieure ou inférieure
+    let result_upper = Blas
+        .matmul(&a_sym, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    assert_eq!(result, result_upper);
+}
+
+#[test]
+fn test_special_symmetric_right_upper() {
+    let a = create_test_matrix_f64([4, 3]).eval();
+    let b_sym = create_symmetric_matrix_f64(3);
+
+    let result = Blas
+        .matmul(&a, &b_sym)
+        .special(Side::Right, Type::Sym, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (4, 3));
+    assert!(result.iter().any(|&x| x != 0.0));
+}
+
+// Tests pour matrices triangulaires
+
+#[test]
+fn test_special_triangular_upper_left() {
+    let a_tri = create_upper_triangular_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_tri, &b)
+        .special(Side::Left, Type::Tri, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (3, 4));
+    assert!(result.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_special_triangular_lower_left() {
+    let a_tri = create_lower_triangular_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_tri, &b)
+        .special(Side::Left, Type::Tri, Triangle::Lower);
+
+    assert_eq!(*result.shape(), (3, 4));
+    assert!(result.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_special_triangular_upper_right() {
+    let a = create_test_matrix_f64([4, 3]).eval();
+    let b_tri = create_upper_triangular_f64(3);
+
+    println!("{:?}", *a.shape());
+    println!("{:?}", *b_tri.shape());
+
+    let result = Blas
+        .matmul(&a, &b_tri)
+        .special(Side::Right, Type::Tri, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (3, 3));
+    assert!(result.iter().any(|&x| x != 0.0));
+}
+
+// Tests pour matrices hermitiennes (nombres complexes)
+
+#[test]
+fn test_special_hermitian_left_upper() {
+    let a_her = create_hermitian_matrix_complex(3);
+    let b = create_test_matrix_complex([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_her, &b)
+        .special(Side::Left, Type::Her, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (3, 4));
+    assert!(result.iter().any(|x| x.norm() != 0.0));
+}
+
+#[test]
+fn test_special_hermitian_left_lower() {
+    let a_her = create_hermitian_matrix_complex(3);
+    let b = create_test_matrix_complex([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&a_her, &b)
+        .special(Side::Left, Type::Her, Triangle::Lower);
+
+    assert_eq!(*result.shape(), (3, 4));
+
+    // Pour une matrice hermitienne, le résultat devrait être le même
+    // peu importe si on utilise la partie supérieure ou inférieure
+    let result_upper = Blas
+        .matmul(&a_her, &b)
+        .special(Side::Left, Type::Her, Triangle::Upper);
+
+    // Comparaison approximative pour les nombres complexes
+    for (a, b) in result.iter().zip(result_upper.iter()) {
+        assert!((a - b).norm() < 1e-10);
+    }
+}
+
+// Tests avec scaling
+
+#[test]
+fn test_special_with_scaling() {
+    let a_sym = create_symmetric_matrix_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+    let scale_factor = 2.5;
+
+    let result =
+        Blas.matmul(&a_sym, &b)
+            .scale(scale_factor)
+            .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    let result_no_scale = Blas
+        .matmul(&a_sym, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    // Vérifier que le scaling a été appliqué
+    for (scaled, unscaled) in result.iter().zip(result_no_scale.iter()) {
+        assert!((scaled - unscaled * scale_factor).abs() < 1e-10);
+    }
+}
+
+// Tests de cas limites
+
+#[test]
+fn test_special_single_element() {
+    let a = tensor![[5.0]];
+    let b = tensor![[2.0]];
+
+    let result = Blas
+        .matmul(&a, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    assert_eq!(*result.shape(), (1, 1));
+    assert_eq!(result[[0, 0]], 10.0);
+}
+
+#[test]
+fn test_special_identity_matrix() {
+    let mut identity = Tensor::from_elem([3, 3], 0.0);
+    for i in 0..3 {
+        identity[[i, i]] = 1.0;
+    }
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let result = Blas
+        .matmul(&identity, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    // Le résultat devrait être égal à b (multiplication par l'identité)
+    assert_eq!(result, b);
+}
+
+// Test de cohérence avec la multiplication matricielle standard
+
+#[test]
+fn test_special_consistency_with_standard_matmul() {
+    // Pour une matrice symétrique complètement remplie,
+    // le résultat devrait être le même qu'une multiplication standard
+    let a_sym = create_symmetric_matrix_f64(3);
+    let b = create_test_matrix_f64([3, 4]).eval();
+
+    let special_result = Blas
+        .matmul(&a_sym, &b)
+        .special(Side::Left, Type::Sym, Triangle::Upper);
+
+    let standard_result = Blas.matmul(&a_sym, &b).eval();
+
+    // Les résultats devraient être identiques (ou très proches)
+    for (special, standard) in special_result.iter().zip(standard_result.iter()) {
+        assert!((special - standard).abs() < 1e-10);
+    }
 }
