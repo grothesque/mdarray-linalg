@@ -2,15 +2,10 @@ mod context;
 mod scalar;
 mod simple;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum SVDConfig {
+    #[default]
     Auto,
     DivideConquer,
     Jacobi,
-}
-
-impl Default for SVDConfig {
-    fn default() -> Self {
-        SVDConfig::Auto
-    }
 }

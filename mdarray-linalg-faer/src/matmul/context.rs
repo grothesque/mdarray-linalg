@@ -13,7 +13,7 @@ use num_complex::ComplexFloat;
 
 use num_traits::One;
 
-use mdarray_linalg::{MatMul, MatMulBuilder};
+use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
 use num_cpus;
 
 #[derive(Default)]
@@ -174,6 +174,10 @@ where
             self.par,
         );
         todo!(); // multiplication by beta not implemented in faer ?
+    }
+
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> DTensor<T, 2> {
+        self.eval()
     }
 }
 

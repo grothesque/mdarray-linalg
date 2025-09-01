@@ -1,7 +1,7 @@
 use super::scalar::{LapackScalar, NeedsRwork};
 use crate::svd::SVDConfig;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::{SVDError, SVDResult};
+use mdarray_linalg::SVDError;
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;

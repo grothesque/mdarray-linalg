@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use num_complex::Complex;
 
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use mdarray::{DTensor, Dense, tensor};
+use mdarray::{DTensor, tensor};
 use mdarray_linalg::{SVD, SVDDecomp, naive_matmul, pretty_print};
 use mdarray_linalg_faer::svd::Faer;
 use mdarray_linalg_lapack::Lapack;
