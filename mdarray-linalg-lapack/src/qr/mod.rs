@@ -2,15 +2,10 @@ mod context;
 mod scalar;
 mod simple;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub enum LapackQRConfig {
+    #[default]
     Full,
     Pivoting,
     TallSkinny,
-}
-
-impl Default for LapackQRConfig {
-    fn default() -> Self {
-        LapackQRConfig::Full
-    }
 }

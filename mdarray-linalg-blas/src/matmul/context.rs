@@ -6,8 +6,6 @@ use num_complex::ComplexFloat;
 
 use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
 
-use crate::matmul::simple::trmm_uninit;
-
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};
 

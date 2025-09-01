@@ -190,7 +190,8 @@ if __name__ == "__main__":
     ) as f:
         f.write(output_scalar)
 
-    with open(
-        os.path.join(script_dir, "../src/matmul", "simple.rs"), "w", encoding="utf-8"
-    ) as f:
-        f.write(output_simple)
+    # with open(
+    #     os.path.join(script_dir, "../src/matmul", "simple.rs"), "w", encoding="utf-8"
+    # ) as f:
+    #     f.write(output_simple)
+    # Deprecated requires to much handling of specific cases

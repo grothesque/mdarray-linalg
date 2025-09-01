@@ -289,13 +289,13 @@ def convert_c_type_for_call(arg_name, arg_type, routine_name):
                     cast_call = f"&{arg_name} as *const _ as *const _"
             else:
                 rust_ty = convert_c_type_to_rust(arg_type, arg_name, routine_name)
-                cast_call = f"{arg_name} as {rust_ty}"
+                cast_call = f"{arg_name}" 
 
         case "real_scalar":
             if "float" in arg_type:
-                cast_call = f"{arg_name} as f32"
+                cast_call = f"{arg_name}"
             elif "double" in arg_type:
-                cast_call = f"{arg_name} as f64"
+                cast_call = f"{arg_name}"
             else:
                 cast_call = f"{arg_name}"
 

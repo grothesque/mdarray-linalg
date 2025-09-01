@@ -54,29 +54,23 @@ where
     /// (i.e. C := beta * C + result).
     fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T);
 
-    /// Computes matrix products where one operand is a special matrix (symmetric,
-    /// Hermitian, or triangular) and the other is a general matrix. The special matrix can be
-    /// positioned on either the left or right side of the operation.
+    /// Computes a matrix product where the first operand is a special
+    /// matrix (symmetric, Hermitian, or triangular) and the other is
+    /// general.
+    ///
+    /// The special matrix is always treated as `A`. `lr` determines the multiplication order:
+    /// - `Side::Left`  : C := alpha * A * B
+    /// - `Side::Right` : C := alpha * B * A
     ///
     /// # Parameters
+    /// * `lr` - side of multiplication (left or right)
+    /// * `type_of_matrix` - special matrix type: `Sym`, `Her`, or `Tri`
+    /// * `tr` - triangle containing stored data: `Upper` or `Lower`
     ///
-    /// * `lr` - Specifies which operand is the special matrix:
-    ///   - `Side::Left`: Special matrix × General matrix
-    ///   - `Side::Right`: General matrix × Special matrix
-    /// * `type_of_matrix` - Type of the special matrix:
-    ///   - `Type::Sym`: Symmetric matrix
-    ///   - `Type::Her`: Hermitian matrix  
-    ///   - `Type::Tri`: Triangular matrix
-    /// * `tr` - Which triangle of the special matrix contains the stored data:
-    ///   - `Triangle::Upper`: Data is stored in the upper triangle
-    ///   - `Triangle::Lower`: Data is stored in the lower triangle
-    ///
-    /// For symmetric and Hermitian matrices, only one triangle needs to be stored since
-    /// the other can be derived. For triangular matrices, this specifies whether it's
-    /// upper or lower triangular.
+    /// Only the specified triangle needs to be stored for symmetric/Hermitian matrices;
+    /// for triangular matrices it specifies which half is used.
     ///
     /// # Returns
-    ///
-    /// A new tensor containing the result of the specialized matrix multiplication.
+    /// A new tensor with the result.
     fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2>;
 }

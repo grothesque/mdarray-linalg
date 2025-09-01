@@ -72,7 +72,7 @@ pub fn dims3(
 pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
     let (m, k) = *a_shape;
     let (k2, n) = *b_shape;
-    println!("{},{},{},{}", m, k, k2, n);
+
     assert!(
         k == k2,
         "a's number of columns must be equal to b's number of rows"
