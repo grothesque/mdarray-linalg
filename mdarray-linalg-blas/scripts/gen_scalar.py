@@ -29,7 +29,7 @@ def gen_raw_data():
     data_raw = {
         "imports": [
             "cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_SIDE, CBLAS_UPLO, CBLAS_DIAG}",
-            "num_complex::Complex",
+            "num_complex::{Complex, ComplexFloat}",
         ],
         "functions_generic": [],
         "functions": {"f32": [], "f64": [], "Complex<f32>": [], "Complex<f64>": []},
@@ -56,14 +56,16 @@ def add_function_to_data_scalar(data, func):
     generic_args = build_args(
         func.arg_names, func.arg_types, pbf.convert_c_type_to_generic
     )
+
     generic_return = None if func.return_type in ("()", None) else func.return_type
 
     generic_function = {
         "name": func.generic_name,
         "args": generic_args,
-        "return_type": generic_return,
+        "return_type": pbf.convert_c_type_to_generic(func.return_type, "return", func.name),
     }
 
+    # if all(f["name"] != generic_function["name"] for f in data["functions_generic"]):
     if generic_function not in data["functions_generic"]:
         data["functions_generic"].append(generic_function)
 
@@ -72,7 +74,7 @@ def add_function_to_data_scalar(data, func):
         "name": func.name,
         "generic_name": func.generic_name,
         "args": rust_args,
-        "return_type": func.return_type,
+        "return_type": pbf.convert_c_type_to_rust(func.return_type, "", ""),
     }
     data["functions"][func.get_rust_type()].append(rust_function)
 
@@ -84,8 +86,9 @@ def add_function_to_data_scalar(data, func):
     call_function = {
         "name": func.name,
         "args": call_args,
-        "return_type": func.return_type,
+        "return_type": pbf.convert_c_type_to_rust(func.return_type, "", ""),
     }
+
     data["functions_call"][func.get_rust_type()].append(call_function)
 
     return data
@@ -112,9 +115,7 @@ if __name__ == "__main__":
 
     scalar_matvec = gen_raw_data()
 
-    functions_for_matvec = ['axpy', 'dot', 'nrm2', 'asum', 'amax', 'copy', 'scal', 'swap', 'rot', 'gemv', 'symv', 'trmv', 'ger', 'syr', 'syr2']
-    functions_for_matvec = ['axpy', 'gemv', 'ger', 'amax', 'dotu', 'dotc']
-    functions_for_matvec = ['dotu']
+    functions_for_matvec = ['axpy', 'gemv', 'ger', 'amax', 'dotu', 'dotc', 'nrm2', 'asum', 'copy', 'scal', 'swap', 'symv', 'trmv', 'syr', 'syr2'] #, 'ddot', 'sdot'] # givens rot are missing
 
     for bf in blas_functions:
         if any(x in bf.name for x in functions_for_matvec):

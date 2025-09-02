@@ -1,12 +1,6 @@
 use mdarray::{DSlice, DTensor, Layout};
 
-use crate::matmul::Triangle;
-
-pub enum Trans {
-    NoTrans,
-    Trans,
-    ConjTrans,
-}
+use crate::matmul::{Triangle, Type};
 
 /// Matrix-vector operations (GEMV, SYMV, TRMV, etc.)
 pub trait MatVec<T> {
@@ -32,7 +26,6 @@ where
 {
     fn parallelize(self) -> Self;
     fn scale(self, alpha: T) -> Self;
-    fn transpose(self, trans: Trans) -> Self;
     fn eval(self) -> DTensor<T, 1>;
     fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
     fn add_to<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
@@ -44,9 +37,15 @@ where
     fn hermitian(self, tr: Triangle) -> Self;
     fn triangular(self, tr: Triangle) -> Self;
 
-    /// Rank-1 update: A := alpha * x * y^T + A
-    /// BLAS: SGER, DGER, CGERU, ZGERU, CGERC, ZGERC
-    fn ger<Ly: Layout>(self, y: &DSlice<T, 1, Ly>);
+    /// Rank-1 update: beta * x * y^T + alpha*A
+    fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2>;
+
+    fn add_outer_special<Ly: Layout>(
+        self,
+        y: &DSlice<T, 1, Ly>,
+        beta: T,
+        ty: Type,
+    ) -> DTensor<T, 2>;
 
     /// Symmetric rank-1 update: A := alpha * x * x^T + A
     /// BLAS: SSYR, DSYR, CHER, ZHER

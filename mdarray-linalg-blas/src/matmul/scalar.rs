@@ -1,10 +1,10 @@
 // This file is auto-generated. Do not edit manually.
 //! Abstracting the BLAS scalar types
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_SIDE, CBLAS_UPLO, CBLAS_DIAG};
-use num_complex::Complex;
+use num_complex::{Complex, ComplexFloat};
 
 #[allow(clippy::too_many_arguments, unused_variables)]
-pub trait BlasScalar {
+pub trait BlasScalar: Sized + ComplexFloat {
     
     /// # Safety
     /// Calls must respect BLAS conventions.

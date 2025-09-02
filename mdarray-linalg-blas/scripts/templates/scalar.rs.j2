@@ -3,7 +3,7 @@
 {% for import in imports %}use {{ import }};
 {% endfor %}
 #[allow(clippy::too_many_arguments, unused_variables)]
-pub trait BlasScalar {
+pub trait BlasScalar: Sized + ComplexFloat {
     {% for func in functions_generic %}
     /// # Safety
     /// Calls must respect BLAS conventions.

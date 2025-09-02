@@ -8,9 +8,7 @@ use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
 
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};
-
-#[derive(Default)]
-pub struct Blas;
+use crate::Blas;
 
 struct BlasMatMulBuilder<'a, T, La, Lb>
 where

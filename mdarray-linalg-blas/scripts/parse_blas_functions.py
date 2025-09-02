@@ -38,8 +38,8 @@ def guess_blas_arg_type(arg_name, routine_name=None):
         # Real dot products
         (("sdsdot", "dsdot"), {"sb": "scalar_of_data_type"}),
         # Real scale of a complex vector
+        (("zdscal", "csscal"), {"alpha": "real_scalar"}),
         (("sscal", "dscal", "cscal", "zscal"), {"alpha": "scalar_of_data_type"}),
-        (("blas_scal_real", "blas_scal_real"), {"alpha": "real_scalar"}),
     ]
 
     for keys, mapping in special_cases:
@@ -58,7 +58,7 @@ def guess_blas_arg_type(arg_name, routine_name=None):
             return "real_scalar"
         if arg in {"param", "p"}:
             return "array"
-
+        
     # --- Standard cases ---
     if arg in cblas:
         return "cblas_option"
@@ -91,9 +91,40 @@ class BlasFunction:
 
         m = re.match(r'^cblas_([sdcz])([a-zA-Z0-9]+)$', name)
 
-        if m:
+        if "scal" in self.name:
+            if len(self.name) == 6:
+                self.generic_name = "cblas_" + "r" + self.name[2:]
+            self.prefix = self.name[0]
+
+        elif any(op in self.name for op in ("nrm2", "asum")):
+            mapping = {
+                "sn": ("s", "s"),
+                "sa": ("s", "s"),
+                "dn": ("d", "d"),
+                "da": ("d", "d"),
+                "sc": ("c", "s"),
+                "dz": ("z", "d"),
+            }
+
+            key = self.name[:2]
+            if key not in mapping:
+                raise ValueError(f"Unsupported prefix for {self.name}")
+
+            self.prefix, generic_prefix = mapping[key]
+            
+            if len(self.name) == 5:
+                self.generic_name = "cblas_" + self.name[1:]
+            else:
+                self.generic_name = "cblas_" + self.name[2:]
+                
+            self.operation = name.rstrip('_')
+        elif m:
             self.prefix = m.group(1)
             self.operation = m.group(2)
+        elif "dot" in self.name:
+            self.prefix = self.name[0]
+            self.operation = name.rstrip('_')
+        
         else:
             self.prefix = None
             self.operation = name.rstrip('_')
@@ -253,7 +284,10 @@ def convert_c_type_to_generic(c_type, param_name, routine_name):
 
     generic_type = ''
 
-    if bat_guessed == "array":
+    if ("nrm2" in routine_name or "asum" in routine_name) and param_name == "return": # should be handled elsewhere
+        generic_type = "Self::Real"
+
+    elif bat_guessed == "array":
         ptr_kind = "mut" if "mut" in c_type else "const"
         generic_type = f"*{ptr_kind} Self"
 
