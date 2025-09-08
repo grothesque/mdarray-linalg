@@ -4,12 +4,12 @@ use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatVec, MatVecBuilder, Side, Triangle, Type};
+use mdarray_linalg::{MatVec, MatVecBuilder, Side, Triangle, Type, VecOps};
 
 use crate::Blas;
 
 use super::scalar::BlasScalar;
-use super::simple::{gemv, ger, scal};
+use super::simple::{asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr};
 
 struct BlasMatVecBuilder<'a, T, La, Lx>
 where
@@ -56,53 +56,45 @@ where
         gemv(self.alpha, self.a, self.x, beta, y);
     }
 
-    /// For symmetric, Hermitian, or triangular matrices
-    /// BLAS: SSYMV, DSYMV, CHEMV, ZHEMV, STRMV, DTRMV, CTRMV, ZTRMV
-    fn symmetric(self, tr: Triangle) -> Self {
-        unimplemented!()
-    }
-    fn hermitian(self, tr: Triangle) -> Self {
-        unimplemented!()
-    }
-    fn triangular(self, tr: Triangle) -> Self {
-        unimplemented!()
-    }
-
     fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2> {
-        // if self.alpha != 1.into().into() {
-        //     let mut x_copy = DTensor::<T, 1>::from_elem(*self.x.shape(), 0.into().into());
-        //     x_copy.assign(self.x);
-        //     scal(self.alpha, &mut x_copy);
-        //     self.x.assign(x_copy);
-        // }
         let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
         a_copy.assign(self.a);
+
+        // Apply scale factor to preserve builder pattern logic: the alpha parameter
+        // may have been modified before this call, so we must scale the matrix
+        // before applying the rank-1 update. Unlike gemm operations, this requires
+        // a separate pass since BLAS lacks a direct matrix-scalar multiplication.
+
+        if self.alpha != 1.into().into() {
+            a_copy = a_copy.map(|x| x * self.alpha);
+        }
+
         ger(beta, self.x, y, &mut a_copy);
         a_copy
     }
 
-    fn add_outer_special<Ly: Layout>(
-        self,
-        y: &DSlice<T, 1, Ly>,
-        beta: T,
-        ty: Type,
-    ) -> DTensor<T, 2> {
-        // if self.alpha != 1.into().into() {
-        //     scal(self.alpha, &mut self.x);
-        // }
+    fn add_outer_special(self, beta: T, ty: Type, tr: Triangle) -> DTensor<T, 2> {
         let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
         a_copy.assign(self.a);
-        ger(beta, self.x, y, &mut a_copy);
-        a_copy
-    }
 
-    /// Symmetric rank-1 update: A := alpha * x * x^T + A
-    /// BLAS: SSYR, DSYR, CHER, ZHER
-    fn syr(self, tr: Triangle) {
-        unimplemented!()
-    }
-    fn her(self, tr: Triangle) {
-        unimplemented!()
+        if self.alpha != 1.into().into() {
+            a_copy = a_copy.map(|x| x * self.alpha);
+        }
+
+        let cblas_uplo = match tr {
+            Triangle::Lower => CBLAS_UPLO::CblasLower,
+            Triangle::Upper => CBLAS_UPLO::CblasUpper,
+        };
+
+        match ty {
+            Type::Her => her(cblas_uplo, beta.re(), self.x, &mut a_copy),
+            Type::Sym => syr(cblas_uplo, beta, self.x, &mut a_copy),
+            Type::Tri => {
+                ger(beta, self.x, self.x, &mut a_copy);
+            }
+        }
+
+        a_copy
     }
 }
 
@@ -126,5 +118,59 @@ where
             a,
             x,
         }
+    }
+}
+
+impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
+    fn add_to_scaled<Lx: Layout, Ly: Layout>(
+        &self,
+        alpha: T,
+        x: &DSlice<T, 1, Lx>,
+        y: &mut DSlice<T, 1, Ly>,
+    ) {
+        axpy(alpha, x, y);
+    }
+
+    fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+        dotu(x, y)
+    }
+
+    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+        dotc(x, y)
+    }
+
+    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real {
+        nrm2(x)
+    }
+
+    fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
+    where
+        T: ComplexFloat,
+    {
+        asum(x)
+    }
+
+    fn argmax<Lx: Layout>(&self, x: &DSlice<T, 2, Lx>) -> Vec<usize> {
+        todo!()
+    }
+    fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+        todo!()
+    }
+    fn scal<Lx: Layout>(&self, alpha: T, x: &mut DSlice<T, 1, Lx>) {
+        todo!()
+    }
+    fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+        todo!()
+    }
+    fn rot<Lx: Layout, Ly: Layout>(
+        &self,
+        x: &mut DSlice<T, 1, Lx>,
+        y: &mut DSlice<T, 1, Ly>,
+        c: T::Real,
+        s: T,
+    ) where
+        T: ComplexFloat,
+    {
+        todo!()
     }
 }

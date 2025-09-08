@@ -1,6 +1,8 @@
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{DSlice, DTensor, DynRank, Layout, Shape};
 
 use crate::matmul::{Triangle, Type};
+
+use num_complex::ComplexFloat;
 
 /// Matrix-vector operations (GEMV, SYMV, TRMV, etc.)
 pub trait MatVec<T> {
@@ -15,7 +17,6 @@ pub trait MatVec<T> {
 }
 
 /// Builder for matrix-vector operations
-/// BLAS: SGEMV, DGEMV, CGEMV, ZGEMV, SSYMV, DSYMV, CHEMV, ZHEMV, STRMV, DTRMV, CTRMV, ZTRMV
 pub trait MatVecBuilder<'a, T, La, Lx>
 where
     La: Layout,
@@ -31,33 +32,22 @@ where
     fn add_to<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
     fn add_to_scaled<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T);
 
-    /// For symmetric, Hermitian, or triangular matrices
-    /// BLAS: SSYMV, DSYMV, CHEMV, ZHEMV, STRMV, DTRMV, CTRMV, ZTRMV
-    fn symmetric(self, tr: Triangle) -> Self;
-    fn hermitian(self, tr: Triangle) -> Self;
-    fn triangular(self, tr: Triangle) -> Self;
-
-    /// Rank-1 update: beta * x * y^T + alpha*A
+    /// Rank-1 update: beta * x * y^T + alpha * A
     fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2>;
+    fn add_outer_special(self, beta: T, ty: Type, tr: Triangle) -> DTensor<T, 2>;
 
-    fn add_outer_special<Ly: Layout>(
-        self,
-        y: &DSlice<T, 1, Ly>,
-        beta: T,
-        ty: Type,
-    ) -> DTensor<T, 2>;
+    // Special rank-2 update: beta * (x * y^T + y * x^T) + alpha * A
+    // syr2 her2
 
-    /// Symmetric rank-1 update: A := alpha * x * x^T + A
-    /// BLAS: SSYR, DSYR, CHER, ZHER
-    fn syr(self, tr: Triangle);
-    fn her(self, tr: Triangle);
+    // Special rank-k update: beta * AA^T + alpha * C
+    // syrk herk
 }
 
 /// Vector operations and utilities
-pub trait VecOps<T> {
+pub trait VecOps<T: ComplexFloat> {
     /// AXPY: y := alpha * x + y
     /// BLAS: SAXPY, DAXPY, CAXPY, ZAXPY
-    fn axpy<Lx: Layout, Ly: Layout>(
+    fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
         x: &DSlice<T, 1, Lx>,
@@ -74,19 +64,17 @@ pub trait VecOps<T> {
 
     /// Euclidean norm
     /// BLAS: SNRM2, DNRM2, SCNRM2, DZNRM2
-    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
-    where
-        T: ComplexFloat;
+    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real;
 
     /// Sum of absolute values
     /// BLAS: SASUM, DASUM, SCASUM, DZASUM
-    fn asum<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
+    fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
     where
         T: ComplexFloat;
 
     /// Index of maximum absolute value
     /// BLAS: ISAMAX, IDAMAX, ICAMAX, IZAMAX
-    fn iamax<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> usize;
+    fn argmax<Lx: Layout>(&self, x: &DSlice<T, 2, Lx>) -> Vec<usize>;
 
     /// Copy vector: y := x
     /// BLAS: SCOPY, DCOPY, CCOPY, ZCOPY
@@ -101,7 +89,6 @@ pub trait VecOps<T> {
     fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>);
 
     /// Givens rotation
-    /// BLAS: SROT, DROT, CSROT, ZDROT
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
         x: &mut DSlice<T, 1, Lx>,
@@ -143,53 +130,4 @@ where
     /// Hermitian rank-2 update: A := alpha * x * y^H + conj(alpha) * y * x^H + A
     /// BLAS: CHER2, ZHER2
     fn her2<La: Layout>(self, tr: Triangle, a: &mut DSlice<T, 2, La>);
-}
-
-pub trait Float: Copy {
-    fn abs(self) -> Self;
-    fn sqrt(self) -> Self;
-}
-
-pub trait ComplexFloat: Copy {
-    type Real: Float;
-    fn conj(self) -> Self;
-    fn abs(self) -> Self::Real;
-}
-
-impl Float for f32 {
-    fn abs(self) -> Self {
-        self.abs()
-    }
-    fn sqrt(self) -> Self {
-        self.sqrt()
-    }
-}
-
-impl Float for f64 {
-    fn abs(self) -> Self {
-        self.abs()
-    }
-    fn sqrt(self) -> Self {
-        self.sqrt()
-    }
-}
-
-impl ComplexFloat for f32 {
-    type Real = f32;
-    fn conj(self) -> Self {
-        self
-    }
-    fn abs(self) -> Self::Real {
-        self.abs()
-    }
-}
-
-impl ComplexFloat for f64 {
-    type Real = f64;
-    fn conj(self) -> Self {
-        self
-    }
-    fn abs(self) -> Self::Real {
-        self.abs()
-    }
 }

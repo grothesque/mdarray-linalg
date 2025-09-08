@@ -250,7 +250,7 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
     }
 
     if "dot" in arg_name:
-        return 'Complex<f32>' if "float" in c_type  else 'Complex<f64>'
+        return '*mut Complex<f32>' if "float" in c_type  else '*mut Complex<f64>'
 
     # if "dot" in routine_name and 
 
@@ -287,6 +287,12 @@ def convert_c_type_to_generic(c_type, param_name, routine_name):
     if ("nrm2" in routine_name or "asum" in routine_name) and param_name == "return": # should be handled elsewhere
         generic_type = "Self::Real"
 
+    elif ("sdot" in routine_name or "ddot" in routine_name) and param_name == "return":
+        generic_type = "Self"
+
+    elif "dot" in param_name:
+        generic_type = "*mut Self"
+
     elif bat_guessed == "array":
         ptr_kind = "mut" if "mut" in c_type else "const"
         generic_type = f"*{ptr_kind} Self"
@@ -321,7 +327,9 @@ def convert_c_type_for_call(arg_name, arg_type, routine_name):
 
         case "scalar_of_data_type":
             if "complex" in arg_type:
-                if "mut" in arg_type:
+                if "dot" in arg_name:
+                    cast_call = f"{arg_name} as *mut _"
+                elif "mut" in arg_type:
                     cast_call = f"&mut {arg_name} as *mut _ as *mut _"
                 else:
                     cast_call = f"&{arg_name} as *const _ as *const _"

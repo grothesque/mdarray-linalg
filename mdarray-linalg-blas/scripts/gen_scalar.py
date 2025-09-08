@@ -50,7 +50,7 @@ def add_function_to_data_scalar(data, func):
 
     def handle_dot(argn):
         if "dot" in argn:
-            return f"mut {argn}"
+            return f"{argn}"
         return argn
 
     generic_args = build_args(
@@ -65,7 +65,6 @@ def add_function_to_data_scalar(data, func):
         "return_type": pbf.convert_c_type_to_generic(func.return_type, "return", func.name),
     }
 
-    # if all(f["name"] != generic_function["name"] for f in data["functions_generic"]):
     if generic_function not in data["functions_generic"]:
         data["functions_generic"].append(generic_function)
 
@@ -115,10 +114,10 @@ if __name__ == "__main__":
 
     scalar_matvec = gen_raw_data()
 
-    functions_for_matvec = ['axpy', 'gemv', 'ger', 'amax', 'dotu', 'dotc', 'nrm2', 'asum', 'copy', 'scal', 'swap', 'symv', 'trmv', 'syr', 'syr2'] #, 'ddot', 'sdot'] # givens rot are missing
+    functions_for_matvec = ['axpy', 'gemv', 'ger', 'amax', 'dotu', 'dotc', 'nrm2', 'asum', 'copy', 'scal', 'swap', 'symv', 'trmv', 'syr', 'syr2', 'her', 'dot'] #, 'ddot', 'sdot'] # givens rot are missing
 
     for bf in blas_functions:
-        if any(x in bf.name for x in functions_for_matvec):
+        if any(x in bf.name for x in functions_for_matvec) and bf.name != 'dsdot' and bf.name != 'sdsdot':
             scalar_matvec = add_function_to_data_scalar(scalar_matvec, bf)
 
     output_scalar_matvec = template_scalar.render(**scalar_matvec)

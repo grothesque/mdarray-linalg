@@ -8,13 +8,22 @@ pub trait BlasScalar: Sized + ComplexFloat {
     
     /// # Safety
     /// Calls must respect BLAS conventions.
+    unsafe fn cblas_dot(
+         n: i32,
+         x: *const Self,
+         incx: i32,
+         y: *const Self,
+         incy: i32
+         ) -> Self where Self: Sized {unimplemented!("")}
+    /// # Safety
+    /// Calls must respect BLAS conventions.
     unsafe fn cblas_dotu_sub(
          n: i32,
          x: *const Self,
          incx: i32,
          y: *const Self,
          incy: i32,
-         mut dotu: Self
+         dotu: *mut Self
          ) where Self: Sized {unimplemented!("")}
     /// # Safety
     /// Calls must respect BLAS conventions.
@@ -24,7 +33,7 @@ pub trait BlasScalar: Sized + ComplexFloat {
          incx: i32,
          y: *const Self,
          incy: i32,
-         mut dotc: Self
+         dotc: *mut Self
          ) where Self: Sized {unimplemented!("")}
     /// # Safety
     /// Calls must respect BLAS conventions.
@@ -198,6 +207,32 @@ pub trait BlasScalar: Sized + ComplexFloat {
          ) where Self: Sized {unimplemented!("")}
     /// # Safety
     /// Calls must respect BLAS conventions.
+    unsafe fn cblas_her(
+         layout: CBLAS_LAYOUT,
+         uplo: CBLAS_UPLO,
+         n: i32,
+         alpha: Self::Real,
+         x: *const Self,
+         incx: i32,
+         a: *mut Self,
+         lda: i32
+         ) where Self: Sized {unimplemented!("")}
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    unsafe fn cblas_her2(
+         layout: CBLAS_LAYOUT,
+         uplo: CBLAS_UPLO,
+         n: i32,
+         alpha: Self,
+         x: *const Self,
+         incx: i32,
+         y: *const Self,
+         incy: i32,
+         a: *mut Self,
+         lda: i32
+         ) where Self: Sized {unimplemented!("")}
+    /// # Safety
+    /// Calls must respect BLAS conventions.
     unsafe fn cblas_syrk(
          layout: CBLAS_LAYOUT,
          uplo: CBLAS_UPLO,
@@ -228,9 +263,59 @@ pub trait BlasScalar: Sized + ComplexFloat {
          c: *mut Self,
          ldc: i32
          ) where Self: Sized {unimplemented!("")}
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    unsafe fn cblas_herk(
+         layout: CBLAS_LAYOUT,
+         uplo: CBLAS_UPLO,
+         trans: CBLAS_TRANSPOSE,
+         n: i32,
+         k: i32,
+         alpha: Self::Real,
+         a: *const Self,
+         lda: i32,
+         beta: Self::Real,
+         c: *mut Self,
+         ldc: i32
+         ) where Self: Sized {unimplemented!("")}
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    unsafe fn cblas_her2k(
+         layout: CBLAS_LAYOUT,
+         uplo: CBLAS_UPLO,
+         trans: CBLAS_TRANSPOSE,
+         n: i32,
+         k: i32,
+         alpha: Self,
+         a: *const Self,
+         lda: i32,
+         b: *const Self,
+         ldb: i32,
+         beta: Self::Real,
+         c: *mut Self,
+         ldc: i32
+         ) where Self: Sized {unimplemented!("")}
 }
 
 impl BlasScalar for f32 {
+    
+    unsafe fn cblas_dot(
+	n: i32,
+        x: *const f32,
+        incx: i32,
+        y: *const f32,
+        incy: i32
+        ) -> f32 {
+        unsafe {
+            cblas_sys::cblas_sdot(
+		n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy
+                )
+        }
+    }
     
     unsafe fn cblas_nrm2(
 	n: i32,
@@ -567,6 +652,24 @@ impl BlasScalar for f32 {
 }
 
 impl BlasScalar for f64 {
+    
+    unsafe fn cblas_dot(
+	n: i32,
+        x: *const f64,
+        incx: i32,
+        y: *const f64,
+        incy: i32
+        ) -> f64 {
+        unsafe {
+            cblas_sys::cblas_ddot(
+		n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy
+                )
+        }
+    }
     
     unsafe fn cblas_nrm2(
 	n: i32,
@@ -910,7 +1013,7 @@ impl BlasScalar for Complex<f32> {
         incx: i32,
         y: *const Complex<f32>,
         incy: i32,
-        mut dotu: Complex<f32>
+        dotu: *mut Complex<f32>
         ) {
         unsafe {
             cblas_sys::cblas_cdotu_sub(
@@ -919,7 +1022,7 @@ impl BlasScalar for Complex<f32> {
                 incx,
                 y as *const _,
                 incy,
-                &mut dotu as *mut _ as *mut _
+                dotu as *mut _
                 )
         }
     }
@@ -930,7 +1033,7 @@ impl BlasScalar for Complex<f32> {
         incx: i32,
         y: *const Complex<f32>,
         incy: i32,
-        mut dotc: Complex<f32>
+        dotc: *mut Complex<f32>
         ) {
         unsafe {
             cblas_sys::cblas_cdotc_sub(
@@ -939,7 +1042,7 @@ impl BlasScalar for Complex<f32> {
                 incx,
                 y as *const _,
                 incy,
-                &mut dotc as *mut _ as *mut _
+                dotc as *mut _
                 )
         }
     }
@@ -1174,6 +1277,58 @@ impl BlasScalar for Complex<f32> {
         }
     }
     
+    unsafe fn cblas_her(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        n: i32,
+        alpha: f32,
+        x: *const Complex<f32>,
+        incx: i32,
+        a: *mut Complex<f32>,
+        lda: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_cher(
+		layout,
+                uplo,
+                n,
+                alpha,
+                x as *const _,
+                incx,
+                a as *mut _,
+                lda
+                )
+        }
+    }
+    
+    unsafe fn cblas_her2(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        n: i32,
+        alpha: Complex<f32>,
+        x: *const Complex<f32>,
+        incx: i32,
+        y: *const Complex<f32>,
+        incy: i32,
+        a: *mut Complex<f32>,
+        lda: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_cher2(
+		layout,
+                uplo,
+                n,
+                &alpha as *const _ as *const _,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                a as *mut _,
+                lda
+                )
+        }
+    }
+    
     unsafe fn cblas_syrk(
 	layout: CBLAS_LAYOUT,
         uplo: CBLAS_UPLO,
@@ -1238,6 +1393,70 @@ impl BlasScalar for Complex<f32> {
         }
     }
     
+    unsafe fn cblas_herk(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        trans: CBLAS_TRANSPOSE,
+        n: i32,
+        k: i32,
+        alpha: f32,
+        a: *const Complex<f32>,
+        lda: i32,
+        beta: f32,
+        c: *mut Complex<f32>,
+        ldc: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_cherk(
+		layout,
+                uplo,
+                trans,
+                n,
+                k,
+                alpha,
+                a as *const _,
+                lda,
+                beta,
+                c as *mut _,
+                ldc
+                )
+        }
+    }
+    
+    unsafe fn cblas_her2k(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        trans: CBLAS_TRANSPOSE,
+        n: i32,
+        k: i32,
+        alpha: Complex<f32>,
+        a: *const Complex<f32>,
+        lda: i32,
+        b: *const Complex<f32>,
+        ldb: i32,
+        beta: f32,
+        c: *mut Complex<f32>,
+        ldc: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_cher2k(
+		layout,
+                uplo,
+                trans,
+                n,
+                k,
+                &alpha as *const _ as *const _,
+                a as *const _,
+                lda,
+                b as *const _,
+                ldb,
+                beta,
+                c as *mut _,
+                ldc
+                )
+        }
+    }
+    
 }
 
 impl BlasScalar for Complex<f64> {
@@ -1248,7 +1467,7 @@ impl BlasScalar for Complex<f64> {
         incx: i32,
         y: *const Complex<f64>,
         incy: i32,
-        mut dotu: Complex<f64>
+        dotu: *mut Complex<f64>
         ) {
         unsafe {
             cblas_sys::cblas_zdotu_sub(
@@ -1257,7 +1476,7 @@ impl BlasScalar for Complex<f64> {
                 incx,
                 y as *const _,
                 incy,
-                &mut dotu as *mut _ as *mut _
+                dotu as *mut _
                 )
         }
     }
@@ -1268,7 +1487,7 @@ impl BlasScalar for Complex<f64> {
         incx: i32,
         y: *const Complex<f64>,
         incy: i32,
-        mut dotc: Complex<f64>
+        dotc: *mut Complex<f64>
         ) {
         unsafe {
             cblas_sys::cblas_zdotc_sub(
@@ -1277,7 +1496,7 @@ impl BlasScalar for Complex<f64> {
                 incx,
                 y as *const _,
                 incy,
-                &mut dotc as *mut _ as *mut _
+                dotc as *mut _
                 )
         }
     }
@@ -1512,6 +1731,58 @@ impl BlasScalar for Complex<f64> {
         }
     }
     
+    unsafe fn cblas_her(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        n: i32,
+        alpha: f64,
+        x: *const Complex<f64>,
+        incx: i32,
+        a: *mut Complex<f64>,
+        lda: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_zher(
+		layout,
+                uplo,
+                n,
+                alpha,
+                x as *const _,
+                incx,
+                a as *mut _,
+                lda
+                )
+        }
+    }
+    
+    unsafe fn cblas_her2(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        n: i32,
+        alpha: Complex<f64>,
+        x: *const Complex<f64>,
+        incx: i32,
+        y: *const Complex<f64>,
+        incy: i32,
+        a: *mut Complex<f64>,
+        lda: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_zher2(
+		layout,
+                uplo,
+                n,
+                &alpha as *const _ as *const _,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                a as *mut _,
+                lda
+                )
+        }
+    }
+    
     unsafe fn cblas_syrk(
 	layout: CBLAS_LAYOUT,
         uplo: CBLAS_UPLO,
@@ -1570,6 +1841,70 @@ impl BlasScalar for Complex<f64> {
                 b as *const _,
                 ldb,
                 &beta as *const _ as *const _,
+                c as *mut _,
+                ldc
+                )
+        }
+    }
+    
+    unsafe fn cblas_herk(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        trans: CBLAS_TRANSPOSE,
+        n: i32,
+        k: i32,
+        alpha: f64,
+        a: *const Complex<f64>,
+        lda: i32,
+        beta: f64,
+        c: *mut Complex<f64>,
+        ldc: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_zherk(
+		layout,
+                uplo,
+                trans,
+                n,
+                k,
+                alpha,
+                a as *const _,
+                lda,
+                beta,
+                c as *mut _,
+                ldc
+                )
+        }
+    }
+    
+    unsafe fn cblas_her2k(
+	layout: CBLAS_LAYOUT,
+        uplo: CBLAS_UPLO,
+        trans: CBLAS_TRANSPOSE,
+        n: i32,
+        k: i32,
+        alpha: Complex<f64>,
+        a: *const Complex<f64>,
+        lda: i32,
+        b: *const Complex<f64>,
+        ldb: i32,
+        beta: f64,
+        c: *mut Complex<f64>,
+        ldc: i32
+        ) {
+        unsafe {
+            cblas_sys::cblas_zher2k(
+		layout,
+                uplo,
+                trans,
+                n,
+                k,
+                &alpha as *const _ as *const _,
+                a as *const _,
+                lda,
+                b as *const _,
+                ldb,
+                beta,
                 c as *mut _,
                 ldc
                 )

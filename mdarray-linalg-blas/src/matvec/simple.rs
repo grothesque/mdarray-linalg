@@ -3,6 +3,9 @@ use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
+use num_complex::Complex;
+use std::any::TypeId;
+
 use super::scalar::BlasScalar;
 
 pub fn gemv<T, La, Lx, Ly>(
@@ -127,4 +130,177 @@ where
     let incx = into_i32(x.stride(0));
 
     unsafe { T::cblas_scal(n, alpha, x.as_mut_ptr(), incx) }
+}
+
+pub fn syr<T, Lx, La>(uplo: CBLAS_UPLO, alpha: T, x: &DSlice<T, 1, Lx>, a: &mut DSlice<T, 2, La>)
+where
+    T: BlasScalar + ComplexFloat,
+    Lx: Layout,
+    La: Layout,
+{
+    let (m, n) = *a.shape();
+    assert_eq!(m, n, "Matrix a must be square for symmetric update");
+    assert_eq!(x.len(), n, "x length must match matrix dimension");
+
+    let row_major = a.stride(1) == 1;
+    assert!(
+        row_major || a.stride(0) == 1,
+        "a must be contiguous in one dimension"
+    );
+
+    let x_inc = into_i32(x.stride(0));
+    let lda = if row_major { into_i32(n) } else { into_i32(m) };
+
+    unsafe {
+        T::cblas_syr(
+            if row_major {
+                CBLAS_LAYOUT::CblasRowMajor
+            } else {
+                CBLAS_LAYOUT::CblasColMajor
+            },
+            uplo,
+            into_i32(n),
+            alpha,
+            x.as_ptr(),
+            x_inc,
+            a.as_mut_ptr(),
+            lda,
+        )
+    }
+}
+
+pub fn her<T, Lx, La>(
+    uplo: CBLAS_UPLO,
+    alpha: T::Real,
+    x: &DSlice<T, 1, Lx>,
+    a: &mut DSlice<T, 2, La>,
+) where
+    T: BlasScalar + ComplexFloat,
+    Lx: Layout,
+    La: Layout,
+{
+    let (m, n) = *a.shape();
+    assert_eq!(m, n, "Matrix a must be square for hermitian update");
+    assert_eq!(x.len(), n, "x length must match matrix dimension");
+
+    let row_major = a.stride(1) == 1;
+    assert!(
+        row_major || a.stride(0) == 1,
+        "a must be contiguous in one dimension"
+    );
+
+    let x_inc = into_i32(x.stride(0));
+    let lda = if row_major { into_i32(n) } else { into_i32(m) };
+
+    unsafe {
+        T::cblas_her(
+            if row_major {
+                CBLAS_LAYOUT::CblasRowMajor
+            } else {
+                CBLAS_LAYOUT::CblasColMajor
+            },
+            uplo,
+            into_i32(n),
+            alpha,
+            x.as_ptr(),
+            x_inc,
+            a.as_mut_ptr(),
+            lda,
+        )
+    }
+}
+
+pub fn asum<T, Lx>(x: &DSlice<T, 1, Lx>) -> T::Real
+where
+    T: BlasScalar + ComplexFloat,
+    Lx: Layout,
+{
+    let n = into_i32(x.len());
+    let incx = into_i32(x.stride(0));
+
+    unsafe { T::cblas_asum(n, x.as_ptr(), incx) }
+}
+
+pub fn axpy<T, Lx, Ly>(alpha: T, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>)
+where
+    T: BlasScalar + ComplexFloat,
+    Lx: Layout,
+    Ly: Layout,
+{
+    assert_eq!(x.len(), y.len(), "Vector lengths must match");
+
+    let n = into_i32(x.len());
+    let incx = into_i32(x.stride(0));
+    let incy = into_i32(y.stride(0));
+
+    unsafe { T::cblas_axpy(n, alpha, x.as_ptr(), incx, y.as_mut_ptr(), incy) }
+}
+
+pub fn nrm2<T, Lx>(x: &DSlice<T, 1, Lx>) -> T::Real
+where
+    T: BlasScalar + ComplexFloat,
+    Lx: Layout,
+{
+    let n = into_i32(x.len());
+    let incx = into_i32(x.stride(0));
+
+    unsafe { T::cblas_nrm2(n, x.as_ptr(), incx) }
+}
+
+pub fn dotu<T, Lx, Ly>(x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T
+where
+    T: BlasScalar + ComplexFloat + 'static,
+    Lx: Layout,
+    Ly: Layout,
+{
+    assert_eq!(x.len(), y.len(), "Vector lengths must match");
+
+    let n = into_i32(x.len());
+    let incx = into_i32(x.stride(0));
+    let incy = into_i32(y.stride(0));
+
+    let mut result = T::zero();
+
+    if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
+        || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
+    {
+        unsafe {
+            T::cblas_dotu_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
+        }
+    } else {
+        unsafe {
+            result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
+        }
+    }
+
+    result
+}
+
+pub fn dotc<T, Lx, Ly>(x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T
+where
+    T: BlasScalar + ComplexFloat + 'static,
+    Lx: Layout,
+    Ly: Layout,
+{
+    assert_eq!(x.len(), y.len(), "Vector lengths must match");
+
+    let n = into_i32(x.len());
+    let incx = into_i32(x.stride(0));
+    let incy = into_i32(y.stride(0));
+
+    let mut result = T::zero();
+
+    if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
+        || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
+    {
+        unsafe {
+            T::cblas_dotc_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
+        }
+    } else {
+        unsafe {
+            result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
+        }
+    }
+
+    result
 }
