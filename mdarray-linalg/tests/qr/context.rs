@@ -1,6 +1,6 @@
 use mdarray::{DTensor, Strided};
 
-use mdarray_linalg::{QR, QRBuilder};
+use mdarray_linalg::QR;
 // use qr::faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
@@ -57,7 +57,7 @@ fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
     let mut r = DTensor::<Complex<f64>, 2>::zeros([m, n]);
 
     let mut reconstructed = DTensor::<Complex<f64>, 2>::zeros([m, n]);
-    bd.qr(&mut a.clone()).overwrite(&mut q, &mut r);
+    bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
     naive_matmul(&q, &r, &mut reconstructed);
     assert_complex_matrix_eq!(a, reconstructed);
 
@@ -65,7 +65,7 @@ fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
     pretty_print(&reconstructed);
 
     let mut reconstructed = DTensor::<Complex<f64>, 2>::zeros([m, n]);
-    let (q, r) = bd.qr(&mut a.clone()).eval::<Strided, Strided>();
+    let (q, r) = bd.qr(&mut a.clone());
     naive_matmul(&q, &r, &mut reconstructed);
     assert_complex_matrix_eq!(a, reconstructed);
 
@@ -89,12 +89,12 @@ where
     let mut r = DTensor::<T, 2>::zeros([m, n]);
 
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
-    bd.qr(&mut a.clone()).overwrite(&mut q, &mut r);
+    bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
     naive_matmul(&q, &r, &mut reconstructed);
     assert_matrix_eq!(a, reconstructed);
 
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
-    let (q, r) = bd.qr(&mut a.clone()).eval::<Strided, Strided>();
+    let (q, r) = bd.qr(&mut a.clone());
     naive_matmul(&q, &r, &mut reconstructed);
     assert_matrix_eq!(a, reconstructed);
 }
