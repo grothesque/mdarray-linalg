@@ -65,35 +65,18 @@ pub fn swap_axis_range<T, L: Layout>(
     }
 }
 
-pub fn outer<T: Copy + std::ops::Mul<Output = T>>(
-    a: &DSlice<T, 1>,
-    b: &DSlice<T, 1>,
-    out: &mut DSlice<T, 2>,
-) {
-    let (m, n) = (a.shape().0, b.shape().0);
-
-    assert_eq!(
-        out.shape(),
-        &(m, n),
-        "Output shape must match a.len() × b.len()"
-    );
-
-    for i in 0..m {
-        for j in 0..n {
-            out[[i, j]] = a[[i]] * b[[j]];
-        }
-    }
-}
-
-pub fn minus_outer<
-    T: Copy + std::ops::Mul<Output = T> + std::ops::Sub<Output = T>,
+pub fn minus_outer_pivot<
+    T: Copy + std::ops::Mul<Output = T> + std::ops::Sub<Output = T> + Signed + PartialOrd,
     Lout: Layout,
 >(
     a: Vec<T>,
     b: Vec<T>,
     out: &mut ViewMut<'_, T, (usize, usize), Lout>,
-) {
+) -> (usize, usize) {
     let (m, n) = (a.len(), b.len());
+
+    let mut max = out[[0, 0]].abs();
+    let mut pos = (0, 0);
 
     assert_eq!(
         out.shape(),
@@ -104,8 +87,14 @@ pub fn minus_outer<
     for i in 0..m {
         for j in 0..n {
             out[[i, j]] = out[[i, j]] - a[i] * b[j];
+            let out_abs = out[[i, j]].abs();
+            if out_abs > max {
+                max = out_abs;
+                pos = (i, j);
+            }
         }
     }
+    pos
 }
 
 pub fn eye<T: Clone + One + Default>(n: usize) -> DTensor<T, 2> {
@@ -114,15 +103,20 @@ pub fn eye<T: Clone + One + Default>(n: usize) -> DTensor<T, 2> {
     a
 }
 
-pub fn perform_elimination<
-    T: Copy + std::ops::Mul<Output = T> + std::ops::Div<Output = T> + std::ops::Sub<Output = T>,
+pub fn gaussian_elimination_pivot<
+    T: Copy
+        + std::ops::Mul<Output = T>
+        + std::ops::Div<Output = T>
+        + std::ops::Sub<Output = T>
+        + Signed
+        + PartialOrd,
     L: Layout,
 >(
     work: &mut DSlice<T, 2, L>,
     lower: &mut DSlice<T, 2>,
     step: usize,
     pivot: T,
-) {
+) -> (usize, usize) {
     let n = work.shape().0;
     if step < n - 1 {
         let multipliers: Vec<_> = work
@@ -137,8 +131,9 @@ pub fn perform_elimination<
             .zip(multipliers.iter())
             .for_each(|(l, m)| *l = *m);
         let start_minus_outer = Instant::now();
-        minus_outer(multipliers, wv, &mut work.view_mut(step + 1.., step..));
-        // println!("Time minus_outer = {:?}", start_minus_outer.elapsed());
+        minus_outer_pivot(multipliers, wv, &mut work.view_mut(step + 1.., step..))
+    } else {
+        (step, step)
     }
 }
 
@@ -182,27 +177,23 @@ where
 
     let max_steps = k.min(n.saturating_sub(1).min(m));
 
-    for step in 0..max_steps {
-        let start_pivot = Instant::now();
-        let idx_pivot = find_pivot(a, step);
-        // println!("Time pivot = {:?}", start_pivot.elapsed());
+    let mut idx_pivot = find_pivot(a, 0);
 
-        let start_swap = Instant::now();
+    for step in 0..max_steps {
         swap_axis(a, 0, step, idx_pivot.0);
         swap_axis(a, 1, step, idx_pivot.1);
 
         update_permutation_matrices(p, q, lower, idx_pivot, step);
-        // println!("Time swap = {:?}", start_swap.elapsed());
 
         let pivot_current = a[[step, step]];
         if is_pivot_too_small(pivot_current, epsilon) {
             return step;
         }
-        let start_elimination = Instant::now();
-        perform_elimination(a, lower, step, pivot_current);
-        // println!("Time elimination = {:?}", start_elimination.elapsed());
+
+        idx_pivot = gaussian_elimination_pivot(a, lower, step, pivot_current);
+        idx_pivot = (idx_pivot.0 + step + 1, idx_pivot.1 + step);
     }
-    return max_steps;
+    max_steps
 }
 
 pub fn is_pivot_too_small<T>(pivot: T, epsilon: T) -> bool
