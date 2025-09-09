@@ -1,7 +1,10 @@
 // Helper module with common code for integration tests.
 // See https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html
 
-use mdarray::expr;
+use mdarray::{DTensor, expr};
+use mdarray_linalg::naive_matmul;
+
+use rand::Rng;
 
 pub fn example_matrix(
     shape: [usize; 2],
@@ -43,4 +46,22 @@ macro_rules! assert_complex_matrix_eq {
             }
         }
     };
+}
+
+/// Generate a random matrix of size m x n
+pub fn random_matrix(m: usize, n: usize) -> DTensor<f64, 2> {
+    let mut rng = rand::rng();
+    DTensor::<f64, 2>::from_fn([m, n], |_| rng.random_range(-10.0..10.0))
+}
+
+/// Generate a rank-k matrix by multiplying m×k and k×n matrices
+pub fn rank_k_matrix(m: usize, n: usize, k: usize) -> DTensor<f64, 2> {
+    assert!(k <= n.min(m));
+
+    let a = random_matrix(m, k);
+    let b = random_matrix(k, n);
+    let mut result = DTensor::<f64, 2>::zeros([m, n]);
+
+    naive_matmul(&a, &b, &mut result);
+    result
 }
