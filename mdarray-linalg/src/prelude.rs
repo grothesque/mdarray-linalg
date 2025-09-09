@@ -3,5 +3,6 @@
 
 pub use super::{MatMul as _, MatMulBuilder as _};
 pub use super::{MatVec as _, MatVecBuilder as _, VecOps as _};
+pub use super::{MatVec, MatVecBuilder, VecOps};
 pub use super::{SVD as _, SVDError, SVDResult};
 pub use super::{Triangle, Type};

@@ -195,3 +195,40 @@ fn dotc_complex() {
     let expected = x[[0]].conj() * y[[0]] + x[[1]].conj() * y[[1]];
     assert_eq!(result, expected);
 }
+
+#[test]
+fn norm1_complex() {
+    use num_complex::Complex64;
+
+    let n = 3;
+    let x = DTensor::<Complex64, 1>::from_fn([n], |i| {
+        Complex64::new((i[0] + 1) as f64, (i[0] + 2) as f64)
+    });
+    // x = [1+2i, 2+3i, 3+4i]
+    // norm1 = sum(|z_k|)
+    let expected: f64 = x.iter().map(|z| z.re.abs() + z.im.abs()).sum();
+
+    let result = Blas.norm1(&x);
+
+    println!("{}", result);
+    println!("{}", expected);
+
+    assert!((result - expected).abs() < 1e-12);
+}
+
+#[test]
+fn norm2_complex() {
+    use num_complex::Complex64;
+
+    let n = 3;
+    let x = DTensor::<Complex64, 1>::from_fn([n], |i| {
+        Complex64::new((i[0] + 1) as f64, (i[0] + 2) as f64)
+    });
+    // x = [1+2i, 2+3i, 3+4i]
+    // norm2 = sqrt(sum(|z_k|²))
+    let expected: f64 = x.iter().map(|z| z.norm_sqr()).sum::<f64>().sqrt();
+
+    let result = Blas.norm2(&x);
+
+    assert!((result - expected).abs() < 1e-12);
+}

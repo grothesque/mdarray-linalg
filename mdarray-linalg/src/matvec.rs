@@ -26,14 +26,26 @@ where
     Lx: 'a,
 {
     fn parallelize(self) -> Self;
+
+    /// `A := α·A`
     fn scale(self, alpha: T) -> Self;
+
+    /// Returns `α·A·x`
     fn eval(self) -> DTensor<T, 1>;
+
+    /// `A := α·A·x`
     fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+
+    /// `A := α·A·x + y`
     fn add_to<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+
+    /// `A := α·A·x + β·y`
     fn add_to_scaled<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T);
 
-    /// Rank-1 update: beta * x * y^T + alpha * A
+    /// Rank-1 update: `β·x·yᵀ + α·A`
     fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2>;
+
+    /// Rank-1 update: `β·x·xᵀ (or x·x†) + α·A`
     fn add_outer_special(self, beta: T, ty: Type, tr: Triangle) -> DTensor<T, 2>;
 
     // Special rank-2 update: beta * (x * y^T + y * x^T) + alpha * A
@@ -45,8 +57,7 @@ where
 
 /// Vector operations and utilities
 pub trait VecOps<T: ComplexFloat> {
-    /// AXPY: y := alpha * x + y
-    /// BLAS: SAXPY, DAXPY, CAXPY, ZAXPY
+    /// Accumulate a scaled vector: `y := α·x + y`
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
@@ -54,41 +65,33 @@ pub trait VecOps<T: ComplexFloat> {
         y: &mut DSlice<T, 1, Ly>,
     );
 
-    /// Dot product
-    /// BLAS: SDOT, DDOT, CDOTU, ZDOTU
+    /// Dot product: `∑xᵢyᵢ`
     fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T;
 
-    /// Conjugated dot product
-    /// BLAS: CDOTC, ZDOTC
+    /// Conjugated dot product: `∑(xᵢ * conj(yᵢ))`
     fn dotc<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T;
 
-    /// Euclidean norm
-    /// BLAS: SNRM2, DNRM2, SCNRM2, DZNRM2
+    /// L2 norm: `√(∑|xᵢ|²)`
     fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real;
 
-    /// Sum of absolute values
-    /// BLAS: SASUM, DASUM, SCASUM, DZASUM
+    /// L1 norm: `∑|xᵢ|`
     fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
     where
         T: ComplexFloat;
 
-    /// Index of maximum absolute value
-    /// BLAS: ISAMAX, IDAMAX, ICAMAX, IZAMAX
+    /// Index of max |xᵢ| (argmaxᵢ |xᵢ|) (**TODO**)
     fn argmax<Lx: Layout>(&self, x: &DSlice<T, 2, Lx>) -> Vec<usize>;
 
-    /// Copy vector: y := x
-    /// BLAS: SCOPY, DCOPY, CCOPY, ZCOPY
+    /// Copy vector: `y := x` (**TODO**)
     fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>);
 
-    /// Scale vector: x := alpha * x
-    /// BLAS: SSCAL, DSCAL, CSCAL, ZSCAL
+    /// Scale vector: `x := α·xᵢ` (**TODO**)
     fn scal<Lx: Layout>(&self, alpha: T, x: &mut DSlice<T, 1, Lx>);
 
-    /// Swap vectors: x <-> y
-    /// BLAS: SSWAP, DSWAP, CSWAP, ZSWAP
+    /// Swap vectors: `x ↔ y` (**TODO**)
     fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>);
 
-    /// Givens rotation
+    /// Givens rotation (**TODO**)
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
         x: &mut DSlice<T, 1, Lx>,
@@ -97,37 +100,4 @@ pub trait VecOps<T: ComplexFloat> {
         s: T,
     ) where
         T: ComplexFloat;
-}
-
-/// Rank-2 updates
-pub trait Rank2Update<T> {
-    fn rank2_update<'a, Lx, Ly>(
-        &self,
-        x: &'a DSlice<T, 1, Lx>,
-        y: &'a DSlice<T, 1, Ly>,
-    ) -> impl Rank2Builder<'a, T, Lx, Ly>
-    where
-        Lx: Layout,
-        Ly: Layout;
-}
-
-/// Builder for rank-2 operations, similar to special() in matmul
-/// BLAS: SSYR2, DSYR2, CHER2, ZHER2
-pub trait Rank2Builder<'a, T, Lx, Ly>
-where
-    Lx: Layout,
-    Ly: Layout,
-    T: 'a,
-    Lx: 'a,
-    Ly: 'a,
-{
-    fn scale(self, alpha: T) -> Self;
-
-    /// Symmetric rank-2 update: A := alpha * x * y^T + alpha * y * x^T + A
-    /// BLAS: SSYR2, DSYR2
-    fn syr2<La: Layout>(self, tr: Triangle, a: &mut DSlice<T, 2, La>);
-
-    /// Hermitian rank-2 update: A := alpha * x * y^H + conj(alpha) * y * x^H + A
-    /// BLAS: CHER2, ZHER2
-    fn her2<La: Layout>(self, tr: Triangle, a: &mut DSlice<T, 2, La>);
 }
