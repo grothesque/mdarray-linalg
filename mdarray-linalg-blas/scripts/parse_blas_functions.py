@@ -38,8 +38,8 @@ def guess_blas_arg_type(arg_name, routine_name=None):
         # Real dot products
         (("sdsdot", "dsdot"), {"sb": "scalar_of_data_type"}),
         # Real scale of a complex vector
+        (("zdscal", "csscal"), {"alpha": "real_scalar"}),
         (("sscal", "dscal", "cscal", "zscal"), {"alpha": "scalar_of_data_type"}),
-        (("blas_scal_real", "blas_scal_real"), {"alpha": "real_scalar"}),
     ]
 
     for keys, mapping in special_cases:
@@ -58,7 +58,11 @@ def guess_blas_arg_type(arg_name, routine_name=None):
             return "real_scalar"
         if arg in {"param", "p"}:
             return "array"
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> feature/blas
     # --- Standard cases ---
     if arg in cblas:
         return "cblas_option"
@@ -91,9 +95,46 @@ class BlasFunction:
 
         m = re.match(r'^cblas_([sdcz])([a-zA-Z0-9]+)$', name)
 
+<<<<<<< HEAD
         if m:
             self.prefix = m.group(1)
             self.operation = m.group(2)
+=======
+        if "scal" in self.name:
+            if len(self.name) == 6:
+                self.generic_name = "cblas_" + "r" + self.name[2:]
+            self.prefix = self.name[0]
+
+        elif any(op in self.name for op in ("nrm2", "asum")):
+            mapping = {
+                "sn": ("s", "s"),
+                "sa": ("s", "s"),
+                "dn": ("d", "d"),
+                "da": ("d", "d"),
+                "sc": ("c", "s"),
+                "dz": ("z", "d"),
+            }
+
+            key = self.name[:2]
+            if key not in mapping:
+                raise ValueError(f"Unsupported prefix for {self.name}")
+
+            self.prefix, generic_prefix = mapping[key]
+            
+            if len(self.name) == 5:
+                self.generic_name = "cblas_" + self.name[1:]
+            else:
+                self.generic_name = "cblas_" + self.name[2:]
+                
+            self.operation = name.rstrip('_')
+        elif m:
+            self.prefix = m.group(1)
+            self.operation = m.group(2)
+        elif "dot" in self.name:
+            self.prefix = self.name[0]
+            self.operation = name.rstrip('_')
+        
+>>>>>>> feature/blas
         else:
             self.prefix = None
             self.operation = name.rstrip('_')
@@ -218,6 +259,14 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
         'c_double': 'f64',
     }
 
+<<<<<<< HEAD
+=======
+    if "dot" in arg_name:
+        return '*mut Complex<f32>' if "float" in c_type  else '*mut Complex<f64>'
+
+    # if "dot" in routine_name and 
+
+>>>>>>> feature/blas
     if bat_guessed=="array":
         if '*const' in c_type:
             base_type = c_type.replace('*const ', '')
@@ -238,8 +287,12 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
 
         if "complex" in c_type:
             return 'Complex<f32>' if "float" in c_type  else 'Complex<f64>'
+<<<<<<< HEAD
         return 'f32' if "float" in c_type  else 'f64'
 
+=======
+        return 'f32' if "float" in c_type  else 'f64'       
+>>>>>>> feature/blas
 
     return type_mapping.get(c_type, c_type)
 
@@ -249,7 +302,20 @@ def convert_c_type_to_generic(c_type, param_name, routine_name):
 
     generic_type = ''
 
+<<<<<<< HEAD
     if bat_guessed == "array":
+=======
+    if ("nrm2" in routine_name or "asum" in routine_name) and param_name == "return": # should be handled elsewhere
+        generic_type = "Self::Real"
+
+    elif ("sdot" in routine_name or "ddot" in routine_name) and param_name == "return":
+        generic_type = "Self"
+
+    elif "dot" in param_name:
+        generic_type = "*mut Self"
+
+    elif bat_guessed == "array":
+>>>>>>> feature/blas
         ptr_kind = "mut" if "mut" in c_type else "const"
         generic_type = f"*{ptr_kind} Self"
 
@@ -283,7 +349,13 @@ def convert_c_type_for_call(arg_name, arg_type, routine_name):
 
         case "scalar_of_data_type":
             if "complex" in arg_type:
+<<<<<<< HEAD
                 if "mut" in arg_type:
+=======
+                if "dot" in arg_name:
+                    cast_call = f"{arg_name} as *mut _"
+                elif "mut" in arg_type:
+>>>>>>> feature/blas
                     cast_call = f"&mut {arg_name} as *mut _ as *mut _"
                 else:
                     cast_call = f"&{arg_name} as *const _ as *const _"

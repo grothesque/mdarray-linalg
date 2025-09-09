@@ -1,85 +1,100 @@
 // This file is auto-generated. Do not edit manually.
 //! Abstracting the BLAS scalar types
-use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_SIDE, CBLAS_UPLO, CBLAS_DIAG};
-use num_complex::Complex;
+use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
+
+use num_complex::{Complex, ComplexFloat};
 
 #[allow(clippy::too_many_arguments, unused_variables)]
-pub trait BlasScalar {
-    
+pub trait BlasScalar: Sized + ComplexFloat {
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_gemm(
-         layout: CBLAS_LAYOUT,
-         transa: CBLAS_TRANSPOSE,
-         transb: CBLAS_TRANSPOSE,
-         m: i32,
-         n: i32,
-         k: i32,
-         alpha: Self,
-         a: *const Self,
-         lda: i32,
-         b: *const Self,
-         ldb: i32,
-         beta: Self,
-         c: *mut Self,
-         ldc: i32
-         ) where Self: Sized {unimplemented!("")}
+        layout: CBLAS_LAYOUT,
+        transa: CBLAS_TRANSPOSE,
+        transb: CBLAS_TRANSPOSE,
+        m: i32,
+        n: i32,
+        k: i32,
+        alpha: Self,
+        a: *const Self,
+        lda: i32,
+        b: *const Self,
+        ldb: i32,
+        beta: Self,
+        c: *mut Self,
+        ldc: i32,
+    ) where
+        Self: Sized,
+    {
+        unimplemented!("")
+    }
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_symm(
-         layout: CBLAS_LAYOUT,
-         side: CBLAS_SIDE,
-         uplo: CBLAS_UPLO,
-         m: i32,
-         n: i32,
-         alpha: Self,
-         a: *const Self,
-         lda: i32,
-         b: *const Self,
-         ldb: i32,
-         beta: Self,
-         c: *mut Self,
-         ldc: i32
-         ) where Self: Sized {unimplemented!("")}
+        layout: CBLAS_LAYOUT,
+        side: CBLAS_SIDE,
+        uplo: CBLAS_UPLO,
+        m: i32,
+        n: i32,
+        alpha: Self,
+        a: *const Self,
+        lda: i32,
+        b: *const Self,
+        ldb: i32,
+        beta: Self,
+        c: *mut Self,
+        ldc: i32,
+    ) where
+        Self: Sized,
+    {
+        unimplemented!("")
+    }
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_trmm(
-         layout: CBLAS_LAYOUT,
-         side: CBLAS_SIDE,
-         uplo: CBLAS_UPLO,
-         transa: CBLAS_TRANSPOSE,
-         diag: CBLAS_DIAG,
-         m: i32,
-         n: i32,
-         alpha: Self,
-         a: *const Self,
-         lda: i32,
-         b: *mut Self,
-         ldb: i32
-         ) where Self: Sized {unimplemented!("")}
+        layout: CBLAS_LAYOUT,
+        side: CBLAS_SIDE,
+        uplo: CBLAS_UPLO,
+        transa: CBLAS_TRANSPOSE,
+        diag: CBLAS_DIAG,
+        m: i32,
+        n: i32,
+        alpha: Self,
+        a: *const Self,
+        lda: i32,
+        b: *mut Self,
+        ldb: i32,
+    ) where
+        Self: Sized,
+    {
+        unimplemented!("")
+    }
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_hemm(
-         layout: CBLAS_LAYOUT,
-         side: CBLAS_SIDE,
-         uplo: CBLAS_UPLO,
-         m: i32,
-         n: i32,
-         alpha: Self,
-         a: *const Self,
-         lda: i32,
-         b: *const Self,
-         ldb: i32,
-         beta: Self,
-         c: *mut Self,
-         ldc: i32
-         ) where Self: Sized {unimplemented!("")}
+        layout: CBLAS_LAYOUT,
+        side: CBLAS_SIDE,
+        uplo: CBLAS_UPLO,
+        m: i32,
+        n: i32,
+        alpha: Self,
+        a: *const Self,
+        lda: i32,
+        b: *const Self,
+        ldb: i32,
+        beta: Self,
+        c: *mut Self,
+        ldc: i32,
+    ) where
+        Self: Sized,
+    {
+        unimplemented!("")
+    }
 }
 
 impl BlasScalar for f32 {
-    
     unsafe fn cblas_gemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         transa: CBLAS_TRANSPOSE,
         transb: CBLAS_TRANSPOSE,
         m: i32,
@@ -92,11 +107,11 @@ impl BlasScalar for f32 {
         ldb: i32,
         beta: f32,
         c: *mut f32,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_sgemm(
-		layout,
+                layout,
                 transa,
                 transb,
                 m,
@@ -109,13 +124,13 @@ impl BlasScalar for f32 {
                 ldb,
                 beta,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_symm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -127,11 +142,11 @@ impl BlasScalar for f32 {
         ldb: i32,
         beta: f32,
         c: *mut f32,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_ssymm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -143,13 +158,13 @@ impl BlasScalar for f32 {
                 ldb,
                 beta,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_trmm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         transa: CBLAS_TRANSPOSE,
@@ -160,11 +175,11 @@ impl BlasScalar for f32 {
         a: *const f32,
         lda: i32,
         b: *mut f32,
-        ldb: i32
-        ) {
+        ldb: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_strmm(
-		layout,
+                layout,
                 side,
                 uplo,
                 transa,
@@ -175,17 +190,15 @@ impl BlasScalar for f32 {
                 a as *const _,
                 lda,
                 b as *mut _,
-                ldb
-                )
+                ldb,
+            )
         }
     }
-    
 }
 
 impl BlasScalar for f64 {
-    
     unsafe fn cblas_gemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         transa: CBLAS_TRANSPOSE,
         transb: CBLAS_TRANSPOSE,
         m: i32,
@@ -198,11 +211,11 @@ impl BlasScalar for f64 {
         ldb: i32,
         beta: f64,
         c: *mut f64,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_dgemm(
-		layout,
+                layout,
                 transa,
                 transb,
                 m,
@@ -215,13 +228,13 @@ impl BlasScalar for f64 {
                 ldb,
                 beta,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_symm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -233,11 +246,11 @@ impl BlasScalar for f64 {
         ldb: i32,
         beta: f64,
         c: *mut f64,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_dsymm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -249,13 +262,13 @@ impl BlasScalar for f64 {
                 ldb,
                 beta,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_trmm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         transa: CBLAS_TRANSPOSE,
@@ -266,11 +279,11 @@ impl BlasScalar for f64 {
         a: *const f64,
         lda: i32,
         b: *mut f64,
-        ldb: i32
-        ) {
+        ldb: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_dtrmm(
-		layout,
+                layout,
                 side,
                 uplo,
                 transa,
@@ -281,17 +294,15 @@ impl BlasScalar for f64 {
                 a as *const _,
                 lda,
                 b as *mut _,
-                ldb
-                )
+                ldb,
+            )
         }
     }
-    
 }
 
 impl BlasScalar for Complex<f32> {
-    
     unsafe fn cblas_gemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         transa: CBLAS_TRANSPOSE,
         transb: CBLAS_TRANSPOSE,
         m: i32,
@@ -304,11 +315,11 @@ impl BlasScalar for Complex<f32> {
         ldb: i32,
         beta: Complex<f32>,
         c: *mut Complex<f32>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_cgemm(
-		layout,
+                layout,
                 transa,
                 transb,
                 m,
@@ -321,13 +332,13 @@ impl BlasScalar for Complex<f32> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_symm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -339,11 +350,11 @@ impl BlasScalar for Complex<f32> {
         ldb: i32,
         beta: Complex<f32>,
         c: *mut Complex<f32>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_csymm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -355,13 +366,13 @@ impl BlasScalar for Complex<f32> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_trmm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         transa: CBLAS_TRANSPOSE,
@@ -372,11 +383,11 @@ impl BlasScalar for Complex<f32> {
         a: *const Complex<f32>,
         lda: i32,
         b: *mut Complex<f32>,
-        ldb: i32
-        ) {
+        ldb: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_ctrmm(
-		layout,
+                layout,
                 side,
                 uplo,
                 transa,
@@ -387,13 +398,13 @@ impl BlasScalar for Complex<f32> {
                 a as *const _,
                 lda,
                 b as *mut _,
-                ldb
-                )
+                ldb,
+            )
         }
     }
-    
+
     unsafe fn cblas_hemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -405,11 +416,11 @@ impl BlasScalar for Complex<f32> {
         ldb: i32,
         beta: Complex<f32>,
         c: *mut Complex<f32>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_chemm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -421,17 +432,15 @@ impl BlasScalar for Complex<f32> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
 }
 
 impl BlasScalar for Complex<f64> {
-    
     unsafe fn cblas_gemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         transa: CBLAS_TRANSPOSE,
         transb: CBLAS_TRANSPOSE,
         m: i32,
@@ -444,11 +453,11 @@ impl BlasScalar for Complex<f64> {
         ldb: i32,
         beta: Complex<f64>,
         c: *mut Complex<f64>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_zgemm(
-		layout,
+                layout,
                 transa,
                 transb,
                 m,
@@ -461,13 +470,13 @@ impl BlasScalar for Complex<f64> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_symm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -479,11 +488,11 @@ impl BlasScalar for Complex<f64> {
         ldb: i32,
         beta: Complex<f64>,
         c: *mut Complex<f64>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_zsymm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -495,13 +504,13 @@ impl BlasScalar for Complex<f64> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
+
     unsafe fn cblas_trmm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         transa: CBLAS_TRANSPOSE,
@@ -512,11 +521,11 @@ impl BlasScalar for Complex<f64> {
         a: *const Complex<f64>,
         lda: i32,
         b: *mut Complex<f64>,
-        ldb: i32
-        ) {
+        ldb: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_ztrmm(
-		layout,
+                layout,
                 side,
                 uplo,
                 transa,
@@ -527,13 +536,13 @@ impl BlasScalar for Complex<f64> {
                 a as *const _,
                 lda,
                 b as *mut _,
-                ldb
-                )
+                ldb,
+            )
         }
     }
-    
+
     unsafe fn cblas_hemm(
-	layout: CBLAS_LAYOUT,
+        layout: CBLAS_LAYOUT,
         side: CBLAS_SIDE,
         uplo: CBLAS_UPLO,
         m: i32,
@@ -545,11 +554,11 @@ impl BlasScalar for Complex<f64> {
         ldb: i32,
         beta: Complex<f64>,
         c: *mut Complex<f64>,
-        ldc: i32
-        ) {
+        ldc: i32,
+    ) {
         unsafe {
             cblas_sys::cblas_zhemm(
-		layout,
+                layout,
                 side,
                 uplo,
                 m,
@@ -561,9 +570,8 @@ impl BlasScalar for Complex<f64> {
                 ldb,
                 &beta as *const _ as *const _,
                 c as *mut _,
-                ldc
-                )
+                ldc,
+            )
         }
     }
-    
 }

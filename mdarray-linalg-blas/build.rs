@@ -2,7 +2,7 @@ use std::process::Command;
 
 fn main() {
     let output = Command::new("python3")
-        .arg("scripts/gen_matmut.py")
+        .arg("scripts/gen_scalar.py")
         .output()
         .expect("Failed to execute Python script");
 
