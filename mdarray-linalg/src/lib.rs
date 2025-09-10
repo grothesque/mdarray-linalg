@@ -22,3 +22,6 @@ pub use matvec::*;
 
 mod prrlu;
 pub use prrlu::*;
+
+mod eig;
+pub use eig::*;
