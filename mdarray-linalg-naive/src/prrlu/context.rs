@@ -15,7 +15,7 @@ impl<T: Default + Clone + One + Float + Signed> PRRLU<T> for Naive {
         let mut q = eye::<T>(n);
         let mut l = eye::<T>(m);
         let k = m.max(n);
-        let epsilon = T::from(1e-10).unwrap();
+        let epsilon = T::from(1e-12).unwrap();
         let rank = prrlu(a, &mut p, &mut q, &mut l, k, epsilon);
         PRRLUDecomp {
             p,
@@ -31,7 +31,7 @@ impl<T: Default + Clone + One + Float + Signed> PRRLU<T> for Naive {
         let mut p = eye::<T>(m);
         let mut q = eye::<T>(n);
         let mut l = eye::<T>(m);
-        let epsilon = T::from(1e-10).unwrap();
+        let epsilon = T::from(1e-12).unwrap();
         let rank = prrlu(a, &mut p, &mut q, &mut l, target_rank, epsilon);
         PRRLUDecomp {
             p,
@@ -51,7 +51,7 @@ impl<T: Default + Clone + One + Float + Signed> PRRLU<T> for Naive {
     ) -> usize {
         let (m, n) = *a.shape();
         let k = m.max(n);
-        let epsilon = T::from(1e-10).unwrap();
+        let epsilon = T::from(1e-12).unwrap();
         prrlu(a, p, q, l, k, epsilon)
     }
 
@@ -61,7 +61,7 @@ impl<T: Default + Clone + One + Float + Signed> PRRLU<T> for Naive {
         let mut q = eye::<T>(n);
         let mut l = eye::<T>(m);
         let k = m.max(n);
-        let epsilon = T::from(1e-10).unwrap();
+        let epsilon = T::from(1e-12).unwrap();
         prrlu(a, &mut p, &mut q, &mut l, k, epsilon)
     }
 }

@@ -76,6 +76,9 @@ fn full_rank() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    println!("{:?}", decomp.u);
+
+    assert_eq!(decomp.rank, n);
     assert_matrix_eq!(original, reconstructed);
 }
 
@@ -92,6 +95,7 @@ fn rectangular() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    assert_eq!(decomp.rank, k);
     assert_matrix_eq!(original, reconstructed);
 }
 

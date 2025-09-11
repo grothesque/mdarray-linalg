@@ -130,7 +130,6 @@ pub fn gaussian_elimination_pivot<
             .iter_mut()
             .zip(multipliers.iter())
             .for_each(|(l, m)| *l = *m);
-        let start_minus_outer = Instant::now();
         minus_outer_pivot(multipliers, wv, &mut work.view_mut(step + 1.., step..))
     } else {
         (step, step)
@@ -173,11 +172,13 @@ where
         + std::ops::Mul<Output = T>
         + std::ops::Neg<Output = T>,
 {
-    let (n, m) = *a.shape();
+    let (m, n) = *a.shape();
 
-    let max_steps = k.min(n.saturating_sub(1).min(m));
+    let max_steps = k.min(n.min(m));
 
     let mut idx_pivot = find_pivot(a, 0);
+
+    let mut pivot_current = a[[idx_pivot.0, idx_pivot.1]];
 
     for step in 0..max_steps {
         swap_axis(a, 0, step, idx_pivot.0);
@@ -185,13 +186,14 @@ where
 
         update_permutation_matrices(p, q, lower, idx_pivot, step);
 
-        let pivot_current = a[[step, step]];
-        if is_pivot_too_small(pivot_current, epsilon) {
-            return step;
-        }
-
         idx_pivot = gaussian_elimination_pivot(a, lower, step, pivot_current);
         idx_pivot = (idx_pivot.0 + step + 1, idx_pivot.1 + step);
+
+        pivot_current = a[[step, step]];
+        if is_pivot_too_small(pivot_current, epsilon) {
+            println!("bug");
+            return step;
+        }
     }
     max_steps
 }
