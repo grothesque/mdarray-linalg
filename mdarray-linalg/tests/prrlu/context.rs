@@ -4,7 +4,7 @@ use mdarray::DTensor;
 use mdarray_linalg::{PRRLU, PRRLUDecomp, naive_matmul};
 use mdarray_linalg_naive::Naive;
 
-// use crate::common::{random_matrix, rank_k_matrix};
+use mdarray_linalg_naive::prrlu::simple::minus_outer_pivot;
 
 use crate::{
     assert_matrix_eq,
@@ -58,24 +58,26 @@ fn rank_deficient() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    println!("{:?}", decomp.u);
+
     assert_eq!(decomp.rank, k);
     assert_matrix_eq!(original, reconstructed);
 }
 
 #[test]
 fn full_rank() {
-    let n = 3;
-    let m = 3;
+    let n = 10;
+    let m = 10;
 
     // Generate a well-conditioned full rank matrix
     let original = random_matrix(m, n);
-
     let mut a = original.clone();
 
-    // Perform full PRR-LU (k = min(n-1, m) = 2)
+    // Perform full PRR-LU
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    assert_eq!(decomp.rank, n);
     assert_matrix_eq!(original, reconstructed);
 }
 
@@ -92,6 +94,9 @@ fn rectangular() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    println!("{:?}", decomp.u);
+
+    assert_eq!(decomp.rank, k);
     assert_matrix_eq!(original, reconstructed);
 }
 
