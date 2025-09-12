@@ -8,7 +8,7 @@ use super::simple::{eye, prrlu};
 
 use crate::Naive;
 
-impl<T: Default + Clone + One + Float + Signed> PRRLU<T> for Naive {
+impl<T: Default + Clone + One + Float + Signed + std::fmt::Debug> PRRLU<T> for Naive {
     fn prrlu<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> PRRLUDecomp<T> {
         let (m, n) = *a.shape();
         let mut p = eye::<T>(m);

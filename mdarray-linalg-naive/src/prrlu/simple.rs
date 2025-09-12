@@ -75,17 +75,23 @@ pub fn minus_outer_pivot<
 ) -> (usize, usize) {
     let (m, n) = (a.len(), b.len());
 
-    let mut max = out[[0, 0]].abs();
-    let mut pos = (0, 0);
-
     assert_eq!(
         out.shape(),
         &(m, n),
         "Output shape must match a.len() × b.len()"
     );
 
+    let mut pos = (0, 0);
+    let mut max = {
+        out[[0, 0]] = out[[0, 0]] - a[0] * b[0];
+        out[[0, 0]].abs()
+    };
+
     for i in 0..m {
         for j in 0..n {
+            if i == 0 && j == 0 {
+                continue;
+            }
             out[[i, j]] = out[[i, j]] - a[i] * b[j];
             let out_abs = out[[i, j]].abs();
             if out_abs > max {
@@ -170,7 +176,8 @@ where
         + std::ops::Sub<Output = T>
         + std::ops::Div<Output = T>
         + std::ops::Mul<Output = T>
-        + std::ops::Neg<Output = T>,
+        + std::ops::Neg<Output = T>
+        + std::fmt::Debug,
 {
     let (m, n) = *a.shape();
 
@@ -178,23 +185,22 @@ where
 
     let mut idx_pivot = find_pivot(a, 0);
 
-    let mut pivot_current = a[[idx_pivot.0, idx_pivot.1]];
-
     for step in 0..max_steps {
         swap_axis(a, 0, step, idx_pivot.0);
         swap_axis(a, 1, step, idx_pivot.1);
 
         update_permutation_matrices(p, q, lower, idx_pivot, step);
 
-        idx_pivot = gaussian_elimination_pivot(a, lower, step, pivot_current);
-        idx_pivot = (idx_pivot.0 + step + 1, idx_pivot.1 + step);
+        let pivot_current = a[[step, step]];
 
-        pivot_current = a[[step, step]];
         if is_pivot_too_small(pivot_current, epsilon) {
-            println!("bug");
             return step;
         }
+
+        idx_pivot = gaussian_elimination_pivot(a, lower, step, pivot_current);
+        idx_pivot = (idx_pivot.0 + step + 1, idx_pivot.1 + step);
     }
+
     max_steps
 }
 

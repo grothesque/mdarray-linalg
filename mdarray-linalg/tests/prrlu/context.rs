@@ -4,6 +4,8 @@ use mdarray::DTensor;
 use mdarray_linalg::{PRRLU, PRRLUDecomp, naive_matmul};
 use mdarray_linalg_naive::Naive;
 
+use mdarray_linalg_naive::prrlu::simple::minus_outer_pivot;
+
 // use crate::common::{random_matrix, rank_k_matrix};
 
 use crate::{
@@ -58,25 +60,26 @@ fn rank_deficient() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    println!("{:?}", decomp.u);
+
     assert_eq!(decomp.rank, k);
     assert_matrix_eq!(original, reconstructed);
 }
 
+use std::time::Instant;
+
 #[test]
 fn full_rank() {
-    let n = 3;
-    let m = 3;
+    let n = 10;
+    let m = 10;
 
     // Generate a well-conditioned full rank matrix
     let original = random_matrix(m, n);
-
     let mut a = original.clone();
 
-    // Perform full PRR-LU (k = min(n-1, m) = 2)
+    // Perform full PRR-LU
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
-
-    println!("{:?}", decomp.u);
 
     assert_eq!(decomp.rank, n);
     assert_matrix_eq!(original, reconstructed);
@@ -94,6 +97,8 @@ fn rectangular() {
 
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
+
+    println!("{:?}", decomp.u);
 
     assert_eq!(decomp.rank, k);
     assert_matrix_eq!(original, reconstructed);
@@ -114,8 +119,21 @@ fn hilbert_matrix() {
     let decomp = Naive.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
+    // assert_eq!(decomp.rank, n); rank is wrong
     assert_matrix_eq!(original, reconstructed);
 }
+
+// #[test]
+// fn test_minus_outer_pivot() {
+//     let mut a = DTensor::<f64, 2>::from_fn([3, 3], |i| (i[0] + i[1]) as f64);
+//     println!("{:?}", a);
+//     let x = vec![1.; 3];
+//     let y = vec![1.; 3];
+//     let idx = minus_outer_pivot(x.clone(), y.clone(), &mut a.view_mut(.., ..));
+//     println!("{:?}", a);
+//     println!("{:?}", idx);
+//     x[10];
+// }
 
 // #[test]
 // fn backend_prrlu_random_matrix() {

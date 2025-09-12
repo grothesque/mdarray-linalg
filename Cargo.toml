@@ -4,6 +4,6 @@ members = [
   "mdarray-linalg-naive",
   "mdarray-linalg-blas",
   "mdarray-linalg-lapack",
-  "mdarray-linalg-faer",
+  "mdarray-linalg-faer", 
 ]
 resolver = "3"
