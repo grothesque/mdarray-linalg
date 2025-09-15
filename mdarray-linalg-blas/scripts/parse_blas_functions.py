@@ -58,7 +58,6 @@ def guess_blas_arg_type(arg_name, routine_name=None):
             return "real_scalar"
         if arg in {"param", "p"}:
             return "array"
-        
     # --- Standard cases ---
     if arg in cblas:
         return "cblas_option"
