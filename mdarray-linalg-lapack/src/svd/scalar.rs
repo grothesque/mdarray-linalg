@@ -119,7 +119,7 @@ macro_rules! impl_lapack_scalar_real {
                                 &lwork as *const i32,
                                 info as *mut i32,
                             );
-                        }
+                    }
                 }
             }
         }
@@ -147,8 +147,6 @@ macro_rules! sv_cast {
 macro_rules! impl_lapack_scalar_cplx {
     ($t:ty, $prefix:ident) => {
         impl LapackScalar for $t {
-            // type Real = <$t as num_complex::ComplexFloat>::Real;
-
             #[inline]
             unsafe fn lapack_gesdd(
                 jobz: i8,
@@ -211,24 +209,24 @@ macro_rules! impl_lapack_scalar_cplx {
             ) {
                 unsafe {
                     paste! {
-                            lapack_sys::[<$prefix gesvd_>](
-                                &jobu as *const i8,
+                                lapack_sys::[<$prefix gesvd_>](
+                                    &jobu as *const i8,
                     &jobvt as *const i8,
-                                &m as *const i32,
-                                &n as *const i32,
-                                a as *mut _,
-                                &lda as *const i32,
-                                s as *mut _,
-                                u as *mut _,
-                                &ldu as *const i32,
-                                vt as *mut _,
-                                &ldvt as *const i32,
-                                work as *mut _,
-                                &lwork as *const i32,
-                                        rwork as *mut _,
-                                info as *mut i32,
-                            );
-                        }
+                                    &m as *const i32,
+                                    &n as *const i32,
+                                    a as *mut _,
+                                    &lda as *const i32,
+                                    s as *mut _,
+                                    u as *mut _,
+                                    &ldu as *const i32,
+                                    vt as *mut _,
+                                    &ldvt as *const i32,
+                                    work as *mut _,
+                                    &lwork as *const i32,
+                                    rwork as *mut _,
+                                    info as *mut i32,
+                                );
+                    }
                 }
             }
         }
