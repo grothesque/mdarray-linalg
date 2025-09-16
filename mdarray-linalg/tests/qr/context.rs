@@ -61,9 +61,6 @@ fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
     naive_matmul(&q, &r, &mut reconstructed);
     assert_complex_matrix_eq!(a, reconstructed);
 
-    pretty_print(&a);
-    pretty_print(&reconstructed);
-
     let mut reconstructed = DTensor::<Complex<f64>, 2>::zeros([m, n]);
     let (q, r) = bd.qr(&mut a.clone());
     naive_matmul(&q, &r, &mut reconstructed);
@@ -91,10 +88,15 @@ where
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
     naive_matmul(&q, &r, &mut reconstructed);
+
     assert_matrix_eq!(a, reconstructed);
 
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
     let (q, r) = bd.qr(&mut a.clone());
     naive_matmul(&q, &r, &mut reconstructed);
+
+    pretty_print(a);
+    pretty_print(&reconstructed);
+
     assert_matrix_eq!(a, reconstructed);
 }
