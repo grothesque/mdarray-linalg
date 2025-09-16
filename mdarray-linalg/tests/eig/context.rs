@@ -1,6 +1,7 @@
 use approx::assert_relative_eq;
 use num_complex::Complex;
 
+use crate::common::random_matrix;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, tensor};
 use mdarray_linalg::{Eig, EigDecomp, naive_matmul, pretty_print};
@@ -86,19 +87,35 @@ where
 }
 
 #[test]
-fn test_backend_eig_square_matrix() {
-    test_eig_square_matrix(&Lapack::default());
+#[should_panic]
+fn non_square_matrix() {
+    test_non_square_matrix(&Lapack::default());
     // test_eig_square_matrix(&Faer);
 }
 
-fn test_eig_square_matrix(bd: &impl Eig<f64>) {
+fn test_non_square_matrix(bd: &impl Eig<f64>) {
     let n = 3;
-    let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] + i[1]) as f64);
+    let m = 5;
+    let a = random_matrix(m, n);
     test_eigen_reconstruction(bd, &a, true);
 }
 
 #[test]
-fn test_backend_eig_cplx_square_matrix() {
+fn square_matrix() {
+    test_square_matrix(&Lapack::default());
+    // test_eig_square_matrix(&Faer);
+}
+
+fn test_square_matrix(bd: &impl Eig<f64>) {
+    let n = 3;
+    let a = random_matrix(n, n);
+    // let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] + i[1]) as f64);
+
+    test_eigen_reconstruction(bd, &a, true);
+}
+
+#[test]
+fn cplx_square_matrix() {
     test_eig_cplx_square_matrix(&Lapack::default());
 }
 
