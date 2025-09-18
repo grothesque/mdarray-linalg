@@ -19,15 +19,16 @@ use mdarray_linalg::{get_dims, into_i32};
 
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 
-use super::scalar::{LapackScalar, NeedsRwork};
+use super::scalar::{LapackScalar, NeedsRwork, ToComplex};
 use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult};
-use num_complex::ComplexFloat;
+use num_complex::{Complex, ComplexFloat};
 
 use crate::Lapack;
 
 impl<T> Eig<T> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    i8: Into<T::Real>,
     T::Real: Into<T>,
 {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices

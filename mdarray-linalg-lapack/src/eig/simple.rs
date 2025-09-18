@@ -3,7 +3,7 @@ use mdarray::{DSlice, DTensor, Layout, tensor};
 use mdarray_linalg::EigError;
 
 use mdarray_linalg::{get_dims, into_i32};
-use num_complex::ComplexFloat;
+use num_complex::{Complex, ComplexFloat};
 use std::ptr::null_mut;
 
 fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
@@ -37,6 +37,10 @@ pub fn geig<
     a: &mut DSlice<T, 2, La>,
     eigenvalues_real: &mut DSlice<T, 2, Ler>,
     eigenvalues_imag: &mut DSlice<T, 2, Lei>,
+    // mut left_eigenvectors_real: Option<&mut DSlice<T, 2, Lvl>>,
+    // mut left_eigenvectors_imag: Option<&mut DSlice<T, 2, Lvl>>,
+    // mut right_eigenvectors_real: Option<&mut DSlice<T, 2, Lvr>>,
+    // mut right_eigenvectors_imag: Option<&mut DSlice<T, 2, Lvr>>,
     mut left_eigenvectors: Option<&mut DSlice<T, 2, Lvl>>,
     mut right_eigenvectors: Option<&mut DSlice<T, 2, Lvr>>,
 ) -> Result<(), EigError>
