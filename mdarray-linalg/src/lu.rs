@@ -1,6 +1,7 @@
 use mdarray::{DSlice, DTensor, Layout};
 
 pub trait LU<T> {
+    /// Compute LU decomposition overwriting existing matrices
     fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
@@ -9,6 +10,7 @@ pub trait LU<T> {
         p: &mut DSlice<T, 2, Lp>,
     );
 
+    /// Compute LU decomposition with new allocated matrices
     fn lu<L: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
