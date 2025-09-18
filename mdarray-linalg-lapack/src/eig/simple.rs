@@ -37,10 +37,6 @@ pub fn geig<
     a: &mut DSlice<T, 2, La>,
     eigenvalues_real: &mut DSlice<T, 2, Ler>,
     eigenvalues_imag: &mut DSlice<T, 2, Lei>,
-    // mut left_eigenvectors_real: Option<&mut DSlice<T, 2, Lvl>>,
-    // mut left_eigenvectors_imag: Option<&mut DSlice<T, 2, Lvl>>,
-    // mut right_eigenvectors_real: Option<&mut DSlice<T, 2, Lvr>>,
-    // mut right_eigenvectors_imag: Option<&mut DSlice<T, 2, Lvr>>,
     mut left_eigenvectors: Option<&mut DSlice<T, 2, Lvl>>,
     mut right_eigenvectors: Option<&mut DSlice<T, 2, Lvr>>,
 ) -> Result<(), EigError>

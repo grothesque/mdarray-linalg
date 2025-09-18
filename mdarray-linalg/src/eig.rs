@@ -1,4 +1,5 @@
 use mdarray::{DSlice, DTensor, Dense, Layout};
+use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -13,17 +14,17 @@ pub enum EigError {
     NotSquareMatrix,
 }
 
-pub struct EigDecomp<T> {
+pub struct EigDecomp<T: ComplexFloat> {
     pub eigenvalues_real: DTensor<T, 2>,
     pub eigenvalues_imag: Option<DTensor<T, 2>>,
-    pub left_eigenvectors: Option<DTensor<T, 2>>,
-    pub right_eigenvectors: Option<DTensor<T, 2>>,
+    pub left_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
+    pub right_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
 }
 
 pub type EigResult<T> = Result<EigDecomp<T>, EigError>;
 
 /// Eigenvalue decomposition operations of general and Hermitian/symmetric matrices
-pub trait Eig<T> {
+pub trait Eig<T: ComplexFloat> {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
     /// The matrix `A` satisfies: `A * v = λ * v` where v are the right eigenvectors
     fn eig<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;

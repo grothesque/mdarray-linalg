@@ -32,7 +32,10 @@ where
     T::Real: Into<T>,
 {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
-    fn eig<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
+    fn eig<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>
+    where
+        <T as ComplexFloat>::Real: From<T>,
+    {
         let (m, n) = get_dims!(a);
         if m != n {
             return Err(EigError::NotSquareMatrix);
@@ -40,21 +43,52 @@ where
 
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
-        let mut right_eigenvectors = tensor![[T::default(); n as usize]; n as usize];
+
+        let mut right_eigenvectors_tmp = tensor![[T::default();n as usize]; n as usize];
+
+        let mut right_eigenvectors = tensor![[Complex::<T::Real>::new(T::Real::from(0.into().into()), T::Real::from(0.into().into()));
+             n as usize]; n as usize];
 
         match geig::<L, Dense, Dense, Dense, Dense, T>(
             a,
             &mut eigenvalues_real,
             &mut eigenvalues_imag,
             None, // no left eigenvectors
-            Some(&mut right_eigenvectors),
+            Some(&mut right_eigenvectors_tmp),
         ) {
-            Ok(_) => Ok(EigDecomp {
-                eigenvalues_real,
-                eigenvalues_imag: Some(eigenvalues_imag),
-                left_eigenvectors: None,
-                right_eigenvectors: Some(right_eigenvectors),
-            }),
+            Ok(_) => {
+                let mut j = 0_usize;
+                while j < n as usize {
+                    let imag = eigenvalues_imag[[0, j]];
+                    if imag == T::default() {
+                        for i in 0..(n as usize) {
+                            let re = right_eigenvectors_tmp[[i, j]];
+                            right_eigenvectors[[i, j]] = Complex::new(
+                                T::Real::from(re.into()),
+                                T::Real::from(0.into().into()),
+                            );
+                        }
+                        j += 1;
+                    } else {
+                        for i in 0..(n as usize) {
+                            let re = right_eigenvectors_tmp[[i, j]];
+                            let im = right_eigenvectors_tmp[[i, j + 1]];
+                            right_eigenvectors[[i, j]] =
+                                Complex::new(T::Real::from(re.into()), T::Real::from(im.into())); // v = Re + i Im
+                            right_eigenvectors[[i, j + 1]] =
+                                ComplexFloat::conj(Complex::new(re.into(), im.into())); // v̄ = Re - i Im
+                        }
+                        j += 2;
+                    }
+                }
+
+                Ok(EigDecomp {
+                    eigenvalues_real,
+                    eigenvalues_imag: Some(eigenvalues_imag),
+                    left_eigenvectors: None,
+                    right_eigenvectors: Some(right_eigenvectors),
+                })
+            }
             Err(e) => Err(e),
         }
     }
