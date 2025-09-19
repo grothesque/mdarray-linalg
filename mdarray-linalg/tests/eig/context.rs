@@ -6,7 +6,6 @@ use mdarray::{DTensor, tensor};
 use mdarray_linalg::{Eig, EigDecomp, naive_matmul, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
 use mdarray_linalg_lapack::Lapack;
-
 use num_complex::{Complex, ComplexFloat};
 use rand::Rng;
 
@@ -19,6 +18,7 @@ where
         + std::fmt::Display
         + std::ops::AddAssign,
     T::Real: std::fmt::Display,
+    f64: From<T>,
 {
     let (n, m) = (a.shape().0, a.shape().1);
     assert_eq!(n, m, "Eigen decomposition requires square matrix");
@@ -51,22 +51,27 @@ where
 
     println!("{:?}", *eigenvalues_real.shape());
     println!("{:?}", *right_eigenvectors.shape());
+    let x = T::default();
 
     for i in 0..n {
-        // let λ = Complex::new(eigenvalues_real[[0, i]], eigenvalues_imag[[0, i]]);
-        let λ = eigenvalues_real[[0, i]];
+        let λ = Complex::new(eigenvalues_real[[0, i]], eigenvalues_imag[[0, i]]);
         let v = right_eigenvectors.view(.., i).to_owned();
         let mut av = DTensor::<T, 1>::zeros([n]);
+        let mut av = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
         let mut λv = DTensor::<T, 1>::zeros([n]);
+        let mut λv = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
 
         // A × v
         for row in 0..n {
-            let mut sum = T::default();
+            let mut sum = Complex::new(x.re(), x.re());
             for col in 0..n {
-                sum = sum + a[[row, col]] * v[[col]];
+                sum = sum
+                    + Complex::new(a[[row, col]].re(), x.re())
+                        * Complex::new(v[[col]].re(), v[[col]].im());
             }
             av[[row]] = sum;
-            λv[[row]] = λ * v[[row]];
+            λv[[row]] = Complex::<f64>::new(λ.re.into(), λ.im.into())
+                * Complex::<f64>::new(v[[row]].re(), v[[row]].im());
         }
 
         if debug_print {
@@ -86,6 +91,10 @@ where
         }
     }
 }
+
+// fn test_eigen_reconstruction_2<T>(a: &DTensor<T, 2>, lambda: debug_print: bool) {
+
+// }
 
 #[test]
 #[should_panic]
@@ -110,10 +119,11 @@ fn square_matrix() {
 fn test_square_matrix(bd: &impl Eig<f64>) {
     let n = 2;
     let a = random_matrix(n, n);
-    let a = tensor![
-        [-1.3687125300798364, -5.83702909406171],
-        [5.030167836010184, 5.50660879498793]
-    ];
+
+    // let a = tensor![
+    //     [-1.3687125300798364, -5.83702909406171],
+    //     [5.030167836010184, 5.50660879498793]
+    // ];
     // let a = DTensor::<f64, 2>::from_fn([n, n], |i| {
     //     (1 / (10 * i[0] + i[1] + 1) * (i[0] + 1) * (i[1] + 1)) as f64
     // });

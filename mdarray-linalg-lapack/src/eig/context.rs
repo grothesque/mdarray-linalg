@@ -34,7 +34,7 @@ where
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
     fn eig<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>
     where
-        <T as ComplexFloat>::Real: From<T>,
+        T: ComplexFloat,
     {
         let (m, n) = get_dims!(a);
         if m != n {
@@ -46,8 +46,9 @@ where
 
         let mut right_eigenvectors_tmp = tensor![[T::default();n as usize]; n as usize];
 
-        let mut right_eigenvectors = tensor![[Complex::<T::Real>::new(T::Real::from(0.into().into()), T::Real::from(0.into().into()));
-             n as usize]; n as usize];
+        let x = T::default();
+
+        let mut right_eigenvectors = tensor![[Complex::new(x.re(), x.re());n as usize]; n as usize];
 
         match geig::<L, Dense, Dense, Dense, Dense, T>(
             a,
@@ -63,20 +64,16 @@ where
                     if imag == T::default() {
                         for i in 0..(n as usize) {
                             let re = right_eigenvectors_tmp[[i, j]];
-                            right_eigenvectors[[i, j]] = Complex::new(
-                                T::Real::from(re.into()),
-                                T::Real::from(0.into().into()),
-                            );
+                            right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
                         }
                         j += 1;
                     } else {
                         for i in 0..(n as usize) {
                             let re = right_eigenvectors_tmp[[i, j]];
                             let im = right_eigenvectors_tmp[[i, j + 1]];
-                            right_eigenvectors[[i, j]] =
-                                Complex::new(T::Real::from(re.into()), T::Real::from(im.into())); // v = Re + i Im
+                            right_eigenvectors[[i, j]] = Complex::new(re.re(), im.re()); // v = Re + i Im
                             right_eigenvectors[[i, j + 1]] =
-                                ComplexFloat::conj(Complex::new(re.into(), im.into())); // v̄ = Re - i Im
+                                ComplexFloat::conj(Complex::new(re.re(), im.re())); // v̄ = Re - i Im
                         }
                         j += 2;
                     }
@@ -102,22 +99,62 @@ where
 
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
-        let mut left_eigenvectors = tensor![[T::default(); n as usize]; n as usize];
-        let mut right_eigenvectors = tensor![[T::default(); n as usize]; n as usize];
+        let mut left_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+        let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+
+        let x = T::default();
+        let mut left_eigenvectors = tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
+        let mut right_eigenvectors =
+            tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
 
         match geig(
             a,
             &mut eigenvalues_real,
             &mut eigenvalues_imag,
-            Some(&mut left_eigenvectors),
-            Some(&mut right_eigenvectors),
+            Some(&mut left_eigenvectors_tmp),
+            Some(&mut right_eigenvectors_tmp),
         ) {
-            Ok(_) => Ok(EigDecomp {
-                eigenvalues_real,
-                eigenvalues_imag: Some(eigenvalues_imag),
-                left_eigenvectors: Some(left_eigenvectors),
-                right_eigenvectors: Some(right_eigenvectors),
-            }),
+            Ok(_) => {
+                // Process right eigenvectors
+                let mut j = 0_usize;
+                while j < n as usize {
+                    let imag = eigenvalues_imag[[0, j]];
+                    if imag == T::default() {
+                        // Real eigenvalue
+                        for i in 0..(n as usize) {
+                            let re_right = right_eigenvectors_tmp[[i, j]];
+                            let re_left = left_eigenvectors_tmp[[i, j]];
+                            right_eigenvectors[[i, j]] = Complex::new(re_right.re(), re_right.im());
+                            left_eigenvectors[[i, j]] = Complex::new(re_left.re(), re_left.im());
+                        }
+                        j += 1;
+                    } else {
+                        // Complex conjugate pair
+                        for i in 0..(n as usize) {
+                            let re_right = right_eigenvectors_tmp[[i, j]];
+                            let im_right = right_eigenvectors_tmp[[i, j + 1]];
+                            let re_left = left_eigenvectors_tmp[[i, j]];
+                            let im_left = left_eigenvectors_tmp[[i, j + 1]];
+
+                            right_eigenvectors[[i, j]] = Complex::new(re_right.re(), im_right.re());
+                            right_eigenvectors[[i, j + 1]] =
+                                ComplexFloat::conj(Complex::new(re_right.re(), im_right.re()));
+
+                            left_eigenvectors[[i, j]] = Complex::new(re_left.re(), im_left.re());
+                            left_eigenvectors[[i, j + 1]] =
+                                ComplexFloat::conj(Complex::new(re_left.re(), im_left.re()));
+                        }
+                        j += 2;
+                    }
+                }
+
+                Ok(EigDecomp {
+                    eigenvalues_real,
+                    eigenvalues_imag: Some(eigenvalues_imag),
+                    left_eigenvectors: Some(left_eigenvectors),
+                    right_eigenvectors: Some(right_eigenvectors),
+                })
+            }
             Err(e) => Err(e),
         }
     }
@@ -162,6 +199,8 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
+        // Note: Cette méthode assume que right_eigenvectors est déjà de type Complex
+        // et que l'appelant gère la conversion des parties réelles/imaginaires
         geig::<L, Dense, Dense, Dense, Dense, T>(
             a,
             eigenvalues_real,
@@ -179,16 +218,30 @@ where
         }
 
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
-        let mut right_eigenvectors = tensor![[T::default(); n as usize]; n as usize];
+        let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+
+        let x = T::default();
+        let mut right_eigenvectors =
+            tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
 
         // For Hermitian matrices, we use a specialized routine that only computes real eigenvalues
-        match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors) {
-            Ok(_) => Ok(EigDecomp {
-                eigenvalues_real,
-                eigenvalues_imag: None, // Hermitian matrices have real eigenvalues only
-                left_eigenvectors: None,
-                right_eigenvectors: Some(right_eigenvectors),
-            }),
+        match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
+            Ok(_) => {
+                // For Hermitian matrices, all eigenvalues are real and eigenvectors are real
+                for j in 0..(n as usize) {
+                    for i in 0..(n as usize) {
+                        let re = right_eigenvectors_tmp[[i, j]];
+                        right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
+                    }
+                }
+
+                Ok(EigDecomp {
+                    eigenvalues_real,
+                    eigenvalues_imag: None, // Hermitian matrices have real eigenvalues only
+                    left_eigenvectors: None,
+                    right_eigenvectors: Some(right_eigenvectors),
+                })
+            }
             Err(e) => Err(e),
         }
     }
