@@ -58,7 +58,6 @@ def guess_blas_arg_type(arg_name, routine_name=None):
             return "real_scalar"
         if arg in {"param", "p"}:
             return "array"
-
     # --- Standard cases ---
     if arg in cblas:
         return "cblas_option"
@@ -249,7 +248,6 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
         'c_double': 'f64',
     }
 
-
     if "dot" in arg_name:
         return '*mut Complex<f32>' if "float" in c_type  else '*mut Complex<f64>'
 
@@ -275,9 +273,7 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
 
         if "complex" in c_type:
             return 'Complex<f32>' if "float" in c_type  else 'Complex<f64>'
-
         return 'f32' if "float" in c_type  else 'f64'       
-
 
     return type_mapping.get(c_type, c_type)
 
