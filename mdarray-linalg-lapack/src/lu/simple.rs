@@ -30,25 +30,28 @@ where
     let mut ipiv = vec![0i32; min_mn as usize];
     let mut info = 0;
 
-    transpose(a); // LAPACK is column major
+    let mut a_col_major = DTensor::<T, 2>::zeros([n as usize, m as usize]);
+    for i in 0..(n as usize) {
+        for j in 0..(m as usize) {
+            a_col_major[[i, j]] = a[[j, i]];
+        }
+    }
 
     unsafe {
         T::lapack_getrf(
             m,
             n,
-            a.as_mut_ptr(),
+            a_col_major.as_mut_ptr(),
             m, // lda
             ipiv.as_mut_ptr(),
             &mut info,
         );
     }
 
-    transpose(a);
-
     for i in 0_usize..(m as usize) {
         for j in 0_usize..(min_mn as usize) {
             if i > j {
-                l[[i, j]] = a[[i, j]];
+                l[[i, j]] = a_col_major[[j, i]];
             } else if i == j {
                 l[[i, j]] = T::one();
             } else {
@@ -60,7 +63,7 @@ where
     for i in 0_usize..(min_mn as usize) {
         for j in 0_usize..(n as usize) {
             if i <= j {
-                u[[i, j]] = a[[i, j]];
+                u[[i, j]] = a_col_major[[j, i]];
             } else {
                 u[[i, j]] = T::zero();
             }
@@ -68,25 +71,4 @@ where
     }
 
     ipiv
-}
-
-pub fn transpose<T, L>(c: &mut DSlice<T, 2, L>)
-where
-    T: ComplexFloat,
-    L: Layout,
-{
-    let (m, n) = *c.shape();
-
-    assert_eq!(
-        m, n,
-        "Transpose in-place only implemented for square matrices."
-    );
-
-    for i in 0..m {
-        for j in (i + 1)..n {
-            let tmp = c[[i, j]];
-            c[[i, j]] = c[[j, i]];
-            c[[j, i]] = tmp;
-        }
-    }
 }
