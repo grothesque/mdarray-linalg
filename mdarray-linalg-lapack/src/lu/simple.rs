@@ -1,0 +1,74 @@
+use super::scalar::LapackScalar;
+use mdarray::{DSlice, DTensor, Layout};
+use mdarray_linalg::get_dims;
+use num_complex::ComplexFloat;
+
+pub fn into_i32<T>(x: T) -> i32
+where
+    T: TryInto<i32>,
+    <T as TryInto<i32>>::Error: std::fmt::Debug,
+{
+    x.try_into().expect("dimension must fit into i32")
+}
+
+pub fn getrf<La: Layout, Ll: Layout, Lu: Layout, T: ComplexFloat + Default + LapackScalar>(
+    a: &mut DSlice<T, 2, La>,
+    l: &mut DSlice<T, 2, Ll>,
+    u: &mut DSlice<T, 2, Lu>,
+) -> Vec<i32>
+where
+    T::Real: Into<T>,
+{
+    let ((m, n), (ml, nl), (mu, nu)) = get_dims!(a, l, u);
+    let min_mn = m.min(n);
+
+    assert_eq!(ml, m, "L must have m rows");
+    assert_eq!(nl, min_mn, "L must have min(m,n) columns");
+    assert_eq!(mu, min_mn, "U must have min(m,n) rows");
+    assert_eq!(nu, n, "U must have n columns");
+
+    let mut ipiv = vec![0i32; min_mn as usize];
+    let mut info = 0;
+
+    let mut a_col_major = DTensor::<T, 2>::zeros([n as usize, m as usize]);
+    for i in 0..(n as usize) {
+        for j in 0..(m as usize) {
+            a_col_major[[i, j]] = a[[j, i]];
+        }
+    }
+
+    unsafe {
+        T::lapack_getrf(
+            m,
+            n,
+            a_col_major.as_mut_ptr(),
+            m, // lda
+            ipiv.as_mut_ptr(),
+            &mut info,
+        );
+    }
+
+    for i in 0_usize..(m as usize) {
+        for j in 0_usize..(min_mn as usize) {
+            if i > j {
+                l[[i, j]] = a_col_major[[j, i]];
+            } else if i == j {
+                l[[i, j]] = T::one();
+            } else {
+                l[[i, j]] = T::zero();
+            }
+        }
+    }
+
+    for i in 0_usize..(min_mn as usize) {
+        for j in 0_usize..(n as usize) {
+            if i <= j {
+                u[[i, j]] = a_col_major[[j, i]];
+            } else {
+                u[[i, j]] = T::zero();
+            }
+        }
+    }
+
+    ipiv
+}
