@@ -1,7 +1,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, DTensor, Layout, Shape, View, tensor};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::{MatVec, MatVecBuilder, Side, Triangle, Type, VecOps};
@@ -150,7 +150,7 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
-    fn argmax<Lx: Layout>(&self, x: &DSlice<T, 2, Lx>) -> Vec<usize> {
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Vec<usize> {
         todo!()
     }
     fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {

@@ -1,4 +1,4 @@
-use super::scalar::LapackScalar;
+use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::get_dims;
 use num_complex::ComplexFloat;
@@ -12,7 +12,12 @@ where
     x.try_into().expect("dimension must fit into i32")
 }
 
-pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + LapackScalar>(
+pub fn geqrf<
+    La: Layout,
+    Lq: Layout,
+    Lr: Layout,
+    T: ComplexFloat + Default + LapackScalar + NeedsRwork,
+>(
     a: &mut DSlice<T, 2, La>,
     q: &mut DSlice<T, 2, Lq>,
     r: &mut DSlice<T, 2, Lr>,
@@ -29,7 +34,7 @@ pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + Lap
     // Allocate tau (Householder scalars)
     let mut tau = vec![T::default(); min_mn as usize];
 
-    let mut work = [0.; 1];
+    let mut work = T::allocate(1);
     let lwork = -1;
     let mut info = 0;
 
@@ -46,9 +51,8 @@ pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + Lap
         );
     }
 
-    let lwork = work[0] as i32;
-
-    let mut work = vec![T::default(); lwork as usize];
+    let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
+    let mut work = T::allocate(lwork);
 
     transpose(a); // Lapack is col major
 
@@ -65,100 +69,14 @@ pub fn geqrf<La: Layout, Lq: Layout, Lr: Layout, T: ComplexFloat + Default + Lap
         );
     }
 
-    transpose(a);
-
     for i in 0_usize..(min_mn as usize) {
         for j in i..(n as usize) {
-            r[[i, j]] = a[[i, j]];
+            r[[i, j]] = a[[j, i]];
         }
     }
 
-    transpose(a);
-
-    //    Construct Q explicitly using orgqr/ungqr
-    unsafe {
-        T::lapack_orgqr(
-            m,
-            min_mn,
-            a.as_mut_ptr() as *mut _,
-            tau.as_mut_ptr() as *mut _,
-            work.as_mut_ptr() as *mut _,
-            lwork,
-            &mut info,
-        );
-    }
-
-    transpose(a);
-
-    for i in 0_usize..(m as usize) {
-        for j in 0_usize..(m as usize) {
-            q[[i, j]] = a[[i, j]];
-        }
-    }
-}
-
-pub fn geqrf_uninit<La: Layout, T: ComplexFloat + Default + LapackScalar>(
-    a: &mut DSlice<T, 2, La>,
-    mut q: DTensor<MaybeUninit<T>, 2>,
-    mut r: DTensor<MaybeUninit<T>, 2>,
-) -> (DTensor<T, 2>, DTensor<T, 2>)
-where
-    T::Real: Into<T>,
-{
-    let ((m, n), (mq, nq), (mr, nr)) = get_dims!(a, q, r);
-    let min_mn = m.min(n);
-
-    assert_eq!(mq, nq, "Q must be square (m × m)");
-    assert_eq!(mr, min_mn, "R must have min(m,n) rows");
-    assert_eq!(nr, n, "R must have n columns");
-
-    // Allocate tau (Householder scalars)
-    let mut tau = vec![T::default(); min_mn as usize];
-
-    let mut work = [0.];
-    let lwork = -1i32;
-
-    let mut info = 0;
-
-    // Query optimal workspace size
-    unsafe {
-        T::lapack_geqrf(
-            m,
-            n,
-            a.as_mut_ptr(),
-            tau.as_mut_ptr(),
-            work.as_mut_ptr() as *mut _,
-            lwork,
-            &mut info,
-        );
-    }
-
-    let lwork = work[0] as i32;
-    let mut work = vec![T::default(); lwork as usize];
-
-    transpose(a); // Lapack is col major
-    // Actual computation
-    unsafe {
-        T::lapack_geqrf(
-            m,
-            n,
-            a.as_mut_ptr(),
-            tau.as_mut_ptr(),
-            work.as_mut_ptr() as *mut _,
-            lwork,
-            &mut info,
-        );
-    }
-
-    transpose(a);
-
-    for i in 0_usize..(min_mn as usize) {
-        for j in i..(n as usize) {
-            r[[i, j]].write(a[[i, j]]);
-        }
-    }
-
-    transpose(a);
+    let mut work = T::allocate(1);
+    let lwork = -1;
 
     // Construct Q explicitly using orgqr/ungqr
     unsafe {
@@ -172,15 +90,27 @@ where
             &mut info,
         );
     }
-    transpose(a);
+
+    let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
+    let mut work = T::allocate(lwork);
+
+    unsafe {
+        T::lapack_orgqr(
+            m,
+            min_mn,
+            a.as_mut_ptr() as *mut _,
+            tau.as_mut_ptr() as *mut _,
+            work.as_mut_ptr() as *mut _,
+            lwork,
+            &mut info,
+        );
+    }
 
     for i in 0_usize..(m as usize) {
         for j in 0_usize..(m as usize) {
-            q[[i, j]].write(a[[i, j]]);
+            q[[i, j]] = a[[j, i]];
         }
     }
-
-    unsafe { (q.assume_init(), r.assume_init()) }
 }
 
 pub fn transpose<T, L>(c: &mut DSlice<T, 2, L>)
