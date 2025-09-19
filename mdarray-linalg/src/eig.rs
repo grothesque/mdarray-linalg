@@ -15,8 +15,7 @@ pub enum EigError {
 }
 
 pub struct EigDecomp<T: ComplexFloat> {
-    pub eigenvalues_real: DTensor<T, 2>,
-    pub eigenvalues_imag: Option<DTensor<T, 2>>,
+    pub eigenvalues: DTensor<Complex<T::Real>, 2>,
     pub left_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
     pub right_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
 }

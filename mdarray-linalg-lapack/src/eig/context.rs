@@ -41,13 +41,13 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
-        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
-        let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
-
-        let mut right_eigenvectors_tmp = tensor![[T::default();n as usize]; n as usize];
-
         let x = T::default();
 
+        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+
+        let mut right_eigenvectors_tmp = tensor![[T::default();n as usize]; n as usize];
         let mut right_eigenvectors = tensor![[Complex::new(x.re(), x.re());n as usize]; n as usize];
 
         match geig::<L, Dense, Dense, Dense, Dense, T>(
@@ -58,6 +58,10 @@ where
             Some(&mut right_eigenvectors_tmp),
         ) {
             Ok(_) => {
+                for i in 0..(n as usize) {
+                    eigenvalues[[0, i]] =
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
+                }
                 let mut j = 0_usize;
                 while j < n as usize {
                     let imag = eigenvalues_imag[[0, j]];
@@ -80,8 +84,7 @@ where
                 }
 
                 Ok(EigDecomp {
-                    eigenvalues_real,
-                    eigenvalues_imag: Some(eigenvalues_imag),
+                    eigenvalues,
                     left_eigenvectors: None,
                     right_eigenvectors: Some(right_eigenvectors),
                 })
@@ -97,8 +100,12 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
+        let x = T::default();
+
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+
         let mut left_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
         let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
 
@@ -115,6 +122,11 @@ where
             Some(&mut right_eigenvectors_tmp),
         ) {
             Ok(_) => {
+                for i in 0..(n as usize) {
+                    eigenvalues[[0, i]] =
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
+                }
+
                 // Process right eigenvectors
                 let mut j = 0_usize;
                 while j < n as usize {
@@ -149,8 +161,7 @@ where
                 }
 
                 Ok(EigDecomp {
-                    eigenvalues_real,
-                    eigenvalues_imag: Some(eigenvalues_imag),
+                    eigenvalues,
                     left_eigenvectors: Some(left_eigenvectors),
                     right_eigenvectors: Some(right_eigenvectors),
                 })
@@ -165,23 +176,31 @@ where
         if m != n {
             return Err(EigError::NotSquareMatrix);
         }
+        let x = T::default();
 
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
 
         match geig::<L, Dense, Dense, Dense, Dense, T>(
             a,
             &mut eigenvalues_real,
             &mut eigenvalues_imag,
-            None, // no left eigenvectors
-            None, // no right eigenvectors
+            None,
+            None,
         ) {
-            Ok(_) => Ok(EigDecomp {
-                eigenvalues_real,
-                eigenvalues_imag: Some(eigenvalues_imag),
-                left_eigenvectors: None,
-                right_eigenvectors: None,
-            }),
+            Ok(_) => {
+                for i in 0..(n as usize) {
+                    eigenvalues[[0, i]] =
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
+                }
+
+                Ok(EigDecomp {
+                    eigenvalues,
+                    left_eigenvectors: None,
+                    right_eigenvectors: None,
+                })
+            }
             Err(e) => Err(e),
         }
     }
@@ -199,13 +218,11 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
-        // Note: Cette méthode assume que right_eigenvectors est déjà de type Complex
-        // et que l'appelant gère la conversion des parties réelles/imaginaires
         geig::<L, Dense, Dense, Dense, Dense, T>(
             a,
             eigenvalues_real,
             eigenvalues_imag,
-            None, // no left eigenvectors
+            None,
             Some(right_eigenvectors),
         )
     }
@@ -217,7 +234,11 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
+        let x = T::default();
+
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+
         let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
 
         let x = T::default();
@@ -227,7 +248,11 @@ where
         // For Hermitian matrices, we use a specialized routine that only computes real eigenvalues
         match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
             Ok(_) => {
-                // For Hermitian matrices, all eigenvalues are real and eigenvectors are real
+                for i in 0..(n as usize) {
+                    eigenvalues[[0, i]] =
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_real[[0, i]].im());
+                }
+
                 for j in 0..(n as usize) {
                     for i in 0..(n as usize) {
                         let re = right_eigenvectors_tmp[[i, j]];
@@ -236,8 +261,7 @@ where
                 }
 
                 Ok(EigDecomp {
-                    eigenvalues_real,
-                    eigenvalues_imag: None, // Hermitian matrices have real eigenvalues only
+                    eigenvalues,
                     left_eigenvectors: None,
                     right_eigenvectors: Some(right_eigenvectors),
                 })

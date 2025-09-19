@@ -26,39 +26,36 @@ where
     println!("{:?}", a);
 
     let EigDecomp {
-        eigenvalues_real,
-        eigenvalues_imag,
+        eigenvalues,
         right_eigenvectors,
         ..
     } = bd
         .eig(&mut a.clone())
         .expect("Eigenvalue decomposition failed");
 
-    let eigenvalues_imag = eigenvalues_imag.unwrap();
     let right_eigenvectors = right_eigenvectors.unwrap();
 
-    assert_eq!(*eigenvalues_real.shape(), (1, n));
+    assert_eq!(*eigenvalues.shape(), (1, n));
     assert_eq!(*right_eigenvectors.shape(), (n, n));
 
     if debug_print {
         println!("=== Eigenvalues (λ) ===");
-        println!("{:?}", eigenvalues_real);
+        println!("{:?}", eigenvalues);
         // pretty_print(&);
         println!("=== Eigenvectors (V) ===");
         println!("{:?}", right_eigenvectors);
         // pretty_print(&right_eigenvectors);
     }
 
-    println!("{:?}", *eigenvalues_real.shape());
+    println!("{:?}", *eigenvalues.shape());
     println!("{:?}", *right_eigenvectors.shape());
     let x = T::default();
 
     for i in 0..n {
-        let λ = Complex::new(eigenvalues_real[[0, i]], eigenvalues_imag[[0, i]]);
+        let λ = eigenvalues[[0, i]];
         let v = right_eigenvectors.view(.., i).to_owned();
-        let mut av = DTensor::<T, 1>::zeros([n]);
+
         let mut av = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
-        let mut λv = DTensor::<T, 1>::zeros([n]);
         let mut λv = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
 
         // A × v
