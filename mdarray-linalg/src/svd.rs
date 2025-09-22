@@ -1,6 +1,7 @@
 use mdarray::{DSlice, DTensor, Layout};
 use thiserror::Error;
 
+/// Error types related to singular value decomposition
 #[derive(Debug, Error)]
 pub enum SVDError {
     #[error("Backend error code: {0}")]
@@ -13,16 +14,19 @@ pub enum SVDError {
     BackendDidNotConverge { superdiagonals: i32 },
 }
 
-// pub type SVDResult<T> = Result<(DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>), SVDError>;
-
+/// Holds the results of a singular value decomposition, including
+/// singular values and the left and right singular vectors
 pub struct SVDDecomp<T> {
     pub s: DTensor<T, 2>,
     pub u: DTensor<T, 2>,
     pub vt: DTensor<T, 2>,
 }
 
+/// Result type for singular value decomposition, returning either an
+/// `SVDDecomp` or an `SVDError`
 pub type SVDResult<T> = Result<SVDDecomp<T>, SVDError>;
 
+/// Singular value decomposition for matrix factorization and analysis
 pub trait SVD<T> {
     /// Compute full SVD with new allocated matrices
     fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SVDResult<T>;

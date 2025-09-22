@@ -4,7 +4,7 @@ use crate::matmul::{Triangle, Type};
 
 use num_complex::ComplexFloat;
 
-/// Matrix-vector operations (GEMV, SYMV, TRMV, etc.)
+/// Matrix-vector multiplication and transformations
 pub trait MatVec<T> {
     fn matvec<'a, La, Lx>(
         &self,
@@ -16,7 +16,7 @@ pub trait MatVec<T> {
         Lx: Layout;
 }
 
-/// Builder for matrix-vector operations
+/// Builder interface for configuring matrix-vector operations
 pub trait MatVecBuilder<'a, T, La, Lx>
 where
     La: Layout,
@@ -55,7 +55,7 @@ where
     // syrk herk
 }
 
-/// Vector operations and utilities
+/// Vector operations and basic linear algebra utilities
 pub trait VecOps<T: ComplexFloat> {
     /// Accumulate a scaled vector: `y := α·x + y`
     fn add_to_scaled<Lx: Layout, Ly: Layout>(

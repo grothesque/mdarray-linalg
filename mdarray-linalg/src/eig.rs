@@ -2,6 +2,7 @@ use mdarray::{DSlice, DTensor, Dense, Layout};
 use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;
 
+/// Error types related to eigenvalue decomposition
 #[derive(Debug, Error)]
 pub enum EigError {
     #[error("Backend error code: {0}")]
@@ -14,12 +15,16 @@ pub enum EigError {
     NotSquareMatrix,
 }
 
+/// Holds the results of an eigenvalue decomposition, including
+/// eigenvalues (complex) and optionally left and right eigenvectors
 pub struct EigDecomp<T: ComplexFloat> {
     pub eigenvalues: DTensor<Complex<T::Real>, 2>,
     pub left_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
     pub right_eigenvectors: Option<DTensor<Complex<T::Real>, 2>>,
 }
 
+/// Result type for eigenvalue decomposition, returning either an
+/// `EigDecomp` or an `EigError`
 pub type EigResult<T> = Result<EigDecomp<T>, EigError>;
 
 /// Eigenvalue decomposition operations of general and Hermitian/symmetric matrices

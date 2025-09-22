@@ -1,5 +1,7 @@
 use mdarray::{DSlice, DTensor, Layout};
 
+/// Holds the results of a pivoted, rank-revealing LU decomposition,
+/// including permutation matrices and the computed rank
 pub struct PRRLUDecomp<T> {
     pub p: DTensor<T, 2>,
     pub l: DTensor<T, 2>,
@@ -8,6 +10,7 @@ pub struct PRRLUDecomp<T> {
     pub rank: usize,
 }
 
+/// Pivoted LU decomposition with rank-revealing
 pub trait PRRLU<T> {
     /// Compute full Partial Rank-Revealing LU decomposition
     ///

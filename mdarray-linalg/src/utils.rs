@@ -1,6 +1,7 @@
 use mdarray::{DSlice, DTensor};
 use num_complex::ComplexFloat;
 
+/// Displays a numeric mdarray in a human-readable format (NumPy-style)
 pub fn pretty_print<T: ComplexFloat + std::fmt::Display>(mat: &DTensor<T, 2>)
 where
     <T as num_complex::ComplexFloat>::Real: std::fmt::Display,
@@ -16,6 +17,8 @@ where
     println!();
 }
 
+/// Textbook implementation of matrix multiplication, useful for
+/// debugging and simple tests without relying on a backend
 pub fn naive_matmul<T: ComplexFloat>(a: &DSlice<T, 2>, b: &DSlice<T, 2>, c: &mut DSlice<T, 2>) {
     for (mut ci, ai) in c.rows_mut().into_iter().zip(a.rows()) {
         for (aik, bk) in ai.expr().into_iter().zip(b.rows()) {
@@ -26,6 +29,7 @@ pub fn naive_matmul<T: ComplexFloat>(a: &DSlice<T, 2>, b: &DSlice<T, 2>, c: &mut
     }
 }
 
+/// Safely casts a value to i32
 pub fn into_i32<T>(x: T) -> i32
 where
     T: TryInto<i32>,
@@ -34,6 +38,8 @@ where
     x.try_into().expect("dimension must fit into i32")
 }
 
+/// Returns the dimensions of an arbitrary number of matrices (e.g.,
+/// A, B, C → (ma, na), (mb, nb), (mc, nc))
 #[macro_export]
 macro_rules! get_dims {
     ( $( $matrix:expr ),+ ) => {
@@ -48,8 +54,9 @@ macro_rules! get_dims {
     };
 }
 
-// Make sure that matrix shapes are compatible with C = A * B, and return the dimensions (m, n, k)
-// where C is (m x n), and k is the common dimension of A and B.
+/// Make sure that matrix shapes are compatible with C = A * B, and
+/// return the dimensions (m, n, k) safely cast to `i32`, where C is (m
+/// x n), and k is the common dimension of A and B
 pub fn dims3(
     a_shape: &(usize, usize),
     b_shape: &(usize, usize),
@@ -69,6 +76,8 @@ pub fn dims3(
     (into_i32(m), into_i32(n), into_i32(k))
 }
 
+/// Make sure that matrix shapes are compatible with A * B, and return
+/// the dimensions (m, n) safely cast to `i32`
 pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
     let (m, k) = *a_shape;
     let (k2, n) = *b_shape;
@@ -81,6 +90,8 @@ pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
     (into_i32(m), into_i32(n))
 }
 
+/// Handles different stride layouts by selecting the correct memory
+/// order and stride for contiguous arrays
 #[macro_export]
 macro_rules! trans_stride {
     ($x:expr, $same_order:expr, $other_order:expr) => {{

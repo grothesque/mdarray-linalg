@@ -1,21 +1,25 @@
 use mdarray::{DSlice, DTensor, Layout};
 
+/// Specifies whether the left or right matrix has the special property
 pub enum Side {
     Left,
     Right,
 }
 
+/// Identifies the structural type of a matrix (Hermitian, symmetric, or triangular)
 pub enum Type {
     Sym,
     Her,
     Tri,
 }
 
+/// Specifies whether a matrix is lower or upper triangular
 pub enum Triangle {
     Upper,
     Lower,
 }
 
+/// Matrix-matrix multiplication and related operations
 pub trait MatMul<T> {
     fn matmul<'a, La, Lb>(
         &self,
@@ -27,6 +31,7 @@ pub trait MatMul<T> {
         Lb: Layout;
 }
 
+/// Builder interface for configuring matrix-matrix operations
 pub trait MatMulBuilder<'a, T, La, Lb>
 where
     La: Layout,

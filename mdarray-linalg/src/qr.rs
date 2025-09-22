@@ -1,5 +1,6 @@
 use mdarray::{DSlice, DTensor, Layout};
 
+/// QR decomposition for orthogonal-triangular factorization
 pub trait QR<T> {
     /// Compute QR decomposition overwriting existing matrices
     fn qr_overwrite<L: Layout, Lq: Layout, Lr: Layout>(

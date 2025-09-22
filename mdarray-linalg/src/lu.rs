@@ -1,5 +1,6 @@
 use mdarray::{DSlice, DTensor, Layout};
 
+///  LU decomposition for solving linear systems and matrix inversion
 pub trait LU<T> {
     /// Compute LU decomposition overwriting existing matrices
     fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
