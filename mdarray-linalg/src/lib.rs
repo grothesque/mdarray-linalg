@@ -69,6 +69,7 @@
 //! use mdarray_linalg_blas::Blas;
 //! use mdarray_linalg_naive::Naive;
 //! use mdarray_linalg_lapack::Lapack;
+//! use mdarray_linalg::{Eig, EigDecomp};
 //!
 //! fn main() {
 //!     // ----- Vector operations -----
@@ -96,9 +97,9 @@
 //!
 //!     // ----- Eigenvalue decomposition -----
 //!     let mut m = mdarray::tensor![[1., 2.], [2., 3.]];
+//!     let bd = Lapack::default();
 //!
-//!     let decomp = Lapack
-//!         .eig(&mut m)
+//!     let decomp = bd.eig(&mut m)
 //!         .expect("Eigenvalue decomposition failed");
 //!
 //!     println!("Eigenvalues: {:?}", decomp.eigenvalues);
@@ -107,11 +108,12 @@
 //!     }
 //!
 //!     // ----- Naive backend -----
+//!     // let _naive_result = Naive.matmul(&a, &b).eval();
 //!     // The Naive backend provides fallback implementations for algorithms
 //!     // not available in other libraries, such as PRRLU.
-//!     let _naive_result = Naive.matmul(&a, &b).eval();
 //! }
 //! ```
+
 pub mod prelude;
 
 mod matmul;

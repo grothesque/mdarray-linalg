@@ -16,8 +16,7 @@ use num_traits::One;
 use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
 use num_cpus;
 
-#[derive(Default)]
-pub struct Faer;
+use crate::Faer;
 
 /// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
 /// This function **does not copy** any data.

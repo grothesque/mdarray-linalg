@@ -5,7 +5,7 @@ use openblas_src as _;
 use mdarray_linalg::naive_matmul;
 use mdarray_linalg::{MatMul, Side, Triangle, Type, prelude::*};
 use mdarray_linalg_blas::Blas;
-use mdarray_linalg_faer::matmul::Faer;
+use mdarray_linalg_faer::Faer;
 
 // Helper functions to create test matrices with known values using mdarray expressions
 fn create_test_matrix_f64(

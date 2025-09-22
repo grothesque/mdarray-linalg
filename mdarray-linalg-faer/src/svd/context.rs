@@ -14,8 +14,7 @@ use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
-#[derive(Debug)]
-pub struct Faer;
+use crate::Faer;
 
 impl<T> SVD<T> for Faer
 where
