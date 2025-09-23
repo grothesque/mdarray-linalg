@@ -19,7 +19,7 @@ use mdarray_linalg::{get_dims, into_i32};
 
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 
-use super::scalar::{LapackScalar, NeedsRwork, ToComplex};
+use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult};
 use num_complex::{Complex, ComplexFloat};
 

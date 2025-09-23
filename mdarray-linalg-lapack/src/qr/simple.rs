@@ -1,16 +1,7 @@
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::get_dims;
+use mdarray::{DSlice, Layout};
+use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
-use std::mem::MaybeUninit;
-
-pub fn into_i32<T>(x: T) -> i32
-where
-    T: TryInto<i32>,
-    <T as TryInto<i32>>::Error: std::fmt::Debug,
-{
-    x.try_into().expect("dimension must fit into i32")
-}
 
 pub fn geqrf<
     La: Layout,
@@ -38,6 +29,9 @@ pub fn geqrf<
     let lwork = -1;
     let mut info = 0;
 
+    // Lapack works with column-major
+    transpose_in_place(a);
+
     // Query optimal workspace size
     unsafe {
         T::lapack_geqrf(
@@ -53,9 +47,6 @@ pub fn geqrf<
 
     let lwork = T::lwork_from_query(work.first().expect("Query buffer is empty"));
     let mut work = T::allocate(lwork);
-
-    transpose(a); // Lapack is col major
-    // a.transpoe();
 
     // Actual computation
     unsafe {
@@ -110,28 +101,6 @@ pub fn geqrf<
     for i in 0_usize..(m as usize) {
         for j in 0_usize..(m as usize) {
             q[[i, j]] = a[[j, i]];
-        }
-    }
-}
-
-pub fn transpose<T, L>(c: &mut DSlice<T, 2, L>)
-where
-    T: ComplexFloat,
-    L: Layout,
-{
-    let (m, n) = *c.shape();
-
-    assert_eq!(
-        m, n,
-        "Transpose in-place only implemented for square matrices."
-    );
-
-    for i in 0..m {
-        for j in (i + 1)..n {
-            let tmp = c[[i, j]];
-            c[[i, j]] = c[[j, i]];
-            c[[j, i]] = tmp;
-            // c.swap(i, j);
         }
     }
 }

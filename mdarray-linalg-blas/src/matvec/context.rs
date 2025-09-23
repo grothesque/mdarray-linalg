@@ -1,10 +1,8 @@
-use std::mem::MaybeUninit;
-
-use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Layout, Shape, View, tensor};
+use cblas_sys::CBLAS_UPLO;
+use mdarray::{DSlice, DTensor, Layout, Shape, View};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatVec, MatVecBuilder, Side, Triangle, Type, VecOps};
+use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
 
 use crate::Blas;
 
@@ -150,24 +148,24 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Vec<usize> {
+    fn argmax<Lx: Layout, S: Shape>(&self, _x: &View<'_, T, S, Lx>) -> Vec<usize> {
         todo!()
     }
-    fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+    fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
         todo!()
     }
-    fn scal<Lx: Layout>(&self, alpha: T, x: &mut DSlice<T, 1, Lx>) {
+    fn scal<Lx: Layout>(&self, _alpha: T, _x: &mut DSlice<T, 1, Lx>) {
         todo!()
     }
-    fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+    fn swap<Lx: Layout, Ly: Layout>(&self, _x: &mut DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
         todo!()
     }
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        x: &mut DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
-        c: T::Real,
-        s: T,
+        _x: &mut DSlice<T, 1, Lx>,
+        _y: &mut DSlice<T, 1, Ly>,
+        _c: T::Real,
+        _s: T,
     ) where
         T: ComplexFloat,
     {

@@ -1,7 +1,7 @@
 use super::scalar::{LapackScalar, NeedsRwork};
 use crate::svd::SVDConfig;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::SVDError;
+use mdarray_linalg::{SVDError, transpose_in_place};
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
@@ -131,8 +131,8 @@ where
             })
         } else {
             if job == 'A' {
-                math_transpose(u.unwrap());
-                math_transpose(vt.unwrap());
+                transpose_in_place(u.unwrap());
+                transpose_in_place(vt.unwrap());
             }
             Ok(())
         }
@@ -142,8 +142,8 @@ where
         })
     } else {
         if job == 'A' {
-            math_transpose(u.unwrap());
-            math_transpose(vt.unwrap());
+            transpose_in_place(u.unwrap());
+            transpose_in_place(vt.unwrap());
         }
         Ok(())
     }
@@ -301,25 +301,4 @@ where
     }
 
     info
-}
-
-pub fn math_transpose<T, L>(c: &mut DSlice<T, 2, L>)
-where
-    T: ComplexFloat,
-    L: Layout,
-{
-    let (m, n) = *c.shape();
-
-    assert_eq!(
-        m, n,
-        "Transpose in-place only implemented for square matrices."
-    );
-
-    for i in 0..m {
-        for j in (i + 1)..n {
-            let tmp = c[[i, j]];
-            c[[i, j]] = c[[j, i]];
-            c[[j, i]] = tmp;
-        }
-    }
 }

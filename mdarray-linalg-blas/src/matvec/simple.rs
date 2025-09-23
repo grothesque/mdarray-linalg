@@ -1,6 +1,6 @@
-use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
+use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
+use mdarray::{DSlice, Layout};
+use mdarray_linalg::{into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
 use num_complex::Complex;
@@ -22,13 +22,11 @@ pub fn gemv<T, La, Lx, Ly>(
 {
     let (m, n) = *a.shape();
 
-    let x_len = if a.stride(1) == 1 {
+    if a.stride(1) == 1 {
         assert_eq!(x.len(), n, "x length must match number of columns in a");
-        n
     } else {
         assert_eq!(x.len(), m, "x length must match number of rows in a");
-        m
-    };
+    }
 
     assert_eq!(
         y.len(),

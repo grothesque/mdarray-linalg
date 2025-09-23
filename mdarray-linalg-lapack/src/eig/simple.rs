@@ -1,6 +1,6 @@
 use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::EigError;
+use mdarray_linalg::{EigError, transpose_in_place};
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::{Complex, ComplexFloat};
@@ -115,10 +115,10 @@ where
     } else {
         // Transpose eigenvectors if computed (LAPACK returns column-major)
         if let Some(ref mut vl) = left_eigenvectors {
-            math_transpose(vl);
+            transpose_in_place(vl);
         }
         if let Some(ref mut vr) = right_eigenvectors {
-            math_transpose(vr);
+            transpose_in_place(vr);
         }
         Ok(())
     }
@@ -169,8 +169,7 @@ where
     } else if info > 0 {
         Err(EigError::BackendDidNotConverge { iterations: info })
     } else {
-        // Transpose eigenvectors (LAPACK returns column-major)
-        math_transpose(eigenvectors);
+        transpose_in_place(eigenvectors);
         Ok(())
     }
 }
@@ -315,25 +314,4 @@ where
     }
 
     info
-}
-
-pub fn math_transpose<T, L>(c: &mut DSlice<T, 2, L>)
-where
-    T: ComplexFloat,
-    L: Layout,
-{
-    let (m, n) = *c.shape();
-
-    assert_eq!(
-        m, n,
-        "Transpose in-place only implemented for square matrices."
-    );
-
-    for i in 0..m {
-        for j in (i + 1)..n {
-            let tmp = c[[i, j]];
-            c[[i, j]] = c[[j, i]];
-            c[[j, i]] = tmp;
-        }
-    }
 }

@@ -121,6 +121,10 @@
 //!     // ----- Naive backend -----
 //!     let PRRLUDecomp { p, l, u, q, rank } = Naive.prrlu(&mut a.clone());
 //!     println!("PRRLU decomposition done (Naive backend)");
+//!     println!(                                                                                                 
+//!         "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",                                                     
+//!         p, l, u, q, rank                                                                                      
+//!     );
 //! }
 //! ```
 //!Some notes:

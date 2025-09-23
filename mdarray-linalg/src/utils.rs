@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor};
+use mdarray::{DSlice, DTensor, Layout};
 use num_complex::ComplexFloat;
 
 /// Displays a numeric mdarray in a human-readable format (NumPy-style)
@@ -104,4 +104,25 @@ macro_rules! trans_stride {
             }
         }
     }};
+}
+
+/// Transposes a square matrix in-place by swapping elements across
+/// the main diagonal.  Panics if the matrix is not square.
+pub fn transpose_in_place<T, L>(c: &mut DSlice<T, 2, L>)
+where
+    T: ComplexFloat,
+    L: Layout,
+{
+    let (m, n) = *c.shape();
+
+    assert_eq!(
+        m, n,
+        "Transpose in-place only implemented for square matrices."
+    );
+
+    for i in 0..m {
+        for j in (i + 1)..n {
+            c.swap(i * n + j, j * n + i);
+        }
+    }
 }

@@ -1,15 +1,7 @@
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::get_dims;
+use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
-
-pub fn into_i32<T>(x: T) -> i32
-where
-    T: TryInto<i32>,
-    <T as TryInto<i32>>::Error: std::fmt::Debug,
-{
-    x.try_into().expect("dimension must fit into i32")
-}
 
 pub fn getrf<La: Layout, Ll: Layout, Lu: Layout, T: ComplexFloat + Default + LapackScalar>(
     a: &mut DSlice<T, 2, La>,
