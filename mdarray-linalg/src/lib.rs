@@ -6,8 +6,8 @@
 //!
 //! # Backends
 //!
-//! - `BLAS` bindings to [BLAS](https://www.netlib.org/blas/)
-//! - `LAPACK` bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - `Blas` bindings to [BLAS](https://www.netlib.org/blas/)
+//! - `Lapack` bindings to [LAPACK](https://www.netlib.org/lapack/)
 //! - `Faer` bindings to [Faer](https://github.com/sarah-ek/faer-rs)
 //! - `Naive` a simple backend with textbook implementations of some algorithms (e.g., `PRRLU`)
 //!   useful for testing or when other backends do not provide them.
@@ -47,73 +47,95 @@
 //!
 //! </details>
 //!
-//! # How it works
-//!
-//! Each backend implements the same set of traits defined in this crate. This allows
-//! code written against `mdarray-linalg` to run seamlessly with BLAS, LAPACK, Faer,
-//! or the Naive backend by simply swapping the imported backend type.
-//!
 //! # Example
+//!
+//! > **Note:**
+//! > When running doctests with Blas or Lapack, linking issues may occur due to this Rust issue:
+//! > [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In that case, run the doctests with:
+//! > `RUSTDOCFLAGS="-L native=/usr/lib -C link-arg=-lopenblas" cargo test --doc`
 //!
 //! The following example demonstrates core functionality:
 //!
-//! - vector operations (dot product, matrix-vector multiplication),
-//! - matrix multiplication,
-//! - eigenvalue decomposition.
-//!
 //! ```rust
-//! use mdarray::DTensor;
+//! use mdarray::{DTensor, tensor};
 //! use mdarray_linalg::prelude::*;
 //!
 //! // Backends
 //! use mdarray_linalg_blas::Blas;
+//! use mdarray_linalg_faer::Faer;
 //! use mdarray_linalg_naive::Naive;
 //! use mdarray_linalg_lapack::Lapack;
-//! use mdarray_linalg::{Eig, EigDecomp};
+//! use mdarray_linalg_lapack::svd::SVDConfig;
 //!
 //! fn main() {
+//!     // Declare two vectors
+//!     let x = tensor![1., 2.];
+//!     let y = tensor![2., 4.];
+//!
+//!     // Declare two matrices
+//!     let a = tensor![[1., 2.], [3., 4.]];
+//!     let b = tensor![[5., 6.], [7., 8.]];
+//!
 //!     // ----- Vector operations -----
-//!     let n = 3;
-//!     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
-//!     let y = DTensor::<f64, 1>::from_fn([n], |i| (2 * (i[0] + 1)) as f64); // [2., 4., 6.]
-//!
-//!     // Dot product using BLAS
 //!     let dot_result = Blas.dot(&x, &y);
-//!     println!("dot(x, y) = {}", dot_result); // 28
+//!     println!("dot(x, y) = {}", dot_result);
 //!
-//!     // Matrix-vector multiplication with scaling
-//!     let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * n + i[1] + 1) as f64);
 //!     let y_result = Blas.matvec(&a, &x).scale(2.).eval();
 //!     println!("A * x * 2 = {:?}", y_result);
 //!
 //!     // ----- Matrix multiplication -----
-//!     let a = mdarray::tensor![[1., 2.], [3., 4.]];
-//!     let b = mdarray::tensor![[5., 6.], [7., 8.]];
-//!
-//!     // Using Faer backend
-//!     use mdarray_linalg_faer::Faer;
 //!     let c = Faer.matmul(&a, &b).eval();
 //!     println!("A * B = {:?}", c);
 //!
 //!     // ----- Eigenvalue decomposition -----
-//!     let mut m = mdarray::tensor![[1., 2.], [2., 3.]];
+//!     // Note: we must clone `a` here because decomposition routines destroy the input.
 //!     let bd = Lapack::default();
+//!     let EigDecomp {
+//!        eigenvalues,
+//!        right_eigenvectors,
+//!        ..
+//!      } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
 //!
-//!     let decomp = bd.eig(&mut m)
-//!         .expect("Eigenvalue decomposition failed");
-//!
-//!     println!("Eigenvalues: {:?}", decomp.eigenvalues);
-//!     if let Some(vectors) = decomp.right_eigenvectors {
+//!     println!("Eigenvalues: {:?}", eigenvalues);
+//!     if let Some(vectors) = right_eigenvectors {
 //!         println!("Right eigenvectors: {:?}", vectors);
 //!     }
 //!
+//!     // ----- Singular Value Decomposition (SVD) -----
+//!     let bd = Lapack::default().config_svd(SVDConfig::DivideConquer);
+//!     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
+//!     println!("Singular values: {:?}", s);
+//!     println!("Left singular vectors U: {:?}", u);
+//!     println!("Right singular vectors V^T: {:?}", vt);
+//!
+//!     // ----- QR Decomposition -----
+//!     let (m, n) = *a.shape();
+//!     let mut q = DTensor::<f64, 2>::zeros([m, m]);
+//!     let mut r = DTensor::<f64, 2>::zeros([m, n]);
+//!
+//!     let bd = Lapack::default();
+//!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
+//!     println!("Q: {:?}", q);
+//!     println!("R: {:?}", r);
+//!
 //!     // ----- Naive backend -----
-//!     // let _naive_result = Naive.matmul(&a, &b).eval();
-//!     // The Naive backend provides fallback implementations for algorithms
-//!     // not available in other libraries, such as PRRLU.
+//!     let PRRLUDecomp { p, l, u, q, rank } = Naive.prrlu(&mut a.clone());
+//!     println!("PRRLU decomposition done (Naive backend)");
 //! }
 //! ```
-
+//!Some notes:
+//!
+//! - **Memory usage**: Each trait provides a method returning new
+//!   matrices and an overwrite variant using user-allocated buffers.
+//!   In that last case, output shapes must match exactly.
+//!
+//! - **Backend configuration**: Some accept parameters; for example, SVD
+//!   may choose an optimal algorithm by default, but the user can
+//!   select a specific one if desired.
+//!
+//! - **Errors**: Convergence issues return a Result; other problems
+//!   (dimension mismatch) may panic.
+//!
 pub mod prelude;
 
 mod matmul;

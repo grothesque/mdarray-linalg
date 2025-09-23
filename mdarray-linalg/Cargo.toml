@@ -8,8 +8,6 @@ mdarray = { git = "https://github.com/fre-hu/mdarray.git", rev = "2a67f2ec7ed326
 thiserror = "2.0.12"
 num-complex = "0.4.6"
 num-traits = "0.2.19"
-lapack-sys = "0.15.0"
-cblas-sys = "0.3.0"
 
 [dev-dependencies]
 approx = "0.5.1"
