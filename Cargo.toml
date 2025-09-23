@@ -7,3 +7,6 @@ members = [
   "mdarray-linalg-faer",
 ]
 resolver = "3"
+
+[workspace.dependencies]
+mdarray = { git = "https://github.com/fre-hu/mdarray.git", rev = "11ce08ae30bae2269c85eab1c4620028d160591a" }

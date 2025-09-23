@@ -55,6 +55,7 @@ pub fn geqrf<
     let mut work = T::allocate(lwork);
 
     transpose(a); // Lapack is col major
+    // a.transpoe();
 
     // Actual computation
     unsafe {
@@ -130,6 +131,7 @@ where
             let tmp = c[[i, j]];
             c[[i, j]] = c[[j, i]];
             c[[j, i]] = tmp;
+            // c.swap(i, j);
         }
     }
 }
