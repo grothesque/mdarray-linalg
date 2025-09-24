@@ -17,11 +17,12 @@
 use super::simple::{geig, geigh};
 use mdarray_linalg::{get_dims, into_i32};
 
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, Dense, Layout, tensor};
 
 use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult};
 use num_complex::{Complex, ComplexFloat};
+use num_traits::identities::Zero;
 
 use crate::Lapack;
 
@@ -59,8 +60,11 @@ where
         ) {
             Ok(_) => {
                 for i in 0..(n as usize) {
-                    eigenvalues[[0, i]] =
-                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
+                    eigenvalues[[0, i]] = if !eigenvalues_real[[0, i]].im().is_zero() {
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_real[[0, i]].im())
+                    } else {
+                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re())
+                    }
                 }
                 let mut j = 0_usize;
                 while j < n as usize {
@@ -227,7 +231,7 @@ where
         )
     }
 
-    /// Compute eigenvalues and eigenvectors of a Hermitian/symmetric matrix
+    /// Compute eigenvalues and eigenvectors of a Hermitian matrix
     fn eigh<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
         let (m, n) = get_dims!(a);
         if m != n {
@@ -238,6 +242,7 @@ where
 
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+        // let mut eigenvalues = tensor![[x.re()]; 1];
 
         let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
 
@@ -245,17 +250,62 @@ where
         let mut right_eigenvectors =
             tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
 
-        // For Hermitian matrices, we use a specialized routine that only computes real eigenvalues
         match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
             Ok(_) => {
-                for i in 0..(n as usize) {
-                    eigenvalues[[0, i]] =
-                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_real[[0, i]].im());
+                println!("{}", n / 2);
+                for i in 0..((n / 2 + 1) as usize) {
+                    eigenvalues[[0, 2 * i]] = Complex::new(eigenvalues_real[[0, i]].re(), x.re());
+                    if 2 * i + 1 < n as usize {
+                        eigenvalues[[0, 2 * i + 1]] =
+                            Complex::new(eigenvalues_real[[0, i]].im(), x.re());
+                    }
                 }
 
                 for j in 0..(n as usize) {
                     for i in 0..(n as usize) {
-                        let re = right_eigenvectors_tmp[[i, j]];
+                        let re = a[[j, i]];
+                        right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
+                    }
+                }
+
+                Ok(EigDecomp {
+                    eigenvalues,
+                    left_eigenvectors: None,
+                    right_eigenvectors: Some(right_eigenvectors),
+                })
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Compute eigenvalues and eigenvectors of a Hermitian matrix
+    fn eigs<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
+        let (m, n) = get_dims!(a);
+        if m != n {
+            return Err(EigError::NotSquareMatrix);
+        }
+
+        let x = T::default();
+
+        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+        // let mut eigenvalues = tensor![[x.re()]; 1];
+
+        let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+
+        let x = T::default();
+        let mut right_eigenvectors =
+            tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
+
+        match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
+            Ok(_) => {
+                for i in 0..n as usize {
+                    eigenvalues[[0, i]] = Complex::new(eigenvalues_real[[0, i]].re(), x.re());
+                }
+
+                for j in 0..(n as usize) {
+                    for i in 0..(n as usize) {
+                        let re = a[[j, i]];
                         right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
                     }
                 }

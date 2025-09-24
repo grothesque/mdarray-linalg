@@ -1,9 +1,9 @@
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray::{DSlice, Layout, tensor};
 use mdarray_linalg::{EigError, transpose_in_place};
 
 use mdarray_linalg::{get_dims, into_i32};
-use num_complex::{Complex, ComplexFloat};
+use num_complex::ComplexFloat;
 use std::ptr::null_mut;
 
 fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
@@ -156,7 +156,6 @@ where
         a,
         n,
         eigenvalues.as_mut_ptr(),
-        eigenvectors.as_mut_ptr(),
         'V', // Always compute eigenvectors for geigh
         'U', // Use upper triangle
     );
@@ -169,11 +168,11 @@ where
     } else if info > 0 {
         Err(EigError::BackendDidNotConverge { iterations: info })
     } else {
-        transpose_in_place(eigenvectors);
         Ok(())
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn call_geev<T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>, La: Layout>(
     a: &mut DSlice<T, 2, La>,
     n: i32,
@@ -255,7 +254,6 @@ fn call_syev<T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>, La
     a: &mut DSlice<T, 2, La>,
     n: i32,
     w_ptr: *mut T,
-    v_ptr: *mut T,
     jobz: char,
     uplo: char,
 ) -> i32

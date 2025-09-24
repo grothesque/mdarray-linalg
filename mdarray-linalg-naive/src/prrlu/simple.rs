@@ -1,7 +1,6 @@
 use mdarray::{DSlice, DTensor, Layout, ViewMut};
 use num_traits::{One, Signed};
 use std::mem::swap;
-use std::time::Instant;
 
 pub fn find_pivot<T: PartialOrd + Signed, L: Layout>(
     mat: &DSlice<T, 2, L>,

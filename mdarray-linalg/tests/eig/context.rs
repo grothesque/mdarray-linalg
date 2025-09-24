@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 
 use crate::common::random_matrix;
 use mdarray::{DTensor, Dense};
-use mdarray_linalg::{Eig, EigDecomp};
+use mdarray_linalg::{Eig, EigDecomp, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
 use mdarray_linalg_lapack::Lapack;
 use num_complex::{Complex, ComplexFloat};
@@ -25,10 +25,13 @@ fn test_eigen_reconstruction<T>(
         let mut av = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
         let mut λv = DTensor::<_, 1>::from_elem([n], Complex::new(x.re(), x.re()));
 
+        let norm: f64 = v.iter().map(|z| z.norm_sqr()).sum::<f64>().sqrt();
+        assert!(norm > 1e-12, "Null vector found");
+
         for row in 0..n {
             let mut sum = Complex::new(x.re(), x.re());
             for col in 0..n {
-                sum += Complex::new(a[[row, col]].re(), x.re()) * v[[col]];
+                sum += Complex::new(a[[row, col]].re(), a[[row, col]].im()) * v[[col]];
             }
             av[[row]] = sum;
             λv[[row]] = λ * v[[row]];
@@ -91,6 +94,7 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] + i[1]) as f64)
     });
+    println!("{:?}", a);
     let EigDecomp {
         eigenvalues,
         right_eigenvectors,
@@ -98,6 +102,8 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     } = bd
         .eig(&mut a.clone())
         .expect("Eigenvalue decomposition failed");
+    println!("{:?}", eigenvalues);
+    println!("{:?}", right_eigenvectors);
 
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
@@ -226,13 +232,20 @@ fn test_eigh_symmetric(bd: &impl Eig<f64>) {
         }
     }
 
+    let mut a_clone = a.clone();
+    println!("{:?}", a_clone);
+
     let EigDecomp {
         eigenvalues,
         right_eigenvectors,
         ..
     } = bd
-        .eigh(&mut a.clone())
+        .eigs(&mut a_clone)
         .expect("Hermitian eigenvalue decomposition failed");
+
+    println!("{:?}", a_clone);
+    println!("{:?}", right_eigenvectors);
+    println!("{:?}", eigenvalues);
 
     // For symmetric real matrices, eigenvalues should be real
     for i in 0..n {
@@ -263,6 +276,10 @@ fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
             }
         }
     }
+    a[[0, 0]] = Complex::new(1., 0.);
+
+    // println!("{:?}", a);
+    pretty_print(&a);
 
     let EigDecomp {
         eigenvalues,
@@ -271,6 +288,9 @@ fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
     } = bd
         .eigh(&mut a.clone())
         .expect("Complex Hermitian eigenvalue decomposition failed");
+
+    pretty_print(&right_eigenvectors.clone().unwrap());
+    println!("{:?}", eigenvalues);
 
     // For Hermitian matrices, eigenvalues should be real
     for i in 0..n {

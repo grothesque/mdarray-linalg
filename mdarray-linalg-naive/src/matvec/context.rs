@@ -1,9 +1,7 @@
-use std::mem::MaybeUninit;
-
-use mdarray::{DSlice, DTensor, Layout, Shape, View, tensor};
+use mdarray::{DSlice, DTensor, Layout, Shape, View};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatVec, MatVecBuilder, Side, Triangle, Type, VecOps};
+use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
 
 use crate::Naive;
 
@@ -35,28 +33,28 @@ where
     }
 
     fn eval(self) -> DTensor<T, 1> {
-        let mut y = DTensor::<T, 1>::from_elem(self.x.len(), 0.into().into());
+        let mut _y = DTensor::<T, 1>::from_elem(self.x.len(), 0.into().into());
         // gemv(self.alpha, self.a, self.x, 0.into().into(), &mut y);
         // y
         todo!()
     }
 
-    fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+    fn overwrite<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
         // gemv(self.alpha, self.a, self.x, 0.into().into(), y);
         todo!()
     }
 
-    fn add_to<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+    fn add_to<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
         // gemv(self.alpha, self.a, self.x, 1.into().into(), y);
         todo!()
     }
 
-    fn add_to_scaled<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T) {
+    fn add_to_scaled<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>, _beta: T) {
         // gemv(self.alpha, self.a, self.x, beta, y);
         todo!()
     }
 
-    fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2> {
+    fn add_outer<Ly: Layout>(self, _y: &DSlice<T, 1, Ly>, _beta: T) -> DTensor<T, 2> {
         let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
         a_copy.assign(self.a);
 
@@ -65,22 +63,22 @@ where
         // before applying the rank-1 update. Unlike gemm operations, this requires
         // a separate pass since BLAS lacks a direct matrix-scalar multiplication.
 
-        if self.alpha != 1.into().into() {
-            a_copy = a_copy.map(|x| x * self.alpha);
-        }
+        // if self.alpha != 1.into().into() {
+        //     a_copy = a_copy.map(|x| x * self.alpha);
+        // }
 
         // ger(beta, self.x, y, &mut a_copy);
         // a_copy
         todo!()
     }
 
-    fn add_outer_special(self, beta: T, ty: Type, tr: Triangle) -> DTensor<T, 2> {
+    fn add_outer_special(self, _beta: T, _ty: Type, _tr: Triangle) -> DTensor<T, 2> {
         let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
         a_copy.assign(self.a);
 
-        if self.alpha != 1.into().into() {
-            a_copy = a_copy.map(|x| x * self.alpha);
-        }
+        // if self.alpha != 1.into().into() {
+        //     a_copy = a_copy.map(|x| x * self.alpha);
+        // }
 
         // let cblas_uplo = match tr {
         //     Triangle::Lower => CBLAS_UPLO::CblasLower,
@@ -125,30 +123,30 @@ where
 impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
-        alpha: T,
-        x: &DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
+        _alpha: T,
+        _x: &DSlice<T, 1, Lx>,
+        _y: &mut DSlice<T, 1, Ly>,
     ) {
         todo!()
         // axpy(alpha, x, y);
     }
 
-    fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+    fn dot<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &DSlice<T, 1, Ly>) -> T {
         todo!()
         // dotu(x, y)
     }
 
-    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+    fn dotc<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &DSlice<T, 1, Ly>) -> T {
         todo!()
         // dotc(x, y)
     }
 
-    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real {
+    fn norm2<Lx: Layout>(&self, _x: &DSlice<T, 1, Lx>) -> T::Real {
         todo!()
         // nrm2(x)
     }
 
-    fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
+    fn norm1<Lx: Layout>(&self, _x: &DSlice<T, 1, Lx>) -> T::Real
     where
         T: ComplexFloat,
     {
@@ -169,21 +167,21 @@ impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
         max_idx
     }
 
-    fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+    fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
         todo!()
     }
-    fn scal<Lx: Layout>(&self, alpha: T, x: &mut DSlice<T, 1, Lx>) {
+    fn scal<Lx: Layout>(&self, _alpha: T, _x: &mut DSlice<T, 1, Lx>) {
         todo!()
     }
-    fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
+    fn swap<Lx: Layout, Ly: Layout>(&self, _x: &mut DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
         todo!()
     }
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        x: &mut DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
-        c: T::Real,
-        s: T,
+        _x: &mut DSlice<T, 1, Lx>,
+        _y: &mut DSlice<T, 1, Ly>,
+        _c: T::Real,
+        _s: T,
     ) where
         T: ComplexFloat,
     {

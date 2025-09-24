@@ -50,6 +50,9 @@ pub trait Eig<T: ComplexFloat> {
         right_eigenvectors: &mut DSlice<T, 2, Dense>,
     ) -> Result<(), EigError>;
 
-    /// Compute eigenvalues and eigenvectors of a Hermitian/symmetric matrix
+    /// Compute eigenvalues and eigenvectors of a Hermitian matrix (input should be complex)
     fn eigh<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;
+
+    /// Compute eigenvalues and eigenvectors of a symmetric matrix (input should be real)
+    fn eigs<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;
 }

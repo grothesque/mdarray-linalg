@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, Dyn, DynRank, Layout, Shape, View};
+use mdarray::{DSlice, DTensor, Layout, Shape, View};
 
 use crate::matmul::{Triangle, Type};
 

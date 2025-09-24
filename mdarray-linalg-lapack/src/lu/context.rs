@@ -17,7 +17,6 @@ use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::LU;
 use mdarray_linalg::into_i32;
 use num_complex::ComplexFloat;
-use std::mem::MaybeUninit;
 
 use crate::Lapack;
 
