@@ -165,3 +165,6 @@ pub use lu::*;
 
 mod eig;
 pub use eig::*;
+
+mod solve;
+pub use solve::*;

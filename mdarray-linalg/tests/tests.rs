@@ -5,4 +5,5 @@ mod matmul;
 mod matvec;
 mod prrlu;
 mod qr;
+mod solve;
 mod svd;

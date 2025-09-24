@@ -1,6 +1,7 @@
 pub mod eig;
 pub mod lu;
 pub mod qr;
+pub mod solve;
 pub mod svd;
 
 #[derive(Debug, Default, Clone)]

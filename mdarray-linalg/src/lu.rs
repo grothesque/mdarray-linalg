@@ -2,7 +2,7 @@ use mdarray::{DSlice, DTensor, Layout};
 
 ///  LU decomposition for solving linear systems and matrix inversion
 pub trait LU<T> {
-    /// Compute LU decomposition overwriting existing matrices
+    /// Computes LU decomposition overwriting existing matrices
     fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
@@ -11,7 +11,7 @@ pub trait LU<T> {
         p: &mut DSlice<T, 2, Lp>,
     );
 
-    /// Compute LU decomposition with new allocated matrices
+    /// Computes LU decomposition with new allocated matrices: L, U, P (permutation matrix)
     fn lu<L: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
