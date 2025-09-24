@@ -16,4 +16,7 @@ pub trait LU<T> {
         &self,
         a: &mut DSlice<T, 2, L>,
     ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>);
+
+    /// Computes inverse with new allocated matrix
+    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> DTensor<T, 2>;
 }

@@ -123,3 +123,60 @@ fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
 
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
+
+#[test]
+fn inverse() {
+    test_inverse(&Lapack::default());
+}
+
+fn test_inverse(bd: &impl LU<f64>) {
+    let n = 4;
+    let mut a = random_matrix(n, n);
+    let original_a = a.clone();
+
+    let a_inv = bd.inv(&mut a);
+
+    // Compute A * A^-1
+    let mut product = DTensor::<f64, 2>::zeros([n, n]);
+    for i in 0..n {
+        for j in 0..n {
+            let mut sum = 0.0;
+            for k in 0..n {
+                sum += original_a[[i, k]] * a_inv[[k, j]];
+            }
+            product[[i, j]] = sum;
+        }
+    }
+
+    // Verify that A * A^-1 is approximately the identity matrix
+    for i in 0..n {
+        for j in 0..n {
+            let expected = if i == j { 1.0 } else { 0.0 };
+            assert_relative_eq!(product[[i, j]], expected, epsilon = 1e-10);
+        }
+    }
+}
+
+#[test]
+#[should_panic]
+fn inverse_singular_should_panic() {
+    test_inverse_singular_should_panic(&Lapack::default());
+}
+
+fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
+    let n = 4;
+    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+    // Create a singular matrix (e.g., all zeros in the last row)
+    for i in 0..n {
+        for j in 0..n {
+            a[[i, j]] = if i == n - 1 {
+                0.0
+            } else {
+                (i * n + j + 1) as f64
+            };
+        }
+    }
+
+    // This should panic because the matrix is singular
+    let _ = bd.inv(&mut a);
+}

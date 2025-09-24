@@ -1,4 +1,4 @@
-use super::scalar::LapackScalar;
+use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
@@ -63,4 +63,66 @@ where
     }
 
     ipiv
+}
+
+pub fn getri<La: Layout, Lai: Layout, T: ComplexFloat + Default + LapackScalar + Workspace>(
+    a: &mut DSlice<T, 2, La>,
+    ipiv: &[i32],
+    a_inv: &mut DSlice<T, 2, Lai>,
+) where
+    T::Real: Into<T>,
+{
+    let ((m, n), (mi, ni)) = get_dims!(a, a_inv);
+    assert_eq!(m, n, "Input matrix must be square");
+    assert_eq!(mi, n, "Output matrix must have n rows");
+    assert_eq!(ni, n, "Output matrix must have n columns");
+    assert_eq!(ipiv.len(), n as usize, "ipiv length must equal n");
+
+    let mut a_col_major = DTensor::<T, 2>::zeros([n as usize, n as usize]);
+    for i in 0..(n as usize) {
+        for j in 0..(n as usize) {
+            a_col_major[[i, j]] = a[[j, i]];
+        }
+    }
+
+    let mut work_query = T::allocate(1);
+    let mut info = 0;
+    unsafe {
+        T::lapack_getri(
+            n,
+            a_col_major.as_mut_ptr(),
+            n, // lda
+            ipiv.as_ptr(),
+            work_query.as_mut_ptr() as *mut T,
+            -1,
+            &mut info,
+        );
+    }
+    assert_eq!(
+        info, 0,
+        "LAPACK GETRI workspace query failed with info = {}",
+        info
+    );
+
+    let lwork = T::lwork_from_query(work_query.first().expect("Query buffer is empty"));
+    let mut work = vec![T::zero(); lwork as usize];
+
+    unsafe {
+        T::lapack_getri(
+            n,
+            a_col_major.as_mut_ptr(),
+            n, // lda
+            ipiv.as_ptr(),
+            work.as_mut_ptr(),
+            lwork,
+            &mut info,
+        );
+    }
+    assert_eq!(info, 0, "LAPACK GETRI failed with info = {}", info);
+
+    for i in 0..(n as usize) {
+        for j in 0..(n as usize) {
+            a_inv[[i, j]] = a_col_major[[j, i]];
+        }
+    }
 }

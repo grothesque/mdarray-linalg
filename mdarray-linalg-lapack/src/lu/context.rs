@@ -9,10 +9,10 @@
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
 
-use super::simple::getrf;
+use super::simple::{getrf, getri};
 use mdarray_linalg::get_dims;
 
-use super::scalar::LapackScalar;
+use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::LU;
 use mdarray_linalg::into_i32;
@@ -45,7 +45,7 @@ fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTenso
 
 impl<T> LU<T> for Lapack
 where
-    T: ComplexFloat + Default + LapackScalar,
+    T: ComplexFloat + Default + LapackScalar + Workspace,
     T::Real: Into<T>,
 {
     fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
@@ -80,5 +80,20 @@ where
         let p_matrix = ipiv_to_permutation_matrix::<T>(&ipiv, m as usize);
 
         (l, u, p_matrix)
+    }
+
+    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> DTensor<T, 2> {
+        let (m, n) = get_dims!(a);
+        assert_eq!(m, n, "Input matrix must be square");
+
+        let min_mn = m.min(n);
+        let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
+        let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
+        let ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+
+        let mut a_inv = DTensor::<T, 2>::zeros([n as usize, n as usize]);
+        getri::<_, Dense, T>(a, &ipiv, &mut a_inv);
+
+        a_inv
     }
 }
