@@ -6,26 +6,6 @@ use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
 use std::ptr::null_mut;
 
-fn to_column_major<T, La: Layout>(a: &mut DSlice<T, 2, La>)
-where
-    T: ComplexFloat + Default,
-    T::Real: Into<T>,
-{
-    let (rows, cols) = (a.shape().0, a.shape().1);
-    let mut result = tensor![[T::default(); rows]; cols];
-    for j in 0..cols {
-        for i in 0..rows {
-            result[j * rows + i] = a[i * cols + j];
-        }
-    }
-
-    for j in 0..cols {
-        for i in 0..rows {
-            a[j * rows + i] = result[j * rows + i];
-        }
-    }
-}
-
 pub fn geig<
     La: Layout,
     Ler: Layout,
@@ -197,7 +177,7 @@ where
     );
 
     if row_major {
-        to_column_major(a);
+        transpose_in_place(a);
     }
 
     let mut rwork = vec![0.0; T::rwork_len_geev(n)];
@@ -271,7 +251,7 @@ where
     );
 
     if row_major {
-        to_column_major(a);
+        transpose_in_place(a);
     }
 
     let mut rwork = vec![0.0; T::rwork_len_syev(n)];
