@@ -16,7 +16,7 @@ use mdarray_linalg::get_dims;
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::Solve;
-use mdarray_linalg::into_i32;
+use mdarray_linalg::{SolveError, SolveResult, SolveResultType, into_i32};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;
@@ -55,19 +55,15 @@ where
         a: &mut DSlice<T, 2, La>,
         b: &mut DSlice<T, 2, Lb>,
         p: &mut DSlice<T, 2, Lp>,
-    ) {
-        let (n, _) = get_dims!(a);
-        let ipiv = gesv(a, b, p);
-
-        // p is already filled by gesv function, but we could also reconstruct it from ipiv if needed
-        // The permutation matrix is already computed in the gesv function
+    ) -> Result<(), SolveError> {
+        gesv(a, b, p).map(|_| ())
     }
 
     fn solve<La: Layout, Lb: Layout>(
         &self,
         a: &mut DSlice<T, 2, La>,
         b: &DSlice<T, 2, Lb>,
-    ) -> (DTensor<T, 2>, DTensor<T, 2>) {
+    ) -> SolveResultType<T> {
         let ((n, _), (_, nrhs)) = get_dims!(a, b);
 
         // Create a copy of b since gesv overwrites it
@@ -81,9 +77,9 @@ where
         // Create permutation matrix
         let mut p = tensor![[T::zero(); n as usize]; n as usize];
 
-        let ipiv = gesv::<_, Dense, Dense, T>(a, &mut b_copy, &mut p);
-
-        // Return solution and permutation matrix
-        (b_copy, p)
+        match gesv::<_, Dense, Dense, T>(a, &mut b_copy, &mut p) {
+            Ok(_ipiv) => Ok(SolveResult { x: b_copy, p }),
+            Err(e) => Err(e),
+        }
     }
 }

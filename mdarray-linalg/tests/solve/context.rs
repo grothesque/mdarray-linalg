@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 
 use crate::common::random_matrix;
 use mdarray::DTensor;
-use mdarray_linalg::Solve;
+use mdarray_linalg::{Solve, SolveResult};
 use mdarray_linalg_lapack::Lapack;
 
 fn test_solve_verification<T>(original_a: &DTensor<T, 2>, x: &DTensor<T, 2>, b: &DTensor<T, 2>)
@@ -47,7 +47,7 @@ fn test_solve_single_rhs(bd: &impl Solve<f64>) {
     let original_a = a.clone();
     let b = random_matrix(n, 1);
 
-    let (x, _p) = bd.solve(&mut a, &b);
+    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -64,7 +64,7 @@ fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
     let original_a = a.clone();
     let b = random_matrix(n, nrhs);
 
-    let (x, _p) = bd.solve(&mut a, &b);
+    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -83,7 +83,7 @@ fn test_solve_overwrite(bd: &impl Solve<f64>) {
     let original_b = b.clone();
     let mut p = DTensor::<f64, 2>::zeros([n, n]);
 
-    bd.solve_overwrite(&mut a, &mut b, &mut p);
+    let _ = bd.solve_overwrite(&mut a, &mut b, &mut p);
 
     // b now contains the solution x
     test_solve_verification(&original_a, &b, &original_b);
@@ -106,7 +106,7 @@ fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
 
     let b = random_matrix(n, nrhs);
 
-    let (x, _p) = bd.solve(&mut a, &b);
+    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
 
     for i in 0..n {
         for j in 0..nrhs {
@@ -116,4 +116,49 @@ fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
     }
 
     test_solve_verification(&original_a, &x, &b);
+}
+
+#[test]
+fn solve_complex() {
+    test_solve_complex(&Lapack::default());
+}
+
+fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>>) {
+    use num_complex::Complex;
+
+    let n = 4;
+    let nrhs = 2;
+
+    let re = random_matrix(n, n);
+    let im = random_matrix(n, n);
+
+    let mut a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+        Complex::new(re[[i[0], i[1]]], im[[i[0], i[1]]])
+    });
+    println!("a={:?}", a);
+    let original_a = a.clone();
+
+    // Create random complex right-hand side
+    let b = DTensor::<Complex<f64>, 2>::from_fn([n, nrhs], |i| {
+        Complex::new((i[0] + 2 * i[1] + 1) as f64, (2 * i[0] + i[1] + 1) as f64)
+    });
+    println!("b={:?}", b);
+
+    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
+
+    println!("{:?}", x);
+
+    // Verify A * X = B for complex matrices
+    for i in 0..n {
+        for j in 0..nrhs {
+            let mut sum = Complex::new(0.0, 0.0);
+            for k in 0..n {
+                sum += original_a[[i, k]] * x[[k, j]];
+            }
+            let diff_real = sum.re - b[[i, j]].re;
+            let diff_imag = sum.im - b[[i, j]].im;
+            assert_relative_eq!(diff_real, 0.0, epsilon = 1e-10);
+            assert_relative_eq!(diff_imag, 0.0, epsilon = 1e-10);
+        }
+    }
 }
