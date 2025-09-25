@@ -180,3 +180,19 @@ where
 
     result
 }
+
+/// Computes the trace of a square matrix (sum of diagonal elements).
+pub fn trace<T, L>(a: &DSlice<T, 2, L>) -> T
+where
+    T: ComplexFloat + std::ops::Add<Output = T> + Copy,
+    L: Layout,
+{
+    let (m, n) = *a.shape();
+    assert_eq!(m, n, "trace is only defined for square matrices");
+
+    let mut tr = T::zero();
+    for i in 0..n {
+        tr = tr + a[[i, i]];
+    }
+    tr
+}
