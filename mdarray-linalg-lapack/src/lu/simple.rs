@@ -1,6 +1,6 @@
 use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::{get_dims, into_i32};
+use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
 pub fn getrf<La: Layout, Ll: Layout, Lu: Layout, T: ComplexFloat + Default + LapackScalar>(
@@ -67,30 +67,37 @@ where
 
 pub fn getri<La: Layout, Lai: Layout, T: ComplexFloat + Default + LapackScalar + Workspace>(
     a: &mut DSlice<T, 2, La>,
-    ipiv: &[i32],
-    a_inv: &mut DSlice<T, 2, Lai>,
-) where
+    ipiv: &mut [i32],
+) -> i32
+where
     T::Real: Into<T>,
 {
-    let ((m, n), (mi, ni)) = get_dims!(a, a_inv);
+    let (m, n) = get_dims!(a);
     assert_eq!(m, n, "Input matrix must be square");
-    assert_eq!(mi, n, "Output matrix must have n rows");
-    assert_eq!(ni, n, "Output matrix must have n columns");
     assert_eq!(ipiv.len(), n as usize, "ipiv length must equal n");
 
-    let mut a_col_major = DTensor::<T, 2>::zeros([n as usize, n as usize]);
-    for i in 0..(n as usize) {
-        for j in 0..(n as usize) {
-            a_col_major[[i, j]] = a[[j, i]];
-        }
+    transpose_in_place(a);
+
+    let mut info = 0;
+
+    unsafe {
+        T::lapack_getrf(
+            m,
+            n,
+            a.as_mut_ptr(),
+            m, // lda
+            ipiv.as_mut_ptr(),
+            &mut info,
+        );
     }
 
+    assert_eq!(info, 0, "GETRF failed");
+
     let mut work_query = T::allocate(1);
-    let mut info = 0;
     unsafe {
         T::lapack_getri(
             n,
-            a_col_major.as_mut_ptr(),
+            a.as_mut_ptr(),
             n, // lda
             ipiv.as_ptr(),
             work_query.as_mut_ptr() as *mut T,
@@ -110,7 +117,7 @@ pub fn getri<La: Layout, Lai: Layout, T: ComplexFloat + Default + LapackScalar +
     unsafe {
         T::lapack_getri(
             n,
-            a_col_major.as_mut_ptr(),
+            a.as_mut_ptr(),
             n, // lda
             ipiv.as_ptr(),
             work.as_mut_ptr(),
@@ -118,11 +125,8 @@ pub fn getri<La: Layout, Lai: Layout, T: ComplexFloat + Default + LapackScalar +
             &mut info,
         );
     }
-    assert_eq!(info, 0, "LAPACK GETRI failed with info = {}", info);
 
-    for i in 0..(n as usize) {
-        for j in 0..(n as usize) {
-            a_inv[[i, j]] = a_col_major[[j, i]];
-        }
-    }
+    transpose_in_place(a);
+
+    info
 }

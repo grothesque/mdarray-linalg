@@ -9,7 +9,7 @@
 //! - `Blas` bindings to [BLAS](https://www.netlib.org/blas/)
 //! - `Lapack` bindings to [LAPACK](https://www.netlib.org/lapack/)
 //! - `Faer` bindings to [Faer](https://github.com/sarah-ek/faer-rs)
-//! - `Naive` a simple backend with textbook implementations of some algorithms (e.g., `PRRLU`)
+//! - `Naive` a simple backend with textbook implementations of some algorithms
 //!   useful for testing or when other backends do not provide them.
 //! > **Note:** Not all backends support all functionalities.
 //!

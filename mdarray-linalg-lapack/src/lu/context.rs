@@ -8,14 +8,13 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-
 use super::simple::{getrf, getri};
 use mdarray_linalg::get_dims;
 
 use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
-use mdarray_linalg::LU;
 use mdarray_linalg::into_i32;
+use mdarray_linalg::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;
@@ -82,18 +81,46 @@ where
         (l, u, p_matrix)
     }
 
-    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> DTensor<T, 2> {
+    fn inv_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
         let (m, n) = get_dims!(a);
-        assert_eq!(m, n, "Input matrix must be square");
+        if m != n {
+            return Err(InvError::NotSquare { rows: m, cols: n });
+        }
 
         let min_mn = m.min(n);
         let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
         let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
-        let ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+        let mut ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+
+        match getri::<_, Dense, T>(a, &mut ipiv) {
+            0 => Ok(()),
+            i if i > 0 => Err(InvError::Singular { pivot: i }),
+            i => Err(InvError::BackendError(i)),
+        }
+    }
+
+    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T> {
+        let (m, n) = get_dims!(a);
+        if m != n {
+            return Err(InvError::NotSquare { rows: m, cols: n });
+        }
 
         let mut a_inv = DTensor::<T, 2>::zeros([n as usize, n as usize]);
-        getri::<_, Dense, T>(a, &ipiv, &mut a_inv);
+        for i in 0..n as usize {
+            for j in 0..m as usize {
+                a_inv[[i, j]] = a[[i, j]];
+            }
+        }
 
-        a_inv
+        let min_mn = m.min(n);
+        let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
+        let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
+        let mut ipiv = getrf::<_, Dense, Dense, T>(&mut a_inv, &mut l, &mut u);
+
+        match getri::<_, Dense, T>(&mut a_inv, &mut ipiv) {
+            0 => Ok(a_inv),
+            i if i > 0 => Err(InvError::Singular { pivot: i }),
+            i => Err(InvError::BackendError(i)),
+        }
     }
 }
