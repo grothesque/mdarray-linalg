@@ -14,36 +14,12 @@ use super::simple::gesv;
 use mdarray_linalg::get_dims;
 
 use super::scalar::LapackScalar;
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
-use mdarray_linalg::Solve;
+use mdarray::{DSlice, Dense, Layout, tensor};
+use mdarray_linalg::{Solve, ipiv_to_permutation_matrix};
 use mdarray_linalg::{SolveError, SolveResult, SolveResultType, into_i32};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;
-
-/// Convert pivot indices to permutation matrix
-fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], n: usize) -> DTensor<T, 2> {
-    let mut p = tensor![[T::zero(); n]; n];
-
-    // Initialize as identity matrix
-    for i in 0..n {
-        p[[i, i]] = T::one();
-    }
-
-    // Apply row swaps according to LAPACK's ipiv convention
-    for i in 0..ipiv.len() {
-        let pivot_row = (ipiv[i] - 1) as usize; // LAPACK uses 1-based indexing
-        if pivot_row != i {
-            for j in 0..n {
-                let temp = p[[i, j]];
-                p[[i, j]] = p[[pivot_row, j]];
-                p[[pivot_row, j]] = temp;
-            }
-        }
-    }
-
-    p
-}
 
 impl<T> Solve<T> for Lapack
 where
@@ -56,7 +32,15 @@ where
         b: &mut DSlice<T, 2, Lb>,
         p: &mut DSlice<T, 2, Lp>,
     ) -> Result<(), SolveError> {
-        gesv(a, b, p).map(|_| ())
+        let ipiv = gesv::<_, Lb, T>(a, b).unwrap();
+        let (n, _) = *a.shape();
+        let p_matrix = ipiv_to_permutation_matrix(&ipiv, n);
+        for i in 0..n {
+            for j in 0..n {
+                p[[i, j]] = p_matrix[[i, j]];
+            }
+        }
+        Ok(())
     }
 
     fn solve<La: Layout, Lb: Layout>(
@@ -66,7 +50,6 @@ where
     ) -> SolveResultType<T> {
         let ((n, _), (_, nrhs)) = get_dims!(a, b);
 
-        // Create a copy of b since gesv overwrites it
         let mut b_copy = tensor![[T::default(); nrhs as usize]; n as usize];
         for i in 0..(n as usize) {
             for j in 0..(nrhs as usize) {
@@ -74,11 +57,11 @@ where
             }
         }
 
-        // Create permutation matrix
-        let mut p = tensor![[T::zero(); n as usize]; n as usize];
-
-        match gesv::<_, Dense, Dense, T>(a, &mut b_copy, &mut p) {
-            Ok(_ipiv) => Ok(SolveResult { x: b_copy, p }),
+        match gesv::<_, Dense, T>(a, &mut b_copy) {
+            Ok(ipiv) => Ok(SolveResult {
+                x: b_copy,
+                p: ipiv_to_permutation_matrix(&ipiv, n as usize),
+            }),
             Err(e) => Err(e),
         }
     }

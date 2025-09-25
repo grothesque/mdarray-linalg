@@ -9,7 +9,7 @@
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
 use super::simple::{getrf, getri};
-use mdarray_linalg::get_dims;
+use mdarray_linalg::{get_dims, ipiv_to_permutation_matrix};
 
 use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
@@ -18,29 +18,6 @@ use mdarray_linalg::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;
-
-/// Convert pivot indices to permutation matrix
-fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2> {
-    let mut p = tensor![[T::zero(); m]; m];
-
-    for i in 0..m {
-        p[[i, i]] = T::one();
-    }
-
-    // Apply row swaps according to LAPACK's ipiv convention
-    for i in 0..ipiv.len() {
-        let pivot_row = (ipiv[i] - 1) as usize; // LAPACK uses 1-based indexing
-        if pivot_row != i {
-            for j in 0..m {
-                let temp = p[[i, j]];
-                p[[i, j]] = p[[pivot_row, j]];
-                p[[pivot_row, j]] = temp;
-            }
-        }
-    }
-
-    p
-}
 
 impl<T> LU<T> for Lapack
 where

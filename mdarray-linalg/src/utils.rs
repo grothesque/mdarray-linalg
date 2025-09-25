@@ -106,11 +106,10 @@ macro_rules! trans_stride {
     }};
 }
 
-/// Transposes a matrix in-place.
+/// Transposes a matrix in-place. Dimensions stay the same, only the memory ordering changes.
 /// - For square matrices: swaps elements across the main diagonal.
 /// - For rectangular matrices: reshuffles data in a temporary buffer so that the
 ///   same (rows, cols) slice now represents the transposed layout.
-/// Dimensions stay the same, only the memory ordering changes.
 pub fn transpose_in_place<T, L>(c: &mut DSlice<T, 2, L>)
 where
     T: ComplexFloat + Default,
@@ -137,4 +136,47 @@ where
             }
         }
     }
+}
+
+/// Convert pivot indices to permutation matrix
+pub fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2> {
+    let mut p = tensor![[T::zero(); m]; m];
+
+    for i in 0..m {
+        p[[i, i]] = T::one();
+    }
+
+    // Apply row swaps according to LAPACK's ipiv convention
+    for i in 0..ipiv.len() {
+        let pivot_row = (ipiv[i] - 1) as usize; // LAPACK uses 1-based indexing
+        if pivot_row != i {
+            for j in 0..m {
+                let temp = p[[i, j]];
+                p[[i, j]] = p[[pivot_row, j]];
+                p[[pivot_row, j]] = temp;
+            }
+        }
+    }
+
+    p
+}
+
+/// Given an input matrix of shape (m × n), this function creates and returns
+/// a new matrix of shape (n × m), where each element at position (i, j) in the
+/// original is moved to position (j, i) in the result.
+pub fn to_col_major<T, L>(c: &DSlice<T, 2, L>) -> DTensor<T, 2>
+where
+    T: ComplexFloat + Default + Clone,
+    L: Layout,
+{
+    let (m, n) = *c.shape();
+    let mut result = DTensor::<T, 2>::zeros([n, m]);
+
+    for i in 0..m {
+        for j in 0..n {
+            result[[j, i]] = c[[i, j]];
+        }
+    }
+
+    result
 }
