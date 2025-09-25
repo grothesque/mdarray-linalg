@@ -12,9 +12,13 @@ pub enum InvError {
     #[error("Backend error code: {0}")]
     BackendError(i32),
 
-    /// The matrix is singular: U(i,i) is exactly zero
+    /// Matrix is singular: U(i,i) is exactly zero
     #[error("Matrix is singular: zero pivot at position {pivot}")]
     Singular { pivot: i32 },
+
+    /// The leading principal minor is not positive (Cholesky decomp)
+    #[error("The leading principal minor is not positive")]
+    NotPositiveDefinite { lpm: i32 },
 }
 
 /// Result type for matrix inversion
@@ -46,4 +50,10 @@ pub trait LU<T> {
     /// Computes the determinant of a square matrix. Panics if the
     /// matrix is non-square.
     fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T;
+
+    /// Computes the Cholesky decomposition, returning a lower-triangular matrix
+    fn choleski<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
+
+    /// Computes the Cholesky decomposition in-place, overwriting the input matrix
+    fn choleski_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
 }

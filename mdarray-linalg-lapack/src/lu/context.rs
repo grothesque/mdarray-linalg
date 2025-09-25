@@ -8,7 +8,7 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use super::simple::{getrf, getri};
+use super::simple::{getrf, getri, potrf};
 use mdarray_linalg::{get_dims, ipiv_to_permutation_matrix};
 
 use super::scalar::{LapackScalar, Workspace};
@@ -126,5 +126,42 @@ where
             det = -det;
         }
         det
+    }
+
+    /// Computes the Cholesky decomposition, returning a lower-triangular matrix
+    fn choleski<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T> {
+        let (m, n) = get_dims!(a);
+        assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
+
+        let mut l = DTensor::<T, 2>::zeros([m as usize, n as usize]);
+
+        match potrf::<_, Dense, T>(a, 'L') {
+            0 => {
+                for i in 0..(m as usize) {
+                    for j in 0..(n as usize) {
+                        if i >= j {
+                            l[[i, j]] = a[[j, i]];
+                        } else {
+                            l[[i, j]] = T::zero();
+                        }
+                    }
+                }
+                Ok(l)
+            }
+            i if i > 0 => Err(InvError::NotPositiveDefinite { lpm: i }),
+            i => Err(InvError::BackendError(i)),
+        }
+    }
+
+    /// Computes the Cholesky decomposition in-place, overwriting the input matrix
+    fn choleski_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+        let (m, n) = get_dims!(a);
+        assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
+
+        match potrf::<_, Dense, T>(a, 'L') {
+            0 => Ok(()),
+            i if i > 0 => Err(InvError::NotPositiveDefinite { lpm: i }),
+            i => Err(InvError::BackendError(i)),
+        }
     }
 }

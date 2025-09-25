@@ -14,6 +14,8 @@ pub trait LapackScalar {
         lwork: i32,
         info: *mut i32,
     );
+
+    unsafe fn lapack_potrf(uplo: i8, n: i32, a: *mut Self, lda: i32, info: *mut i32);
 }
 
 macro_rules! impl_lapack_scalar {
@@ -61,6 +63,21 @@ macro_rules! impl_lapack_scalar {
                             ipiv as *const _,
                             work as *mut _,
                             &lwork as *const i32,
+                            info as *mut i32,
+                        );
+                    }
+                }
+            }
+
+            #[inline]
+            unsafe fn lapack_potrf(uplo: i8, n: i32, a: *mut Self, lda: i32, info: *mut i32) {
+                unsafe {
+                    paste! {
+                        lapack_sys::[<$prefix potrf_>](
+                            &uplo as *const i8,
+                            &n as *const i32,
+                            a as *mut _,
+                            &lda as *const i32,
                             info as *mut i32,
                         );
                     }

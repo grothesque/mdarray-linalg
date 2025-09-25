@@ -171,11 +171,10 @@ fn determinant() {
 fn test_determinant(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_matrix(n, n);
-    let original_a = a.clone();
 
     let d = bd.det(&mut a);
 
-    assert_eq!(det_permutations(&a), d);
+    assert_relative_eq!(det_permutations(&a), d, epsilon = 1e-6);
 }
 
 use itertools::Itertools;

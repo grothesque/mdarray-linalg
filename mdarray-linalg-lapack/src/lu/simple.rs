@@ -130,3 +130,36 @@ where
 
     info
 }
+
+pub fn potrf<La: Layout, Ll: Layout, T: ComplexFloat + Default + LapackScalar>(
+    a: &mut DSlice<T, 2, La>,
+    uplo: char,
+) -> i32
+where
+    T::Real: Into<T>,
+{
+    let (m, n) = get_dims!(a);
+
+    assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
+
+    let mut info = 0;
+
+    transpose_in_place(a);
+
+    let uplo_byte = match uplo {
+        'U' | 'u' => b'U' as i8,
+        'L' | 'l' => b'L' as i8,
+        _ => panic!("uplo must be 'U' or 'L'"),
+    };
+
+    unsafe {
+        T::lapack_potrf(
+            uplo_byte,
+            n,
+            a.as_mut_ptr(),
+            m, // lda
+            &mut info,
+        );
+    }
+    info
+}
