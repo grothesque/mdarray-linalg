@@ -100,4 +100,31 @@ where
             i => Err(InvError::BackendError(i)),
         }
     }
+
+    fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T {
+        let (m, n) = get_dims!(a);
+        assert_eq!(m, n, "determinant is only defined for square matrices");
+
+        let mut l = tensor![[T::default(); n as usize]; n as usize];
+        let mut u = tensor![[T::default(); n as usize]; n as usize];
+
+        let ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+
+        let mut det = T::one();
+        for i in 0..n as usize {
+            det = det * u[[i, i]];
+        }
+
+        let mut sign = 1;
+        for (i, &pivot) in ipiv.iter().enumerate() {
+            if (i as i32) != (pivot - 1) {
+                sign *= -1;
+            }
+        }
+
+        if sign == -1 {
+            det = -det;
+        }
+        det
+    }
 }

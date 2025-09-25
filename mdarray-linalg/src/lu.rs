@@ -42,4 +42,8 @@ pub trait LU<T> {
 
     /// Computes inverse with new allocated matrix
     fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
+
+    /// Computes the determinant of a square matrix. Panics if the
+    /// matrix is non-square.
+    fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T;
 }

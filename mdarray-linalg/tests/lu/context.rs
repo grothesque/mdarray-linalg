@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
-use mdarray::DTensor;
+use mdarray::{DSlice, DTensor, Dense};
 use mdarray_linalg::{LU, naive_matmul};
 use mdarray_linalg_lapack::Lapack;
 
@@ -161,4 +161,62 @@ fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = DTensor::<f64, 2>::from_elem([n, n], 1.);
     let _ = bd.inv(&mut a);
+}
+
+#[test]
+fn determinant() {
+    test_determinant(&Lapack::default());
+}
+
+fn test_determinant(bd: &impl LU<f64>) {
+    let n = 4;
+    let mut a = random_matrix(n, n);
+    let original_a = a.clone();
+
+    let d = bd.det(&mut a);
+
+    assert_eq!(det_permutations(&a), d);
+}
+
+use itertools::Itertools;
+
+/// Computes the determinant of an n×n matrix using the Leibniz formula.
+/// Very slow (O(n!)), only for testing / small matrices.
+pub fn det_permutations<T>(a: &DSlice<T, 2, Dense>) -> T
+where
+    T: ComplexFloat
+        + std::ops::Add<Output = T>
+        + std::ops::Sub<Output = T>
+        + std::ops::Mul<Output = T>
+        + Copy
+        + Default,
+{
+    let (n, m) = *a.shape();
+    assert_eq!(n, m, "Matrix must be square");
+
+    let mut det = T::default();
+
+    for perm in (0..n).permutations(n) {
+        let mut sign = 1;
+        for i in 0..n {
+            for j in i + 1..n {
+                if perm[i] > perm[j] {
+                    sign = -sign;
+                }
+            }
+        }
+
+        let mut prod = T::one();
+        for i in 0..n {
+            prod = prod * a[[i, perm[i]]];
+        }
+
+        if sign == 1 {
+            det = det + prod;
+        } else {
+            det = det - prod;
+        }
+    }
+
+    det
 }
