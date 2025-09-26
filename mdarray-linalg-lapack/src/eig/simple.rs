@@ -1,6 +1,6 @@
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray::{DSlice, Layout, tensor};
-use mdarray_linalg::{EigError, transpose_in_place};
+use mdarray::{DSlice, DTensor, Layout};
+use mdarray_linalg::{EigError, SchurDecomp, SchurError, SchurResult, transpose_in_place};
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
@@ -292,4 +292,120 @@ where
     }
 
     info
+}
+
+use std::ptr;
+
+pub fn gees<
+    La: Layout,
+    Lwr: Layout,
+    Lwi: Layout,
+    Lvs: Layout,
+    T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+>(
+    a: &mut DSlice<T, 2, La>,
+    eigenvalues_real: &mut DSlice<T, 2, Lwr>,
+    eigenvalues_imag: &mut DSlice<T, 2, Lwi>,
+    schur_vectors: &mut DSlice<T, 2, Lvs>,
+) -> Result<(), SchurError>
+where
+    T::Real: Into<T>,
+{
+    let (m, n) = get_dims!(a);
+
+    if m != n {
+        return Err(SchurError::NotSquareMatrix);
+    }
+
+    let jobvs = b'V';
+
+    let (mvs, nvs) = get_dims!(schur_vectors);
+    assert_eq!(mvs, n, "Schur vectors must have same number of rows as A");
+    assert_eq!(nvs, n, "Schur vectors must be square (n × n)");
+
+    // Validate eigenvalue vectors dimensions
+    let (mwr, nwr) = get_dims!(eigenvalues_real);
+    let (mwi, nwi) = get_dims!(eigenvalues_imag);
+    assert_eq!(mwr, 1, "Real eigenvalues must be a row vector");
+    assert_eq!(nwr, n, "Real eigenvalues must have n elements");
+    assert_eq!(mwi, 1, "Imaginary eigenvalues must be a row vector");
+    assert_eq!(nwi, n, "Imaginary eigenvalues must have n elements");
+
+    // Allocate workspace
+    let mut sdim = 0i32;
+    let lwork = {
+        let mut work = vec![T::default(); 1];
+        let mut info = 0;
+        let rwork_len = T::rwork_len_gees(n);
+        let mut rwork = vec![T::default(); rwork_len];
+        let bwork: *mut i32 = if n > 0 {
+            vec![0i32; n as usize].as_mut_ptr()
+        } else {
+            ptr::null_mut()
+        };
+
+        unsafe {
+            T::lapack_gees(
+                jobvs.try_into().unwrap(),
+                b'N'.try_into().unwrap(), // No sorting
+                ptr::null_mut(),          // Null select as *mut c_void
+                n,
+                a.as_mut_ptr(),
+                n,
+                &mut sdim,
+                eigenvalues_real.as_mut_ptr(),
+                eigenvalues_imag.as_mut_ptr(),
+                schur_vectors.as_mut_ptr(),
+                n,
+                work.as_mut_ptr(),
+                -1, // Query workspace size
+                rwork.as_mut_ptr(),
+                bwork,
+                &mut info,
+            );
+        }
+
+        if info != 0 {
+            panic!("Error during workspace query: info = {}", info);
+        }
+        T::lwork_from_query(&work[0])
+    };
+
+    let mut work = T::allocate(lwork);
+    let rwork_len = T::rwork_len_gees(n);
+    let mut rwork = vec![T::default(); rwork_len];
+    let bwork: *mut i32 = if n > 0 {
+        vec![0i32; n as usize].as_mut_ptr()
+    } else {
+        ptr::null_mut()
+    };
+
+    let mut info = 0;
+    unsafe {
+        T::lapack_gees(
+            jobvs.try_into().unwrap(),
+            b'N'.try_into().unwrap(), // No sorting
+            ptr::null_mut(),          // Null select as *mut c_void
+            n,
+            a.as_mut_ptr(),
+            n,
+            &mut sdim,
+            eigenvalues_real.as_mut_ptr(),
+            eigenvalues_imag.as_mut_ptr(),
+            schur_vectors.as_mut_ptr(),
+            n,
+            work.as_mut_ptr(),
+            lwork,
+            rwork.as_mut_ptr(),
+            bwork,
+            &mut info,
+        );
+    }
+
+    if info < 0 {
+        return Err(SchurError::BackendError(-info));
+    } else if info > 0 {
+        return Err(SchurError::BackendDidNotConverge { iterations: info });
+    }
+    Ok(())
 }

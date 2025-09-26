@@ -27,6 +27,32 @@ pub struct EigDecomp<T: ComplexFloat> {
 /// `EigDecomp` or an `EigError`
 pub type EigResult<T> = Result<EigDecomp<T>, EigError>;
 
+/// Error types related to Schur decomposition
+#[derive(Debug, Error)]
+pub enum SchurError {
+    #[error("Backend error code: {0}")]
+    BackendError(i32),
+
+    #[error("Backend failed to converge: {iterations} iterations exceeded")]
+    BackendDidNotConverge { iterations: i32 },
+
+    #[error("Matrix must be square for Schur decomposition")]
+    NotSquareMatrix,
+}
+
+/// Holds the results of a Schur decomposition: A = Z * T * Z^H
+/// where Z is unitary and T is upper-triangular (complex) or quasi-upper triangular (real)
+pub struct SchurDecomp<T: ComplexFloat> {
+    /// Schur form T (upper-triangular for complex, quasi-upper triangular for real)
+    pub t: DTensor<T, 2>,
+    /// Unitary Schur transformation matrix Z
+    pub z: DTensor<T, 2>,
+}
+
+/// Result type for Schur decomposition, returning either a
+/// `SchurDecomp` or a `SchurError`
+pub type SchurResult<T> = Result<SchurDecomp<T>, SchurError>;
+
 /// Eigenvalue decomposition operations of general and Hermitian/symmetric matrices
 pub trait Eig<T: ComplexFloat> {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
@@ -55,4 +81,15 @@ pub trait Eig<T: ComplexFloat> {
 
     /// Compute eigenvalues and eigenvectors of a symmetric matrix (input should be real)
     fn eigs<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;
+
+    /// Compute Schur decomposition with new allocated matrices
+    fn schur<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T>;
+
+    /// Compute Schur decomposition overwriting existing matrices
+    fn schur_overwrite<L: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        t: &mut DSlice<T, 2, Dense>,
+        z: &mut DSlice<T, 2, Dense>,
+    ) -> Result<(), SchurError>;
 }

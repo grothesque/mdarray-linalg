@@ -14,13 +14,13 @@
 //!     - λ are real eigenvalues
 //!     - v are orthonormal eigenvectors
 
-use super::simple::{geig, geigh};
+use super::simple::{gees, geig, geigh};
 use mdarray_linalg::{get_dims, into_i32};
 
 use mdarray::{DSlice, Dense, Layout, tensor};
 
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult};
+use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult};
 use num_complex::{Complex, ComplexFloat};
 use num_traits::identities::Zero;
 
@@ -318,5 +318,63 @@ where
             }
             Err(e) => Err(e),
         }
+    }
+
+    /// Compute Schur decomposition with new allocated matrices
+    fn schur<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
+        let (m, n) = get_dims!(a);
+        if m != n {
+            return Err(SchurError::NotSquareMatrix);
+        }
+
+        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+        let mut schur_vectors = tensor![[T::default(); n as usize]; n as usize];
+
+        match gees::<L, Dense, Dense, Dense, T>(
+            a,
+            &mut eigenvalues_real,
+            &mut eigenvalues_imag,
+            &mut schur_vectors,
+        ) {
+            Ok(_) => {
+                let mut t = tensor![[T::default(); n as usize]; n as usize];
+                for j in 0..(n as usize) {
+                    for i in 0..(n as usize) {
+                        t[[i, j]] = a[[i, j]];
+                    }
+                }
+
+                Ok(SchurDecomp {
+                    t,
+                    z: schur_vectors,
+                })
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Compute Schur decomposition overwriting existing matrices
+    fn schur_overwrite<L: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        t: &mut DSlice<T, 2, Dense>,
+        z: &mut DSlice<T, 2, Dense>,
+    ) -> Result<(), SchurError> {
+        let (m, n) = get_dims!(a);
+        if m != n {
+            return Err(SchurError::NotSquareMatrix);
+        }
+
+        for j in 0..(n as usize) {
+            for i in 0..(n as usize) {
+                t[[i, j]] = a[[i, j]];
+            }
+        }
+
+        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+
+        gees::<Dense, Dense, Dense, Dense, T>(t, &mut eigenvalues_real, &mut eigenvalues_imag, z)
     }
 }

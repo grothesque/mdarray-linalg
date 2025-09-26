@@ -1,5 +1,6 @@
 use num_complex::Complex;
 use paste::paste;
+use std::ffi::c_void;
 
 #[allow(clippy::too_many_arguments)]
 pub trait LapackScalar {
@@ -33,6 +34,26 @@ pub trait LapackScalar {
         work: *mut Self,
         lwork: i32,
         rwork: *mut Self,
+        info: *mut i32,
+    );
+
+    // Schur decomposition (GEES)
+    unsafe fn lapack_gees(
+        jobvs: i8,
+        sort: i8,
+        select: *mut c_void,
+        n: i32,
+        a: *mut Self,
+        lda: i32,
+        sdim: *mut i32,
+        wr: *mut Self,
+        wi: *mut Self,
+        vs: *mut Self,
+        ldvs: i32,
+        work: *mut Self,
+        lwork: i32,
+        rwork: *mut Self,
+        bwork: *mut i32,
         info: *mut i32,
     );
 }
@@ -107,6 +128,49 @@ macro_rules! impl_lapack_scalar_real {
                             info as *mut i32,
                         );
                     }
+                }
+            }
+
+            #[inline]
+            unsafe fn lapack_gees(
+                jobvs: i8,
+                sort: i8,
+                _select: *mut c_void,
+                n: i32,
+                a: *mut Self,
+                lda: i32,
+                sdim: *mut i32,
+                wr: *mut Self,
+                wi: *mut Self,
+                vs: *mut Self,
+                ldvs: i32,
+                work: *mut Self,
+                lwork: i32,
+                _rwork: *mut Self, // unused for real types
+                bwork: *mut i32,
+                info: *mut i32,
+            ) {
+                type SelectFunc<T> = unsafe extern "C" fn(*const T, *const T) -> i32;
+                unsafe {
+                    paste! {
+                                            lapack_sys::[<$prefix gees_>](
+                                                &jobvs as *const i8,
+                                                &sort as *const i8,
+                    None::<SelectFunc<Self>>, // not used
+                                                &n as *const i32,
+                                                a as *mut _,
+                                                &lda as *const i32,
+                                                sdim as *mut i32,
+                                                wr as *mut _,
+                                                wi as *mut _,
+                                                vs as *mut _,
+                                                &ldvs as *const i32,
+                                                work as *mut _,
+                                                &lwork as *const i32,
+                                                bwork as *mut i32,
+                                                info as *mut i32,
+                                            );
+                                        }
                 }
             }
         }
@@ -204,6 +268,49 @@ macro_rules! impl_lapack_scalar_cplx {
                     }
                 }
             }
+
+            #[inline]
+            unsafe fn lapack_gees(
+                jobvs: i8,
+                sort: i8,
+                _select: *mut c_void,
+                n: i32,
+                a: *mut Self,
+                lda: i32,
+                sdim: *mut i32,
+                wr: *mut Self,  // For complex, this holds the eigenvalues directly
+                _wi: *mut Self, // unused for complex types
+                vs: *mut Self,
+                ldvs: i32,
+                work: *mut Self,
+                lwork: i32,
+                rwork: *mut Self,
+                bwork: *mut i32,
+                info: *mut i32,
+            ) {
+                type SelectFunc<T> = unsafe extern "C" fn(*const T) -> i32;
+                unsafe {
+                    paste! {
+                        lapack_sys::[<$prefix gees_>](
+                            &jobvs as *const i8,
+                            &sort as *const i8,
+                                    None::<SelectFunc<lapack_sys_cast!($prefix)>>, // not used
+                            &n as *const i32,
+                            a as *mut lapack_sys_cast!($prefix),
+                            &lda as *const i32,
+                            sdim as *mut i32,
+                            wr as *mut lapack_sys_cast!($prefix),
+                            vs as *mut lapack_sys_cast!($prefix),
+                            &ldvs as *const i32,
+                            work as *mut lapack_sys_cast!($prefix),
+                            &lwork as *const i32,
+                            rwork as *mut real_cast!($prefix),
+                            bwork as *mut i32,
+                            info as *mut i32,
+                        );
+                    }
+                }
+            }
         }
     };
 }
@@ -218,6 +325,7 @@ pub trait NeedsRwork {
     type Elem;
     fn rwork_len_geev(n: i32) -> usize;
     fn rwork_len_syev(n: i32) -> usize;
+    fn rwork_len_gees(n: i32) -> usize;
     fn lwork_from_query(query: &Self::Elem) -> i32;
     fn allocate(lwork: i32) -> Vec<Self::Elem>;
 }
@@ -233,6 +341,10 @@ macro_rules! impl_needs_rwork {
             }
 
             fn rwork_len_syev(_: i32) -> usize {
+                0
+            }
+
+            fn rwork_len_gees(_: i32) -> usize {
                 0
             }
 
@@ -257,6 +369,10 @@ macro_rules! impl_needs_rwork {
 
             fn rwork_len_syev(n: i32) -> usize {
                 (3 * n - 2).max(1) as usize
+            }
+
+            fn rwork_len_gees(n: i32) -> usize {
+                n.max(1) as usize
             }
 
             fn lwork_from_query(query: &Self::Elem) -> i32 {
