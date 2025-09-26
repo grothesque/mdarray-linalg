@@ -51,7 +51,7 @@ macro_rules! assert_complex_matrix_eq {
 /// Generate a random matrix of size m x n
 pub fn random_matrix(m: usize, n: usize) -> DTensor<f64, 2> {
     let mut rng = rand::rng();
-    DTensor::<f64, 2>::from_fn([m, n], |_| rng.random_range(-10.0..10.0))
+    DTensor::<f64, 2>::from_fn([m, n], |_| rng.random_range(0.0..1.0))
 }
 
 /// Generate a rank-k matrix by multiplying m×k and k×n matrices

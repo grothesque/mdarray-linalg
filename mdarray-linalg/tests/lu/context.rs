@@ -3,7 +3,7 @@ use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
 use mdarray::{DSlice, DTensor, Dense};
-use mdarray_linalg::{LU, naive_matmul};
+use mdarray_linalg::{LU, naive_matmul, transpose_in_place};
 use mdarray_linalg_lapack::Lapack;
 
 fn test_lu_reconstruction<T>(
@@ -218,4 +218,149 @@ where
     }
 
     det
+}
+
+fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
+    // A^T + A + nI is positive definite
+    let a = random_matrix(n, n);
+    let mut a_t = a.clone();
+    transpose_in_place(&mut a_t);
+    let mut b = a + a_t;
+    for i in 0..n {
+        b[[i, i]] += n as f64;
+    }
+    b
+}
+
+fn test_cholesky_reconstruction<T>(a: &DTensor<T, 2>, l: &DTensor<T, 2>)
+where
+    T: Default
+        + ComplexFloat
+        + std::fmt::Debug
+        + Copy
+        + std::ops::Mul<Output = T>
+        + std::ops::Add<Output = T>
+        + std::ops::Sub<Output = T>,
+    f64: From<T>,
+{
+    let (n, m) = *a.shape();
+    assert_eq!(n, m, "Matrix must be square");
+    let mut ln = DTensor::<T, 2>::zeros([n, n]);
+    for i in 0..n {
+        for j in 0..n {
+            if i >= j {
+                ln[[i, j]] = l[[i, j]];
+            }
+        }
+    }
+
+    // Compute L^T
+    let mut lt = DTensor::<T, 2>::zeros([n, m]);
+    for i in 0..n {
+        for j in 0..m {
+            if i <= j {
+                lt[[i, j]] = l[[j, i]];
+            }
+        }
+    }
+
+    // Compute L * L^T
+    let mut llt = DTensor::<T, 2>::zeros([n, m]);
+    naive_matmul(&ln, &lt, &mut llt);
+
+    // Verify that A = L * L^T
+    for i in 0..n {
+        for j in 0..m {
+            let diff = f64::from(a[[i, j]]) - f64::from(llt[[i, j]]);
+            assert_relative_eq!(diff, 0.0, epsilon = 1e-10);
+        }
+    }
+}
+
+#[test]
+fn cholesky_decomposition() {
+    test_cholesky_decomposition(&Lapack::default());
+}
+
+fn test_cholesky_decomposition(bd: &impl LU<f64>) {
+    let n = 4;
+    let mut a = random_positive_definite_matrix(n);
+    let original_a = a.clone();
+
+    let l = bd.choleski(&mut a).unwrap();
+
+    println!("{:?}", l);
+
+    test_cholesky_reconstruction(&original_a, &l);
+}
+
+#[test]
+fn cholesky_overwrite() {
+    test_cholesky_overwrite(&Lapack::default());
+}
+
+fn test_cholesky_overwrite(bd: &impl LU<f64>) {
+    let n = 4;
+    let a = random_positive_definite_matrix(n);
+    let original_a = a.clone();
+    let mut a_copy = a.clone();
+
+    let l = bd.choleski(&mut a_copy.clone()).unwrap();
+    bd.choleski_overwrite(&mut a_copy).unwrap();
+
+    println!("{:?}", l);
+    println!("{:?}", a_copy);
+
+    test_cholesky_reconstruction(&original_a, &a_copy);
+}
+
+#[test]
+fn cholesky_not_positive_definite() {
+    test_cholesky_not_positive_definite(&Lapack::default());
+}
+
+fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
+    let n = 4;
+    // Create a matrix that is not positive definite (has negative eigenvalues)
+    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+
+    // Fill with a pattern that creates a non-positive definite matrix
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                a[[i, j]] = -1.0; // Negative diagonal elements
+            } else {
+                a[[i, j]] = 0.1;
+            }
+        }
+    }
+
+    // This should fail
+    let result = bd.choleski(&mut a);
+    assert!(result.is_err());
+}
+
+#[test]
+fn cholesky_identity_matrix() {
+    test_cholesky_identity_matrix(&Lapack::default());
+}
+
+fn test_cholesky_identity_matrix(bd: &impl LU<f64>) {
+    let n = 4;
+    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+
+    // Create identity matrix (positive definite)
+    for i in 0..n {
+        a[[i, i]] = 1.0;
+    }
+
+    let l = bd.choleski(&mut a).unwrap();
+
+    // Cholesky of identity should be identity
+    for i in 0..n {
+        for j in 0..n {
+            let expected = if i == j { 1.0 } else { 0.0 };
+            assert_relative_eq!(l[[i, j]], expected, epsilon = 1e-14);
+        }
+    }
 }

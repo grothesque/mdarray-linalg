@@ -9,7 +9,7 @@
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
 use super::simple::{getrf, getri, potrf};
-use mdarray_linalg::{get_dims, ipiv_to_permutation_matrix};
+use mdarray_linalg::{get_dims, ipiv_to_permutation_matrix, transpose_in_place};
 
 use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
@@ -159,7 +159,10 @@ where
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 
         match potrf::<_, Dense, T>(a, 'L') {
-            0 => Ok(()),
+            0 => {
+                transpose_in_place(a);
+                Ok(())
+            }
             i if i > 0 => Err(InvError::NotPositiveDefinite { lpm: i }),
             i => Err(InvError::BackendError(i)),
         }
