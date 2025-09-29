@@ -1,5 +1,6 @@
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use num_complex::ComplexFloat;
+use num_traits::{One, Zero};
 
 /// Displays a numeric mdarray in a human-readable format (NumPy-style)
 pub fn pretty_print<T: ComplexFloat + std::fmt::Display>(mat: &DTensor<T, 2>)
@@ -195,4 +196,41 @@ where
         tr = tr + a[[i, i]];
     }
     tr
+}
+
+/// Creates an identity matrix of size `n x n`.
+/// # Examples
+/// ```
+/// use mdarray::tensor;
+/// use mdarray_linalg::eye;
+///
+/// let i3 = eye::<f64>(3);
+/// assert_eq!(i3, tensor![[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]);
+/// ```
+pub fn eye<T: Zero + One>(n: usize) -> DTensor<T, 2> {
+    DTensor::<T, 2>::from_fn([n, n], |i| if i[0] == i[1] { T::one() } else { T::zero() })
+}
+
+/// Creates a diagonal matrix of size `n x n` with ones on a specified diagonal.
+///
+/// The diagonal can be shifted using `k`:  
+/// - `k = 0` → main diagonal (default, standard identity)  
+/// - `k > 0` → k-th diagonal above the main one  
+/// - `k < 0` → k-th diagonal below the main one
+/// # Examples
+/// ```
+/// use mdarray::tensor;
+/// use mdarray_linalg::eye_k;
+///
+/// let i3 = eye_k::<f64>(3, 1);
+/// assert_eq!(i3, tensor![[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]]);
+/// ```
+pub fn eye_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
+    DTensor::<T, 2>::from_fn([n, n], |i| {
+        if (i[1] as isize - i[0] as isize) == k {
+            T::one()
+        } else {
+            T::zero()
+        }
+    })
 }
