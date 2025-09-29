@@ -154,17 +154,26 @@ impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
         // asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Vec<usize> {
-        let mut max_val = None;
-        let mut max_idx = Vec::new();
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Option<Vec<usize>> {
+        if x.is_empty() {
+            return None;
+        }
 
-        for (flat_idx, val) in x.iter().enumerate() {
-            if max_val.is_none() || Some(val) > max_val {
-                max_val = Some(val);
-                max_idx = unravel_index(x, flat_idx);
+        if x.rank() == 0 {
+            return Some(Vec::new());
+        }
+
+        let mut max_flat_idx = 0;
+        let mut max_val = x.iter().next().unwrap();
+
+        for (flat_idx, val) in x.iter().enumerate().skip(1) {
+            if val > max_val {
+                max_val = val;
+                max_flat_idx = flat_idx;
             }
         }
-        max_idx
+
+        Some(unravel_index(x, max_flat_idx))
     }
 
     fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {

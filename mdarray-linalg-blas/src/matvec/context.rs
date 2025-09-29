@@ -148,7 +148,7 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, _x: &View<'_, T, S, Lx>) -> Vec<usize> {
+    fn argmax<Lx: Layout, S: Shape>(&self, _x: &View<'_, T, S, Lx>) -> Option<Vec<usize>> {
         todo!()
     }
     fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
