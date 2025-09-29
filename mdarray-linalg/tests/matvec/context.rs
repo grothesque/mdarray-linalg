@@ -1,4 +1,4 @@
-use mdarray::DTensor;
+use mdarray::{DTensor, tensor};
 
 use mdarray_linalg::prelude::*;
 
@@ -238,28 +238,39 @@ fn norm2_complex() {
 fn argmax_real() {
     use mdarray::DTensor;
 
-    let bd = Naive; // ton impl de l’interface avec argmax
+    let bd = Naive;
+
+    // ----- Empty tensor -----
+    let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
+    let idx = bd.argmax(&x.view(..).into_dyn());
+    println!("Empty: {:?}", idx);
+    assert_eq!(idx, None);
+
+    // ----- Scalar (rank 0) -----
+    let x = tensor![42.];
+    let idx = bd.argmax(&x.view(..)).unwrap();
+    println!("Scalar: {:?}", idx);
+    assert_eq!(idx, vec![0]); // Empty vec for scalar
 
     // ----- 1D -----
     let n = 5;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3., 4., 5.]
-    let idx = bd.argmax(&x.view(..).into_dyn());
+    let idx = bd.argmax(&x.view(..).into_dyn()).unwrap();
     println!("{:?}", idx);
-    assert_eq!(idx, vec![4]); // 5.0 est max, à l'indice 4
+    assert_eq!(idx, vec![4]);
 
     // ----- 2D -----
     let x = DTensor::<f64, 2>::from_fn([2, 3], |i| (i[0] * 3 + i[1]) as f64);
-    // matrice :
+
     // [[0., 1., 2.],
     //  [3., 4., 5.]]
-    let idx = bd.argmax(&x.view(.., ..).into_dyn());
+    let idx = bd.argmax(&x.view(.., ..).into_dyn()).unwrap();
     println!("{:?}", idx);
-    assert_eq!(idx, vec![1, 2]); // valeur max = 5.0 en (1,2)
+    assert_eq!(idx, vec![1, 2]);
 
     // ----- 3D -----
     let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
-    // tenseur valeurs 0..7
-    let idx = bd.argmax(&x.view(.., .., ..).into_dyn());
+    let idx = bd.argmax(&x.view(.., .., ..).into_dyn()).unwrap();
     println!("{:?}", idx);
-    assert_eq!(idx, vec![1, 1, 1]); // valeur max = 7.0 à la fin
+    assert_eq!(idx, vec![1, 1, 1]);
 }
