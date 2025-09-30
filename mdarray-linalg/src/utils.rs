@@ -183,6 +183,18 @@ where
 }
 
 /// Computes the trace of a square matrix (sum of diagonal elements).
+/// # Examples
+/// ```
+/// use mdarray::tensor;
+/// use mdarray_linalg::trace;
+///
+/// let a = tensor![[1., 2., 3.],
+///                 [4., 5., 6.],
+///                 [7., 8., 9.]];
+///
+/// let tr = trace(&a);
+/// assert_eq!(tr, 15.0);
+/// ```
 pub fn trace<T, L>(a: &DSlice<T, 2, L>) -> T
 where
     T: ComplexFloat + std::ops::Add<Output = T> + Copy,
@@ -232,5 +244,55 @@ pub fn eye_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
         } else {
             T::zero()
         }
+    })
+}
+
+/// Computes the Kronecker product of two 2D tensors.
+///
+/// The Kronecker product of matrices `A (m×n)` and `B (p×q)` is defined as the
+/// block matrix of size `(m*p) × (n*q)` where each element `a[i, j]` of `A`
+/// multiplies the entire matrix `B`.
+///
+/// # Examples
+/// ```
+/// use mdarray::tensor;
+/// use mdarray_linalg::kron;
+///
+/// let a = tensor![[1., 2.],
+///                 [3., 4.]];
+///
+/// let b = tensor![[0., 5.],
+///                 [6., 7.]];
+///
+/// let k = kron(&a, &b);
+///
+/// assert_eq!(k, tensor![
+///     [ 0.,  5.,  0., 10.],
+///     [ 6.,  7., 12., 14.],
+///     [ 0., 15.,  0., 20.],
+///     [18., 21., 24., 28.]
+/// ]);
+/// ```
+pub fn kron<T, La, Lb>(a: &DSlice<T, 2, La>, b: &DSlice<T, 2, Lb>) -> DTensor<T, 2>
+where
+    T: ComplexFloat + std::ops::Mul<Output = T> + Copy,
+    La: Layout,
+    Lb: Layout,
+{
+    let (ma, na) = *a.shape();
+    let (mb, nb) = *b.shape();
+
+    let out_shape = [ma * mb, na * nb];
+
+    DTensor::<T, 2>::from_fn(out_shape, |idx| {
+        let i = idx[0];
+        let j = idx[1];
+
+        let ai = i / mb;
+        let bi = i % mb;
+        let aj = j / nb;
+        let bj = j % nb;
+
+        a[[ai, aj]] * b[[bi, bj]]
     })
 }
