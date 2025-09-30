@@ -92,4 +92,15 @@ pub trait Eig<T: ComplexFloat> {
         t: &mut DSlice<T, 2, Dense>,
         z: &mut DSlice<T, 2, Dense>,
     ) -> Result<(), SchurError>;
+
+    /// Compute Schur (complex) decomposition with new allocated matrices
+    fn schur_complex<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T>;
+
+    /// Compute Schur complex) decomposition overwriting existing matrices
+    fn schur_complex_overwrite<L: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        t: &mut DSlice<T, 2, Dense>,
+        z: &mut DSlice<T, 2, Dense>,
+    ) -> Result<(), SchurError>;
 }

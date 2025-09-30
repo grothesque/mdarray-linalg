@@ -14,8 +14,8 @@
 //!     - λ are real eigenvalues
 //!     - v are orthonormal eigenvectors
 
-use super::simple::{gees, geig, geigh};
-use mdarray_linalg::{get_dims, into_i32};
+use super::simple::{gees, gees_complex, geig, geigh};
+use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 
 use mdarray::{DSlice, Dense, Layout, tensor};
 
@@ -341,9 +341,11 @@ where
                 let mut t = tensor![[T::default(); n as usize]; n as usize];
                 for j in 0..(n as usize) {
                     for i in 0..(n as usize) {
-                        t[[i, j]] = a[[i, j]];
+                        t[[i, j]] = a[[j, i]];
                     }
                 }
+
+                transpose_in_place(&mut schur_vectors);
 
                 Ok(SchurDecomp {
                     t,
@@ -375,6 +377,78 @@ where
         let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
         let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
 
-        gees::<Dense, Dense, Dense, Dense, T>(t, &mut eigenvalues_real, &mut eigenvalues_imag, z)
+        let result = gees::<Dense, Dense, Dense, Dense, T>(
+            t,
+            &mut eigenvalues_real,
+            &mut eigenvalues_imag,
+            z,
+        );
+        transpose_in_place(z);
+        transpose_in_place(t);
+        result
     }
-}
+
+    /// Compute Schur (complex) decomposition with new allocated matrices
+    fn schur_complex<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T>
+    {
+	todo!()
+        // let (m, n) = get_dims!(a);
+        // if m != n {
+        //     return Err(SchurError::NotSquareMatrix);
+        // }
+
+        // // let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        // // let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+
+        // let mut eigenvalues = tensor![[T::default(); n as usize]; 1];
+        // let mut schur_vectors = tensor![[T::default(); n as usize]; n as usize];
+
+        // match gees_complex::<L, Dense, Dense, T>(a, &mut eigenvalues, &mut schur_vectors) {
+        //     Ok(_) => {
+        //         let mut t = tensor![[T::default(); n as usize]; n as usize];
+        //         for j in 0..(n as usize) {
+        //             for i in 0..(n as usize) {
+        //                 t[[i, j]] = a[[j, i]];
+        //             }
+        //         }
+
+        //         transpose_in_place(&mut schur_vectors);
+
+        //         Ok(SchurDecomp {
+        //             t,
+        //             z: schur_vectors,
+        //         })
+        //     }
+        //     Err(e) => Err(e),
+        // }
+    }
+
+    /// Compute Schur (complex) decomposition overwriting existing matrices
+    fn schur_complex_overwrite<L: Layout>(
+        &self,
+        a: &mut DSlice<T, 2, L>,
+        t: &mut DSlice<T, 2, Dense>,
+        z: &mut DSlice<T, 2, Dense>,
+    ) -> Result<(), SchurError> {
+	todo!()
+    //     let (m, n) = get_dims!(a);
+    //     if m != n {
+    //         return Err(SchurError::NotSquareMatrix);
+    //     }
+
+    //     for j in 0..(n as usize) {
+    //         for i in 0..(n as usize) {
+    //             t[[i, j]] = a[[i, j]];
+    //         }
+    //     }
+
+    //     let mut eigenvalues = tensor![[T::default(); n as usize]; 1];
+
+    //     let result = gees_complex::<Dense, Dense, Dense, T>(t, &mut eigenvalues, z);
+
+    //     transpose_in_place(z);
+    //     transpose_in_place(t);
+
+    //     result
+    // }
+    }

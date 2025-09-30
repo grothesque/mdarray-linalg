@@ -1,8 +1,9 @@
 use approx::assert_relative_eq;
 
+use crate::assert_matrix_eq;
 use crate::common::random_matrix;
-use mdarray::{DTensor, Dense};
-use mdarray_linalg::{Eig, EigDecomp, pretty_print};
+use mdarray::{DTensor, Dense, tensor};
+use mdarray_linalg::{Eig, EigDecomp, SchurDecomp, naive_matmul, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
 use mdarray_linalg_lapack::Lapack;
 use num_complex::{Complex, ComplexFloat};
@@ -107,8 +108,6 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
 
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
-
-// Add these tests to your existing context.rs file
 
 #[test]
 fn eig_full() {
@@ -331,3 +330,68 @@ fn test_eig_values_non_square(bd: &impl Eig<f64>) {
         .eig_values(&mut a.clone())
         .expect("Eigenvalues computation failed");
 }
+
+#[test]
+fn schur_decomp() {
+    test_schur(&Lapack::default());
+}
+
+fn test_schur(bd: &impl Eig<f64>) {
+    let n = 4;
+    let a = random_matrix(n, n);
+
+    let SchurDecomp { t, z } = bd
+        .schur(&mut a.clone())
+        .expect("Schur decomposition failed");
+
+    assert_eq!(t.shape(), &(n, n));
+    assert_eq!(z.shape(), &(n, n));
+
+    let mut a_reconstructed_tmp = DTensor::<f64, 2>::zeros([n, n]);
+    let mut a_reconstructed = DTensor::<f64, 2>::zeros([n, n]);
+    let zt = z.transpose().to_tensor();
+
+    println!("{:?}", a);
+    println!("{:?}", t);
+    println!("{:?}", z);
+
+    naive_matmul(&z, &t, &mut a_reconstructed_tmp);
+    naive_matmul(&a_reconstructed_tmp, &zt, &mut a_reconstructed);
+
+    assert_matrix_eq!(&a, &a_reconstructed);
+}
+
+#[test]
+// fn schur_decomp_cplx() {
+//     test_schur(&Lapack::default());
+// }
+
+// fn test_schur_cplx(bd: &impl Eig<f64>) {
+//     let n = 4;
+//     let a = random_matrix(n, n);
+//     let b = random_matrix(n, n);
+
+//     let c = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+//         Complex::new(a[[i[0], i[1]]], b[[i[0], i[1]]])
+//     });
+
+//     let SchurDecomp { t, z } = bd
+//         .schur_complex(&mut c.clone())
+//         .expect("Schur decomposition failed");
+
+//     assert_eq!(t.shape(), &(n, n));
+//     assert_eq!(z.shape(), &(n, n));
+
+//     let mut a_reconstructed_tmp = DTensor::<f64, 2>::zeros([n, n]);
+//     let mut a_reconstructed = DTensor::<f64, 2>::zeros([n, n]);
+//     let zt = z.transpose().to_tensor();
+
+//     println!("{:?}", a);
+//     println!("{:?}", t);
+//     println!("{:?}", z);
+
+//     naive_matmul(&z, &t, &mut a_reconstructed_tmp);
+//     naive_matmul(&a_reconstructed_tmp, &zt, &mut a_reconstructed);
+
+//     assert_matrix_eq!(&a, &a_reconstructed);
+// }
