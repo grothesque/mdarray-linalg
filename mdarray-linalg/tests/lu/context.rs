@@ -4,6 +4,7 @@ use num_complex::ComplexFloat;
 use crate::common::random_matrix;
 use mdarray::{DSlice, DTensor, Dense};
 use mdarray_linalg::{LU, naive_matmul, transpose_in_place};
+use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
 fn test_lu_reconstruction<T>(
@@ -41,6 +42,7 @@ fn test_lu_reconstruction<T>(
 #[test]
 fn lu_decomposition() {
     test_lu_decomposition(&Lapack::default());
+    test_lu_decomposition(&Faer);
 }
 
 fn test_lu_decomposition(bd: &impl LU<f64>) {
@@ -56,6 +58,7 @@ fn test_lu_decomposition(bd: &impl LU<f64>) {
 #[test]
 fn lu_decomposition_rectangular() {
     test_lu_decomposition_rectangular(&Lapack::default());
+    test_lu_decomposition_rectangular(&Faer);
 }
 
 fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
