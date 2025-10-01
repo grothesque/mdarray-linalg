@@ -7,7 +7,6 @@
 //     - V^T is n × n      (transpose of right singular vectors, orthogonal)
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
-use super::scalar::BlasScalar;
 use super::simple::svd_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
@@ -21,11 +20,10 @@ where
     T: ComplexFloat
         + ComplexField
         + Default
-        + BlasScalar
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>
         + 'static,
 {
-    // Compute full SVD with new allocated matrices
+    /// Compute full SVD with new allocated matrices
     fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<SVDDecomp<T>, SVDError> {
         let (m, n) = *a.shape();
         let min_mn = m.min(n);
@@ -59,7 +57,7 @@ where
         }
     }
 
-    // Compute only singular values with new allocated matrix
+    /// Compute only singular values with new allocated matrix
     fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError> {
         let (m, n) = *a.shape();
         let min_mn = m.min(n);
@@ -77,7 +75,7 @@ where
         }
     }
 
-    // Compute full SVD, overwriting existing matrices
+    /// Compute full SVD, overwriting existing matrices
     fn svd_overwrite<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
@@ -88,7 +86,7 @@ where
         svd_faer::<T, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
     }
 
-    // Compute only singular values, overwriting existing matrix
+    /// Compute only singular values, overwriting existing matrix
     fn svd_overwrite_s<L: Layout, Ls: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,

@@ -18,6 +18,11 @@ openblas-src = { version = "0.10.11", features = ["system"] }
 **Important notes:**
 - Use the latest GitHub version of `mdarray`, not the crates.io version
 - When using the BLAS backend, include `openblas-src` to avoid linkage errors
+- When running doctests with Blas or Lapack, linking issues may occur
+ due to this Rust issue:
+ [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In
+ that case, run the doctests with: `RUSTDOCFLAGS="-L native=/usr/lib
+ -C link-arg=-lopenblas" cargo test --doc`
 
 See the tests for a “tutorial”.
 

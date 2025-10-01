@@ -9,6 +9,7 @@ thiserror = "2.0.12"
 num-complex = "0.4.6"
 num-traits = "0.2.19"
 itertools = "0.14.0"
+faer = "0.23.2"
 
 [dev-dependencies]
 approx = "0.5.1"
