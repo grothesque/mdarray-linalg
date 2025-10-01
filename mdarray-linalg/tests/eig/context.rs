@@ -1,7 +1,7 @@
 use approx::assert_relative_eq;
 
-use crate::assert_matrix_eq;
 use crate::common::random_matrix;
+use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, Dense, tensor};
 use mdarray_linalg::{Eig, EigDecomp, SchurDecomp, naive_matmul, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
@@ -362,36 +362,46 @@ fn test_schur(bd: &impl Eig<f64>) {
 }
 
 #[test]
-// fn schur_decomp_cplx() {
-//     test_schur(&Lapack::default());
-// }
+fn schur_decomp_cplx() {
+    test_schur_cplx(&Lapack::default());
+}
 
-// fn test_schur_cplx(bd: &impl Eig<f64>) {
-//     let n = 4;
-//     let a = random_matrix(n, n);
-//     let b = random_matrix(n, n);
+fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
+    let n = 4;
+    let a = random_matrix(n, n);
+    let b = random_matrix(n, n);
 
-//     let c = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
-//         Complex::new(a[[i[0], i[1]]], b[[i[0], i[1]]])
-//     });
+    let c = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+        Complex::new(a[[i[0], i[1]]], b[[i[0], i[1]]])
+    });
 
-//     let SchurDecomp { t, z } = bd
-//         .schur_complex(&mut c.clone())
-//         .expect("Schur decomposition failed");
+    let SchurDecomp { t, z } = bd
+        .schur_complex(&mut c.clone())
+        .expect("Schur decomposition failed");
 
-//     assert_eq!(t.shape(), &(n, n));
-//     assert_eq!(z.shape(), &(n, n));
+    assert_eq!(t.shape(), &(n, n));
+    assert_eq!(z.shape(), &(n, n));
 
-//     let mut a_reconstructed_tmp = DTensor::<f64, 2>::zeros([n, n]);
-//     let mut a_reconstructed = DTensor::<f64, 2>::zeros([n, n]);
-//     let zt = z.transpose().to_tensor();
+    let mut c_reconstructed_tmp = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+    let mut c_reconstructed = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+    let mut zt = z.transpose().to_tensor();
 
-//     println!("{:?}", a);
-//     println!("{:?}", t);
-//     println!("{:?}", z);
+    for i in 0..n {
+        for j in 0..n {
+            zt[[i, j]] = zt[[i, j]].conj();
+        }
+    }
 
-//     naive_matmul(&z, &t, &mut a_reconstructed_tmp);
-//     naive_matmul(&a_reconstructed_tmp, &zt, &mut a_reconstructed);
+    println!("{:?}", c);
+    println!("{:?}", t);
+    println!("{:?}", z);
 
-//     assert_matrix_eq!(&a, &a_reconstructed);
-// }
+    naive_matmul(&z, &t, &mut c_reconstructed_tmp);
+    naive_matmul(&c_reconstructed_tmp, &zt, &mut c_reconstructed);
+
+    println!("---------------------------------------------");
+    println!("{:?}", c);
+    println!("{:?}", c_reconstructed);
+
+    assert_complex_matrix_eq!(&c, &c_reconstructed);
+}

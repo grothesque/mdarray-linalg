@@ -1,6 +1,6 @@
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::{EigError, SchurDecomp, SchurError, SchurResult, transpose_in_place};
+use mdarray::{DSlice, Layout};
+use mdarray_linalg::{EigError, SchurError, transpose_in_place};
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;
@@ -424,12 +424,9 @@ pub fn gees_complex<
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
 >(
     a: &mut DSlice<T, 2, La>,
-    eigenvalues: &mut DSlice<T, 2, Lw>,    // shape (1, n)
+    eigenvalues: &mut DSlice<T, 1, Lw>,    // shape (1, n)
     schur_vectors: &mut DSlice<T, 2, Lvs>, // shape (n, n)
-) -> Result<(), SchurError>
-where
-    T::Real: Default,
-{
+) -> Result<(), SchurError> {
     let (m, n) = get_dims!(a);
     if m != n {
         return Err(SchurError::NotSquareMatrix);
@@ -442,11 +439,6 @@ where
     assert_eq!(mvs, n, "Schur vectors must have same number of rows as A");
     assert_eq!(nvs, n, "Schur vectors must be square (n × n)");
 
-    let (mw, nw) = get_dims!(eigenvalues);
-    assert_eq!(mw, 1, "Eigenvalues must be a row vector");
-    assert_eq!(nw, n, "Eigenvalues must have n elements");
-
-    // LAPACK expects column-major: you already transpose inputs in other impls
     transpose_in_place(a);
 
     // --- workspace query (lwork) ---
@@ -457,8 +449,7 @@ where
         let mut info = 0i32;
 
         // rwork is real workspace
-        let rwork_len = T::rwork_len_gees(n);
-        let mut rwork: Vec<T::Real> = vec![T::Real::default(); rwork_len];
+        let mut rwork = vec![0.; 1];
 
         // keep bwork alive
         let mut bwork_storage = if n > 0 {
@@ -471,9 +462,6 @@ where
             .map_or(ptr::null_mut(), |v| v.as_mut_ptr());
 
         unsafe {
-            // IMPORTANT: respect exact parameter order of your signature:
-            // jobvs, sort, select, n, a, lda, sdim, wr, _wi, vs, ldvs,
-            // work, lwork, rwork, bwork, info
             T::lapack_gees(
                 jobvs.try_into().unwrap(),
                 b'N'.try_into().unwrap(), // no sorting
@@ -506,7 +494,8 @@ where
     // allocate real work + bwork + rwork
     let mut work = T::allocate(lwork);
     let rwork_len = T::rwork_len_gees(n);
-    let mut rwork: Vec<T::Real> = vec![T::Real::default(); rwork_len];
+    // let mut rwork = T::allocate(rwork_len as i32);
+    let mut rwork = vec![0.0; rwork_len];
     let mut bwork_storage = if n > 0 {
         Some(vec![0i32; n as usize])
     } else {
@@ -532,7 +521,7 @@ where
             n,                          // ldvs
             work.as_mut_ptr(),
             lwork,
-            rwork.as_mut_ptr() as *mut _, // cast to generic pointer
+            rwork.as_mut_ptr() as *mut _,
             bwork,
             &mut info,
         );
