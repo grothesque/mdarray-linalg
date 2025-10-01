@@ -1,7 +1,7 @@
-use mdarray::{DTensor, Strided};
+use mdarray::DTensor;
 
 use mdarray_linalg::QR;
-// use qr::faer::Faer;
+use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
 use approx::assert_relative_eq;
@@ -14,7 +14,7 @@ use mdarray_linalg::{naive_matmul, pretty_print};
 #[test]
 fn test_backend_qr_random_matrix() {
     test_qr_random_matrix(&Lapack::default());
-    // test_qr_random_matrix(&Faer);
+    test_qr_random_matrix(&Faer);
 }
 
 fn test_qr_random_matrix(bd: &impl QR<f64>) {
@@ -28,7 +28,7 @@ fn test_qr_random_matrix(bd: &impl QR<f64>) {
 #[test]
 fn test_backend_qr_structured_matrix() {
     test_qr_structured_matrix(&Lapack::default());
-    // test_qr_structured_matrix(&Faer);
+    test_qr_structured_matrix(&Faer);
 }
 
 fn test_qr_structured_matrix(bd: &impl QR<f64>) {
@@ -41,7 +41,7 @@ fn test_qr_structured_matrix(bd: &impl QR<f64>) {
 #[test]
 fn test_backend_qr_complex_matrix() {
     test_qr_complex_matrix(&Lapack::default());
-    // test_qr_complex_matrix(&Faer);
+    test_qr_complex_matrix(&Faer);
 }
 
 fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
@@ -88,6 +88,12 @@ where
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
     naive_matmul(&q, &r, &mut reconstructed);
+
+    pretty_print(&q);
+    pretty_print(&r);
+
+    pretty_print(a);
+    pretty_print(&reconstructed);
 
     assert_matrix_eq!(a, reconstructed);
 
