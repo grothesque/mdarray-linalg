@@ -2,7 +2,7 @@ use mdarray::{DSlice, DTensor, Layout, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
-/// Displays a numeric mdarray in a human-readable format (NumPy-style)
+/// Displays a numeric `mdarray` in a human-readable format (NumPy-style)
 pub fn pretty_print<T: ComplexFloat + std::fmt::Display>(mat: &DTensor<T, 2>)
 where
     <T as num_complex::ComplexFloat>::Real: std::fmt::Display,
@@ -30,7 +30,7 @@ pub fn naive_matmul<T: ComplexFloat>(a: &DSlice<T, 2>, b: &DSlice<T, 2>, c: &mut
     }
 }
 
-/// Safely casts a value to i32
+/// Safely casts a value to `i32`
 pub fn into_i32<T>(x: T) -> i32
 where
     T: TryInto<i32>,
@@ -40,7 +40,7 @@ where
 }
 
 /// Returns the dimensions of an arbitrary number of matrices (e.g.,
-/// A, B, C → (ma, na), (mb, nb), (mc, nc))
+/// `A, B, C → (ma, na), (mb, nb), (mc, nc))`
 #[macro_export]
 macro_rules! get_dims {
     ( $( $matrix:expr ),+ ) => {
@@ -55,9 +55,9 @@ macro_rules! get_dims {
     };
 }
 
-/// Make sure that matrix shapes are compatible with C = A * B, and
-/// return the dimensions (m, n, k) safely cast to `i32`, where C is (m
-/// x n), and k is the common dimension of A and B
+/// Make sure that matrix shapes are compatible with `C = A * B`, and
+/// return the dimensions `(m, n, k)` safely cast to `i32`, where `C` is `(m
+/// x n)`, and `k` is the common dimension of `A` and `B`
 pub fn dims3(
     a_shape: &(usize, usize),
     b_shape: &(usize, usize),
@@ -77,8 +77,8 @@ pub fn dims3(
     (into_i32(m), into_i32(n), into_i32(k))
 }
 
-/// Make sure that matrix shapes are compatible with A * B, and return
-/// the dimensions (m, n) safely cast to `i32`
+/// Make sure that matrix shapes are compatible with `A * B`, and return
+/// the dimensions `(m, n)` safely cast to `i32`
 pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
     let (m, k) = *a_shape;
     let (k2, n) = *b_shape;
@@ -110,7 +110,7 @@ macro_rules! trans_stride {
 /// Transposes a matrix in-place. Dimensions stay the same, only the memory ordering changes.
 /// - For square matrices: swaps elements across the main diagonal.
 /// - For rectangular matrices: reshuffles data in a temporary buffer so that the
-///   same (rows, cols) slice now represents the transposed layout.
+///   same `(rows, cols)` slice now represents the transposed layout.
 pub fn transpose_in_place<T, L>(c: &mut DSlice<T, 2, L>)
 where
     T: ComplexFloat + Default,
@@ -162,9 +162,9 @@ pub fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DT
     p
 }
 
-/// Given an input matrix of shape (m × n), this function creates and returns
-/// a new matrix of shape (n × m), where each element at position (i, j) in the
-/// original is moved to position (j, i) in the result.
+/// Given an input matrix of shape `(m × n)`, this function creates and returns
+/// a new matrix of shape `(n × m)`, where each element at position `(i, j)` in the
+/// original is moved to position `(j, i)` in the result.
 pub fn to_col_major<T, L>(c: &DSlice<T, 2, L>) -> DTensor<T, 2>
 where
     T: ComplexFloat + Default + Clone,
