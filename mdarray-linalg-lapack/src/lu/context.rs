@@ -115,17 +115,13 @@ where
             det = det * u[[i, i]];
         }
 
-        let mut sign = 1;
+        let mut sign = T::one();
         for (i, &pivot) in ipiv.iter().enumerate() {
             if (i as i32) != (pivot - 1) {
-                sign *= -1;
+                sign = sign * (-T::one());
             }
         }
-
-        if sign == -1 {
-            det = -det;
-        }
-        det
+        det * sign
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix

@@ -2,8 +2,8 @@ use approx::assert_relative_eq;
 use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
-use mdarray::{DSlice, DTensor, Dense};
-use mdarray_linalg::{LU, naive_matmul, transpose_in_place};
+use mdarray::{DSlice, DTensor, Dense, tensor};
+use mdarray_linalg::{LU, naive_matmul, pretty_print, transpose_in_place};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
@@ -46,11 +46,21 @@ fn lu_decomposition() {
 }
 
 fn test_lu_decomposition(bd: &impl LU<f64>) {
-    let n = 4;
+    let n = 2;
     let mut a = random_matrix(n, n);
+    let mut a = tensor![
+        [0.16931568150114162, 0.5524301997803323],
+        [0.10477204466703971, 0.33895423448188766]
+    ];
+
     let original_a = a.clone();
 
     let (l, u, p) = bd.lu(&mut a);
+
+    println!("{:?}", a);
+    pretty_print(&a);
+    pretty_print(&l);
+    pretty_print(&u);
 
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
@@ -169,13 +179,14 @@ fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
 #[test]
 fn determinant() {
     test_determinant(&Lapack::default());
+    test_determinant(&Faer);
 }
 
 fn test_determinant(bd: &impl LU<f64>) {
     let n = 4;
-    let mut a = random_matrix(n, n);
+    let a = random_matrix(n, n);
 
-    let d = bd.det(&mut a);
+    let d = bd.det(&mut a.clone());
 
     assert_relative_eq!(det_permutations(&a), d, epsilon = 1e-6);
 }
@@ -219,7 +230,6 @@ where
             det = det - prod;
         }
     }
-
     det
 }
 

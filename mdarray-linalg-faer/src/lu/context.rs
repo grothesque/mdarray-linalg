@@ -31,8 +31,6 @@ where
         let min_mn = m.min(n);
         let mut l_mda = tensor![[T::default(); min_mn]; m ];
         let mut u_mda = tensor![[T::default(); n ]; min_mn];
-        // let mut l_mda = tensor![[T::default(); m]; m];
-        // let mut u_mda = tensor![[T::default(); n]; m];
         let mut p_mda = tensor![[T::default(); m]; m];
 
         lu_faer(a, &mut l_mda, &mut u_mda, &mut p_mda);
@@ -63,7 +61,36 @@ where
 
     /// Computes the determinant of a square matrix. Panics if the matrix is non-square.
     fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T {
-        todo!("det will be implemented later")
+        let (m, n) = *a.shape();
+        assert_eq!(m, n, "determinant is only defined for square matrices");
+
+        let mut l = tensor![[T::default(); n]; n];
+        let mut u = tensor![[T::default(); n]; n];
+        let mut p = tensor![[T::default(); n]; n];
+
+        lu_faer(a, &mut l, &mut u, &mut p);
+
+        let mut det = T::one();
+        for i in 0..n {
+            det = det * u[[i, i]];
+        }
+
+        // Counting number of transpositions:
+        let mut sign = -T::one();
+        for i in 0..n {
+            let mut max_idx = i;
+            for j in 0..n {
+                if p[[j, i]] != T::zero() {
+                    max_idx = j;
+                    break;
+                }
+            }
+            if max_idx != i {
+                sign = -sign;
+            }
+        }
+
+        sign * det
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
