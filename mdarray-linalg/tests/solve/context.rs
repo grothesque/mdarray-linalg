@@ -3,6 +3,7 @@ use approx::assert_relative_eq;
 use crate::common::random_matrix;
 use mdarray::DTensor;
 use mdarray_linalg::{Solve, SolveResult};
+use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
 fn test_solve_verification<T>(original_a: &DTensor<T, 2>, x: &DTensor<T, 2>, b: &DTensor<T, 2>)
@@ -39,15 +40,16 @@ where
 #[test]
 fn solve_single_rhs() {
     test_solve_single_rhs(&Lapack::default());
+    test_solve_single_rhs(&Faer);
 }
 
 fn test_solve_single_rhs(bd: &impl Solve<f64>) {
     let n = 4;
-    let mut a = random_matrix(n, n);
+    let a = random_matrix(n, n);
     let original_a = a.clone();
     let b = random_matrix(n, 1);
 
-    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
+    let SolveResult { x, .. } = bd.solve(&mut a.clone(), &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -55,6 +57,7 @@ fn test_solve_single_rhs(bd: &impl Solve<f64>) {
 #[test]
 fn solve_multiple_rhs() {
     test_solve_multiple_rhs(&Lapack::default());
+    test_solve_multiple_rhs(&Faer);
 }
 
 fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
@@ -72,6 +75,7 @@ fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
 #[test]
 fn solve_overwrite() {
     test_solve_overwrite(&Lapack::default());
+    test_solve_overwrite(&Faer);
 }
 
 fn test_solve_overwrite(bd: &impl Solve<f64>) {
@@ -92,6 +96,7 @@ fn test_solve_overwrite(bd: &impl Solve<f64>) {
 #[test]
 fn solve_identity_matrix() {
     test_solve_identity_matrix(&Lapack::default());
+    test_solve_identity_matrix(&Faer);
 }
 
 fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
@@ -121,6 +126,7 @@ fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
 #[test]
 fn solve_complex() {
     test_solve_complex(&Lapack::default());
+    test_solve_complex(&Faer);
 }
 
 fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>>) {

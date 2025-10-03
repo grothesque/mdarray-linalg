@@ -161,10 +161,7 @@ where
             perm.as_ref(),
             par,
             MemStack::new(&mut MemBuffer::new(
-                faer::linalg::lu::partial_pivoting::inverse::inverse_scratch::<usize, T>(
-                    m, par,
-                    // faer::prelude::default(),
-                ),
+                faer::linalg::lu::partial_pivoting::inverse::inverse_scratch::<usize, T>(m, par),
             )),
         );
 
