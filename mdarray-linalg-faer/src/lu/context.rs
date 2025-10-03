@@ -9,7 +9,7 @@
 use super::simple::lu_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::{InvError, InvResult, LU};
+use mdarray_linalg::{InvError, InvResult, LU, into_faer_mut};
 use num_complex::ComplexFloat;
 
 use crate::Faer;
@@ -63,34 +63,8 @@ where
     fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T {
         let (m, n) = *a.shape();
         assert_eq!(m, n, "determinant is only defined for square matrices");
-
-        let mut l = tensor![[T::default(); n]; n];
-        let mut u = tensor![[T::default(); n]; n];
-        let mut p = tensor![[T::default(); n]; n];
-
-        lu_faer(a, &mut l, &mut u, &mut p);
-
-        let mut det = T::one();
-        for i in 0..n {
-            det = det * u[[i, i]];
-        }
-
-        // Counting number of transpositions:
-        let mut sign = -T::one();
-        for i in 0..n {
-            let mut max_idx = i;
-            for j in 0..n {
-                if p[[j, i]] != T::zero() {
-                    max_idx = j;
-                    break;
-                }
-            }
-            if max_idx != i {
-                sign = -sign;
-            }
-        }
-
-        sign * det
+        let a_faer = into_faer_mut(a);
+        a_faer.determinant()
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix

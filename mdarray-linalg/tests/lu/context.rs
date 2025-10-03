@@ -3,7 +3,7 @@ use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
 use mdarray::{DSlice, DTensor, Dense, tensor};
-use mdarray_linalg::{LU, naive_matmul, pretty_print, transpose_in_place};
+use mdarray_linalg::{LU, identity, naive_matmul, pretty_print, transpose_in_place};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 
@@ -189,6 +189,19 @@ fn test_determinant(bd: &impl LU<f64>) {
     let d = bd.det(&mut a.clone());
 
     assert_relative_eq!(det_permutations(&a), d, epsilon = 1e-6);
+}
+
+#[test]
+fn determinant_dummy() {
+    test_determinant_dummy(&Lapack::default());
+    test_determinant_dummy(&Faer);
+}
+
+fn test_determinant_dummy(bd: &impl LU<f64>) {
+    let a = identity(3);
+    let d = bd.det(&mut a.clone());
+    println!("{}", d);
+    assert_relative_eq!(1., d, epsilon = 1e-6);
 }
 
 use itertools::Itertools;

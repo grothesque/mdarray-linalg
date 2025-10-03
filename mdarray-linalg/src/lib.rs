@@ -41,8 +41,8 @@
 //! | `givens rot`  | ❌   | ⬜     | ❌    | ❌   |
 //! | `prrlu`       | ⬜   | ⬜     | ✅    | ⬜   |
 //!
-//! ✅ = implemented  
-//! ❌ = not implemented yet  
+//! ✅ = implemented
+//! ❌ = not implemented yet
 //! ⬜ = not applicable / not part of the backend’s scope
 //!
 //! </details>
@@ -121,9 +121,9 @@
 //!     // ----- Naive backend -----
 //!     let PRRLUDecomp { p, l, u, q, rank } = Naive.prrlu(&mut a.clone());
 //!     println!("PRRLU decomposition done (Naive backend)");
-//!     println!(                                                                                                 
-//!         "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",                                                     
-//!         p, l, u, q, rank                                                                                      
+//!     println!(
+//!         "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",
+//!         p, l, u, q, rank
 //!     );
 //! }
 //! ```

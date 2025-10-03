@@ -8,8 +8,8 @@
 
 use super::simple::qr_faer;
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
-use mdarray_linalg::{QR, eye};
+use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray_linalg::{QR, identity};
 use num_complex::ComplexFloat;
 
 use crate::Faer;
@@ -25,7 +25,7 @@ where
     /// Compute full QR decomposition with new allocated matrices
     fn qr<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> (DTensor<T, 2>, DTensor<T, 2>) {
         let (m, n) = *a.shape();
-        let mut q_mda = eye(m);
+        let mut q_mda = identity(m);
         let mut r_mda = tensor![[T::default(); n]; m];
 
         qr_faer(a, Some(&mut q_mda), &mut r_mda);

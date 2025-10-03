@@ -161,7 +161,7 @@ if __name__ == "__main__":
         "generics": ["T", "La", "Lb"],
         "bounds": ["BlasScalar + ComplexFloat", "Layout", "Layout"]
     }
-    
+
     functions_simple = {
         "gemm" : [args_gemm],
         "symm" : [args_symm],

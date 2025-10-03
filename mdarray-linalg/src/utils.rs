@@ -216,30 +216,30 @@ where
 /// # Examples
 /// ```
 /// use mdarray::tensor;
-/// use mdarray_linalg::eye;
+/// use mdarray_linalg::identity;
 ///
-/// let i3 = eye::<f64>(3);
+/// let i3 = identity::<f64>(3);
 /// assert_eq!(i3, tensor![[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]);
 /// ```
-pub fn eye<T: Zero + One>(n: usize) -> DTensor<T, 2> {
+pub fn identity<T: Zero + One>(n: usize) -> DTensor<T, 2> {
     DTensor::<T, 2>::from_fn([n, n], |i| if i[0] == i[1] { T::one() } else { T::zero() })
 }
 
 /// Creates a diagonal matrix of size `n x n` with ones on a specified diagonal.
 ///
-/// The diagonal can be shifted using `k`:  
-/// - `k = 0` → main diagonal (default, standard identity)  
-/// - `k > 0` → k-th diagonal above the main one  
+/// The diagonal can be shifted using `k`:
+/// - `k = 0` → main diagonal (default, standard identity)
+/// - `k > 0` → k-th diagonal above the main one
 /// - `k < 0` → k-th diagonal below the main one
 /// # Examples
 /// ```
 /// use mdarray::tensor;
-/// use mdarray_linalg::eye_k;
+/// use mdarray_linalg::identity_k;
 ///
-/// let i3 = eye_k::<f64>(3, 1);
+/// let i3 = identity_k::<f64>(3, 1);
 /// assert_eq!(i3, tensor![[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]]);
 /// ```
-pub fn eye_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
+pub fn identity_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
     DTensor::<T, 2>::from_fn([n, n], |i| {
         if (i[1] as isize - i[0] as isize) == k {
             T::one()

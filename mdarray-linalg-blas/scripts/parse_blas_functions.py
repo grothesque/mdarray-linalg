@@ -110,12 +110,12 @@ class BlasFunction:
                 raise ValueError(f"Unsupported prefix for {self.name}")
 
             self.prefix, generic_prefix = mapping[key]
-            
+
             if len(self.name) == 5:
                 self.generic_name = "cblas_" + self.name[1:]
             else:
                 self.generic_name = "cblas_" + self.name[2:]
-                
+
             self.operation = name.rstrip('_')
         elif m:
             self.prefix = m.group(1)
@@ -123,7 +123,7 @@ class BlasFunction:
         elif "dot" in self.name:
             self.prefix = self.name[0]
             self.operation = name.rstrip('_')
-        
+
         else:
             self.prefix = None
             self.operation = name.rstrip('_')
@@ -251,7 +251,7 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
     if "dot" in arg_name:
         return '*mut Complex<f32>' if "float" in c_type  else '*mut Complex<f64>'
 
-    # if "dot" in routine_name and 
+    # if "dot" in routine_name and
 
     if bat_guessed=="array":
         if '*const' in c_type:
@@ -273,7 +273,7 @@ def convert_c_type_to_rust(c_type, arg_name, routine_name):
 
         if "complex" in c_type:
             return 'Complex<f32>' if "float" in c_type  else 'Complex<f64>'
-        return 'f32' if "float" in c_type  else 'f64'       
+        return 'f32' if "float" in c_type  else 'f64'
 
     return type_mapping.get(c_type, c_type)
 
@@ -334,7 +334,7 @@ def convert_c_type_for_call(arg_name, arg_type, routine_name):
                     cast_call = f"&{arg_name} as *const _ as *const _"
             else:
                 rust_ty = convert_c_type_to_rust(arg_type, arg_name, routine_name)
-                cast_call = f"{arg_name}" 
+                cast_call = f"{arg_name}"
 
         case "real_scalar":
             if "float" in arg_type:
