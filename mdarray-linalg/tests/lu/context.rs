@@ -85,6 +85,7 @@ fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
 #[test]
 fn lu_overwrite() {
     test_lu_overwrite(&Lapack::default());
+    test_lu_overwrite(&Faer);
 }
 
 fn test_lu_overwrite(bd: &impl LU<f64>) {
@@ -104,6 +105,7 @@ fn test_lu_overwrite(bd: &impl LU<f64>) {
 #[test]
 fn lu_overwrite_rectangular() {
     test_lu_overwrite_rectangular(&Lapack::default());
+    test_lu_overwrite_rectangular(&Faer);
 }
 
 fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
@@ -124,6 +126,7 @@ fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
 #[test]
 fn inverse() {
     test_inverse(&Lapack::default());
+    test_inverse(&Faer);
 }
 
 fn test_inverse(bd: &impl LU<f64>) {
@@ -145,6 +148,7 @@ fn test_inverse(bd: &impl LU<f64>) {
 #[test]
 fn inverse_overwrite() {
     test_inverse_overwrite(&Lapack::default());
+    test_inverse_overwrite(&Faer);
 }
 
 fn test_inverse_overwrite(bd: &impl LU<f64>) {
