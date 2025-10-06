@@ -1,3 +1,4 @@
+pub mod eig;
 pub mod lu;
 pub mod matmul;
 pub mod qr;

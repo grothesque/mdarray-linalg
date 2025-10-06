@@ -5,6 +5,7 @@ use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, Dense, tensor};
 use mdarray_linalg::{Eig, EigDecomp, SchurDecomp, naive_matmul, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
+use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use num_complex::{Complex, ComplexFloat};
 
@@ -37,10 +38,8 @@ fn test_eigen_reconstruction<T>(
             av[[row]] = sum;
             λv[[row]] = λ * v[[row]];
         }
-
         for row in 0..n {
             let diff = av[[row]] - λv[[row]];
-            println!("{:?}", diff);
             assert_relative_eq!(diff.re(), 0.0, epsilon = 1e-10);
             assert_relative_eq!(diff.im(), 0.0, epsilon = 1e-10);
         }
@@ -51,7 +50,7 @@ fn test_eigen_reconstruction<T>(
 #[should_panic]
 fn non_square_matrix() {
     test_non_square_matrix(&Lapack::default());
-    // test_eig_square_matrix(&Faer);
+    test_non_square_matrix(&Faer);
 }
 
 fn test_non_square_matrix(bd: &impl Eig<f64>) {
@@ -67,7 +66,7 @@ fn test_non_square_matrix(bd: &impl Eig<f64>) {
 #[test]
 fn square_matrix() {
     test_square_matrix(&Lapack::default());
-    // test_eig_square_matrix(&Faer);
+    test_square_matrix(&Faer);
 }
 
 fn test_square_matrix(bd: &impl Eig<f64>) {
@@ -88,6 +87,7 @@ fn test_square_matrix(bd: &impl Eig<f64>) {
 #[test]
 fn cplx_square_matrix() {
     test_eig_cplx_square_matrix(&Lapack::default());
+    test_eig_cplx_square_matrix(&Faer);
 }
 
 fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
@@ -109,14 +109,40 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
+// #[test]
+// fn eig_full() {
+//     test_eig_full(&Lapack::default());
+//     test_eig_full(&Faer);
+// }
+
+// fn test_eig_full(bd: &impl Eig<f64>) {
+//     let n = 3;
+//     let a = random_matrix(n, n);
+
+//     let EigDecomp {
+//         eigenvalues,
+//         left_eigenvectors,
+//         right_eigenvectors,
+//     } = bd
+//         .eig_full(&mut a.clone())
+//         .expect("Full eigenvalue decomposition failed");
+
+//     // Test right eigenvectors
+//     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
+
+//     // Verify left eigenvectors are computed
+//     assert!(left_eigenvectors.is_some());
+// }
+
 #[test]
-fn eig_full() {
-    test_eig_full(&Lapack::default());
+fn test_eig_full_reconstruction() {
+    test_eig_full_reconstruction_impl(&Lapack::default());
+    test_eig_full_reconstruction_impl(&Faer);
 }
 
-fn test_eig_full(bd: &impl Eig<f64>) {
-    let n = 3;
-    let a = random_matrix(n, n);
+fn test_eig_full_reconstruction_impl(bd: &impl Eig<f64>) {
+    let n = 4;
+    let mut a = random_matrix(n, n);
 
     let EigDecomp {
         eigenvalues,
@@ -124,18 +150,67 @@ fn test_eig_full(bd: &impl Eig<f64>) {
         right_eigenvectors,
     } = bd
         .eig_full(&mut a.clone())
-        .expect("Full eigenvalue decomposition failed");
+        .expect("Full eigen decomposition failed");
 
-    // Test right eigenvectors
-    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
+    // Vérification des équations caractéristiques
+    test_eigen_reconstruction_full(
+        &a,
+        &eigenvalues,
+        &left_eigenvectors.unwrap(),
+        &right_eigenvectors.unwrap(),
+    );
+}
 
-    // Verify left eigenvectors are computed
-    assert!(left_eigenvectors.is_some());
+fn test_eigen_reconstruction_full<T>(
+    a: &DTensor<T, 2>,
+    eigenvalues: &DTensor<Complex<T::Real>, 2>,
+    left_eigenvectors: &DTensor<Complex<T::Real>, 2>,
+    right_eigenvectors: &DTensor<Complex<T::Real>, 2>,
+) where
+    T: Default + std::fmt::Debug + ComplexFloat<Real = f64>,
+{
+    let (n, _) = *a.shape();
+    let x = T::default();
+
+    for i in 0..n {
+        let λ = eigenvalues[[0, i]];
+        let vr = right_eigenvectors.view(.., i).to_owned();
+        let vl = left_eigenvectors.view(.., i).to_owned();
+
+        let norm_r: f64 = vr.iter().map(|z| z.norm_sqr()).sum::<f64>().sqrt();
+        let norm_l: f64 = vl.iter().map(|z| z.norm_sqr()).sum::<f64>().sqrt();
+
+        assert!(norm_r > 1e-12, "Null right eigenvector found");
+        assert!(norm_l > 1e-12, "Null left eigenvector found");
+
+        // A * vr = λ * vr
+        for row in 0..n {
+            let mut sum = Complex::new(x.re(), x.re());
+            for col in 0..n {
+                sum += Complex::new(a[[row, col]].re(), a[[row, col]].im()) * vr[[col]];
+            }
+            let diff = sum - λ * vr[[row]];
+            assert_relative_eq!(diff.re(), 0.0, epsilon = 1e-10);
+            assert_relative_eq!(diff.im(), 0.0, epsilon = 1e-10);
+        }
+
+        //  vl^H * A = λ * vl^H
+        for col in 0..n {
+            let mut sum = Complex::new(x.re(), x.re());
+            for row in 0..n {
+                sum += vl[[row]].conj() * Complex::new(a[[row, col]].re(), a[[row, col]].im());
+            }
+            let diff = sum - λ * vl[[col]].conj();
+            assert_relative_eq!(diff.re(), 0.0, epsilon = 1e-10);
+            assert_relative_eq!(diff.im(), 0.0, epsilon = 1e-10);
+        }
+    }
 }
 
 #[test]
 fn eig_values_only() {
     test_eig_values_only(&Lapack::default());
+    test_eig_values_only(&Faer);
 }
 
 fn test_eig_values_only(bd: &impl Eig<f64>) {
@@ -158,64 +233,61 @@ fn test_eig_values_only(bd: &impl Eig<f64>) {
     assert!(right_eigenvectors.is_none());
 }
 
-#[test]
-fn eig_overwrite() {
-    test_eig_overwrite(&Lapack::default());
-}
+// test on overwrite removed as the function has been temporary removed.
 
-fn test_eig_overwrite(bd: &impl Eig<f64>) {
-    let n = 3;
-    let mut a = random_matrix(n, n);
-    let original_a = a.clone();
+// #[test]
+// fn eig_overwrite() {
+//     test_eig_overwrite(&Lapack::default());
+// }
 
-    let mut eigenvalues_real = DTensor::<f64, 2>::zeros([1, n]);
-    let mut eigenvalues_imag = DTensor::<f64, 2>::zeros([1, n]);
-    let mut right_eigenvectors_raw = DTensor::<f64, 2>::zeros([n, n]);
+// fn test_eig_overwrite(bd: &impl Eig<f64>) {
+//     let n = 3;
+//     let mut a = random_matrix(n, n);
+//     let original_a = a.clone();
 
-    bd.eig_overwrite::<Dense, Dense, Dense, Dense>(
-        &mut a,
-        &mut eigenvalues_real,
-        &mut eigenvalues_imag,
-        &mut right_eigenvectors_raw,
-    )
-    .expect("Overwrite eigenvalue decomposition failed");
+//     let mut eigenvalues = DTensor::<Complex<f64>, 2>::zeros([1, n]);
+//     let mut right_eigenvectors_raw = DTensor::<f64, 2>::zeros([n, n]);
 
-    // Reconstruct complex eigenvalues and eigenvectors from LAPACK format
-    let mut eigenvalues = DTensor::<Complex<f64>, 2>::zeros([1, n]);
-    let mut complex_eigenvectors = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+//     bd.eig_overwrite::<Dense, Dense, Dense, Dense>(
+//         &mut a,
+//         &mut eigenvalues,
+//         &mut right_eigenvectors_raw,
+//     )
+//     .expect("Overwrite eigenvalue decomposition failed");
 
-    for i in 0..n {
-        eigenvalues[[0, i]] = Complex::new(eigenvalues_real[[0, i]], eigenvalues_imag[[0, i]]);
-    }
+//     // Reconstruct complex eigenvalues and eigenvectors from LAPACK format
+//     // let mut eigenvalues = DTensor::<Complex<f64>, 2>::zeros([1, n]);
+//     let mut complex_eigenvectors = DTensor::<Complex<f64>, 2>::zeros([n, n]);
 
-    let mut j = 0_usize;
-    while j < n {
-        let imag = eigenvalues_imag[[0, j]];
-        if imag == 0.0 {
-            // Real eigenvalue: copy the real eigenvector
-            for i in 0..n {
-                let re = right_eigenvectors_raw[[i, j]];
-                complex_eigenvectors[[i, j]] = Complex::new(re, 0.0);
-            }
-            j += 1;
-        } else {
-            // Complex conjugate pair: reconstruct both eigenvectors
-            for i in 0..n {
-                let re = right_eigenvectors_raw[[i, j]];
-                let im = right_eigenvectors_raw[[i, j + 1]];
-                complex_eigenvectors[[i, j]] = Complex::new(re, im); // v = Re + i*Im
-                complex_eigenvectors[[i, j + 1]] = Complex::new(re, -im); // v̄ = Re - i*Im
-            }
-            j += 2;
-        }
-    }
+//     let mut j = 0_usize;
+//     while j < n {
+//         let imag = eigenvalues[[0, j]].im();
+//         if imag == 0.0 {
+//             // Real eigenvalue: copy the real eigenvector
+//             for i in 0..n {
+//                 let re = right_eigenvectors_raw[[i, j]];
+//                 complex_eigenvectors[[i, j]] = Complex::new(re, 0.0);
+//             }
+//             j += 1;
+//         } else {
+//             // Complex conjugate pair: reconstruct both eigenvectors
+//             for i in 0..n {
+//                 let re = right_eigenvectors_raw[[i, j]];
+//                 let im = right_eigenvectors_raw[[i, j + 1]];
+//                 complex_eigenvectors[[i, j]] = Complex::new(re, im); // v = Re + i*Im
+//                 complex_eigenvectors[[i, j + 1]] = Complex::new(re, -im); // v̄ = Re - i*Im
+//             }
+//             j += 2;
+//         }
+//     }
 
-    test_eigen_reconstruction(&original_a, &eigenvalues, &complex_eigenvectors);
-}
+//     test_eigen_reconstruction(&original_a, &eigenvalues, &complex_eigenvectors);
+// }
 
 #[test]
 fn eigh_symmetric() {
     test_eigh_symmetric(&Lapack::default());
+    test_eigh_symmetric(&Faer);
 }
 
 fn test_eigh_symmetric(bd: &impl Eig<f64>) {
@@ -257,6 +329,7 @@ fn test_eigh_symmetric(bd: &impl Eig<f64>) {
 #[test]
 fn eigh_complex_hermitian() {
     test_eigh_complex_hermitian(&Lapack::default());
+    test_eigh_complex_hermitian(&Faer);
 }
 
 fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
@@ -303,6 +376,7 @@ fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
 #[should_panic]
 fn eig_full_non_square() {
     test_eig_full_non_square(&Lapack::default());
+    test_eig_full_non_square(&Faer);
 }
 
 fn test_eig_full_non_square(bd: &impl Eig<f64>) {

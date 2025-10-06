@@ -67,14 +67,18 @@ pub trait Eig<T: ComplexFloat> {
     /// Compute only eigenvalues with new allocated vectors
     fn eig_values<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;
 
-    /// Compute eigenvalues and right eigenvectors, overwriting existing matrices
-    fn eig_overwrite<L: Layout, Lr: Layout, Li: Layout, Lv: Layout>(
-        &self,
-        a: &mut DSlice<T, 2, L>,
-        eigenvalues_real: &mut DSlice<T, 2, Dense>,
-        eigenvalues_imag: &mut DSlice<T, 2, Dense>,
-        right_eigenvectors: &mut DSlice<T, 2, Dense>,
-    ) -> Result<(), EigError>;
+    // Note of october 2025: this method has been
+    // temporary removed as it was very hard to provide a coherent
+    // interface for the user that deals with all the cases and all
+    // the backends.
+
+    // // Compute eigenvalues and right eigenvectors, overwriting
+    // existing matrices
+    //fn eig_overwrite<L: Layout, Lr: Layout, Li:
+    // Layout, Lv: Layout>( &self, a: &mut DSlice<T, 2, L>,
+    // eigenvalues: &mut DSlice<Complex<T>, 2, Dense>,
+    // right_eigenvectors: &mut DSlice<Complex<T>, 2, Dense>, ) ->
+    // Result<(), EigError>;
 
     /// Compute eigenvalues and eigenvectors of a Hermitian matrix (input should be complex)
     fn eigh<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T>;

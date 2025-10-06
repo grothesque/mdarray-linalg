@@ -209,28 +209,6 @@ where
         }
     }
 
-    /// Compute eigenvalues and right eigenvectors, overwriting existing matrices
-    fn eig_overwrite<L: Layout, Lr: Layout, Li: Layout, Lv: Layout>(
-        &self,
-        a: &mut DSlice<T, 2, L>,
-        eigenvalues_real: &mut DSlice<T, 2, Dense>,
-        eigenvalues_imag: &mut DSlice<T, 2, Dense>,
-        right_eigenvectors: &mut DSlice<T, 2, Dense>,
-    ) -> Result<(), EigError> {
-        let (m, n) = get_dims!(a);
-        if m != n {
-            return Err(EigError::NotSquareMatrix);
-        }
-
-        geig::<L, Dense, Dense, Dense, Dense, T>(
-            a,
-            eigenvalues_real,
-            eigenvalues_imag,
-            None,
-            Some(right_eigenvectors),
-        )
-    }
-
     /// Compute eigenvalues and eigenvectors of a Hermitian matrix
     fn eigh<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
         let (m, n) = get_dims!(a);
