@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, Layout, Shape, View};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
@@ -154,7 +154,7 @@ impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
         // asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Option<Vec<usize>> {
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         if x.is_empty() {
             return None;
         }
@@ -198,7 +198,7 @@ impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
     }
 }
 
-pub fn unravel_index<T, S: Shape, L: Layout>(x: &View<'_, T, S, L>, mut flat: usize) -> Vec<usize> {
+pub fn unravel_index<T, S: Shape, L: Layout>(x: &Slice<T, S, L>, mut flat: usize) -> Vec<usize> {
     let rank = x.rank();
 
     assert!(

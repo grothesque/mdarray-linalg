@@ -1,5 +1,5 @@
 use cblas_sys::CBLAS_UPLO;
-use mdarray::{DSlice, DTensor, Layout, Shape, View};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
@@ -148,7 +148,7 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, _x: &View<'_, T, S, Lx>) -> Option<Vec<usize>> {
+    fn argmax<Lx: Layout, S: Shape>(&self, _x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         todo!()
     }
     fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {

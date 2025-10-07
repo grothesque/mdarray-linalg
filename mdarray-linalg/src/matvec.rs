@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, Layout, Shape, View};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 
 use crate::matmul::{Triangle, Type};
 
@@ -80,7 +80,7 @@ pub trait VecOps<T: ComplexFloat> {
         T: ComplexFloat;
 
     /// Index of max |xᵢ| (argmaxᵢ |xᵢ|) (**TODO**)
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &View<'_, T, S, Lx>) -> Option<Vec<usize>>;
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
 
     /// Copy vector: `y := x` (**TODO**)
     fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>);
