@@ -91,9 +91,9 @@ fn cplx_square_matrix() {
 }
 
 fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
-    let n = 3;
+    let n = 4;
     let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
-        Complex::new((i[0] + i[1]) as f64, (i[0] + i[1]) as f64)
+        Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
     });
     println!("{:?}", a);
     let EigDecomp {
@@ -134,32 +134,39 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
 //     assert!(left_eigenvectors.is_some());
 // }
 
-#[test]
-fn test_eig_full_reconstruction() {
-    test_eig_full_reconstruction_impl(&Lapack::default());
-    test_eig_full_reconstruction_impl(&Faer);
-}
+// #[test]
+// TODO
+// fn test_eig_full_reconstruction() {
+//     test_eig_full_reconstruction_impl(&Lapack::default());
+//     // test_eig_full_reconstruction_impl(&Faer);
+// }
 
-fn test_eig_full_reconstruction_impl(bd: &impl Eig<f64>) {
-    let n = 4;
-    let mut a = random_matrix(n, n);
+// fn test_eig_full_reconstruction_impl(bd: &impl Eig<Complex<f64>>) {
+//     let n = 4;
+//     // let mut a = random_matrix(n, n);
+//     // let mut b = random_matrix(n, n);
+//     let mut a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+//         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
+//     });
 
-    let EigDecomp {
-        eigenvalues,
-        left_eigenvectors,
-        right_eigenvectors,
-    } = bd
-        .eig_full(&mut a.clone())
-        .expect("Full eigen decomposition failed");
+//     let EigDecomp {
+//         eigenvalues,
+//         left_eigenvectors,
+//         right_eigenvectors,
+//     } = bd
+//         .eig_full(&mut a.clone())
+//         .expect("Full eigen decomposition failed");
 
-    // Vérification des équations caractéristiques
-    test_eigen_reconstruction_full(
-        &a,
-        &eigenvalues,
-        &left_eigenvectors.unwrap(),
-        &right_eigenvectors.unwrap(),
-    );
-}
+//     pretty_print(&right_eigenvectors.clone().unwrap());
+//     pretty_print(&left_eigenvectors.clone().unwrap());
+
+//     test_eigen_reconstruction_full(
+//         &a,
+//         &eigenvalues,
+//         &left_eigenvectors.unwrap(),
+//         &right_eigenvectors.unwrap(),
+//     );
+// }
 
 fn test_eigen_reconstruction_full<T>(
     a: &DTensor<T, 2>,

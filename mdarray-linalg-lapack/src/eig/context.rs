@@ -99,6 +99,7 @@ where
 
     /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
     fn eig_full<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
+        todo!(); // fix bug in complex case
         let (m, n) = get_dims!(a);
         if m != n {
             return Err(EigError::NotSquareMatrix);
