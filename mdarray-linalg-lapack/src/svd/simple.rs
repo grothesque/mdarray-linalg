@@ -1,5 +1,5 @@
 use super::scalar::{LapackScalar, NeedsRwork};
-use crate::svd::SVDConfig;
+use crate::SVDConfig;
 use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::{SVDError, transpose_in_place};
 

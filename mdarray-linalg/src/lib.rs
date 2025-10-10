@@ -65,7 +65,7 @@
 //! use mdarray_linalg_faer::Faer;
 //! use mdarray_linalg_naive::Naive;
 //! use mdarray_linalg_lapack::Lapack;
-//! use mdarray_linalg_lapack::svd::SVDConfig;
+//! use mdarray_linalg_lapack::SVDConfig;
 //!
 //! fn main() {
 //!     // Declare two vectors

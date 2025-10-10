@@ -6,7 +6,7 @@ use mdarray::{DTensor, tensor};
 use mdarray_linalg::{SVD, SVDDecomp, naive_matmul, pretty_print};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
-use mdarray_linalg_lapack::svd::SVDConfig;
+use mdarray_linalg_lapack::SVDConfig;
 
 use num_complex::ComplexFloat;
 use rand::Rng;
