@@ -1,3 +1,8 @@
+use num_complex::Complex;
+use num_traits::Zero;
+use std::cmp::Ordering;
+use std::ops::{Add, Mul};
+
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
 
@@ -120,7 +125,9 @@ where
     }
 }
 
-impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
+impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy>
+    VecOps<T> for Naive
+{
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         _alpha: T,
@@ -131,9 +138,12 @@ impl<T: ComplexFloat + 'static + PartialOrd> VecOps<T> for Naive {
         // axpy(alpha, x, y);
     }
 
-    fn dot<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &DSlice<T, 1, Ly>) -> T {
-        todo!()
-        // dotu(x, y)
+    fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+        let mut result = T::zero();
+        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+            result = result + *elem_x * (*elem_y);
+        }
+        result
     }
 
     fn dotc<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &DSlice<T, 1, Ly>) -> T {

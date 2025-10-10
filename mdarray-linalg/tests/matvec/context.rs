@@ -157,10 +157,9 @@ fn dot_real() {
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
     let y = DTensor::<f64, 1>::from_fn([n], |i| (2 * (i[0] + 1)) as f64); // [2., 4., 6.]
 
-    let result = Blas.dot(&x, &y);
-
     // dot(x, y) = 1*2 + 2*4 + 3*6 = 28
-    assert_eq!(result, 28.0);
+    assert_eq!(Blas.dot(&x, &y), 28.0);
+    assert_eq!(Naive.dot(&x, &y), 28.0);
 }
 
 #[test]
@@ -170,10 +169,10 @@ fn dot_complex() {
     let x = DTensor::<Complex64, 1>::from_fn([n], |i| Complex64::new((i[0] + 1) as f64, 0.)); // [1., 2., 3.]
     let y = DTensor::<Complex64, 1>::from_fn([n], |i| Complex64::new(0., (2 * (i[0] + 1)) as f64)); // [2i, 4i, 6i]
 
-    let result = Blas.dot(&x, &y);
     let expected = Complex64::new(0.0, 28.0);
 
-    assert_eq!(result, expected);
+    assert_eq!(Blas.dot(&x, &y), expected);
+    // println!("{:?}", Naive.dot(&x, &y));
 }
 
 #[test]
