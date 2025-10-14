@@ -5,7 +5,9 @@ use openblas_src as _;
 
 use crate::common::example_matrix;
 
-use mdarray_linalg::naive_matmul;
+use mdarray_linalg::{MatMul, MatMulBuilder};
+
+use mdarray_linalg_naive::Naive;
 
 #[test]
 fn test_gemm() {
@@ -15,7 +17,7 @@ fn test_gemm() {
     let mut c = c_expr().eval();
     let ab_plus_c = {
         let mut ab = Tensor::from_elem([a.dim(0), b.dim(1)], 0.0);
-        naive_matmul(&a, &b, &mut ab);
+        Naive.matmul(&a, &b).overwrite(&mut ab);
         ab + &c
     };
 

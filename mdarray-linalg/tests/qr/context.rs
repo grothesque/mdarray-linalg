@@ -1,15 +1,16 @@
 use mdarray::DTensor;
 
-use mdarray_linalg::QR;
+use mdarray_linalg::{MatMul, MatMulBuilder, QR};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_naive::Naive;
 
 use approx::assert_relative_eq;
 use num_complex::Complex;
 use rand::prelude::*;
 
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use mdarray_linalg::{naive_matmul, pretty_print};
+use mdarray_linalg::pretty_print;
 
 #[test]
 fn test_backend_qr_random_matrix() {
@@ -58,12 +59,12 @@ fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
 
     let mut reconstructed = DTensor::<Complex<f64>, 2>::zeros([m, n]);
     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
-    naive_matmul(&q, &r, &mut reconstructed);
+    Naive.matmul(&q, &r).overwrite(&mut reconstructed);
     assert_complex_matrix_eq!(a, reconstructed);
 
     let mut reconstructed = DTensor::<Complex<f64>, 2>::zeros([m, n]);
     let (q, r) = bd.qr(&mut a.clone());
-    naive_matmul(&q, &r, &mut reconstructed);
+    Naive.matmul(&q, &r).overwrite(&mut reconstructed);
     assert_complex_matrix_eq!(a, reconstructed);
 
     pretty_print(&a);
@@ -79,7 +80,8 @@ where
         + approx::AbsDiffEq<Epsilon = f64>
         + std::fmt::Display
         + approx::RelativeEq
-        + num_traits::Float,
+        + num_traits::Float
+        + std::convert::From<i8>,
 {
     let (m, n) = *a.shape();
     let mut q = DTensor::<T, 2>::zeros([m, m]);
@@ -87,7 +89,7 @@ where
 
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
-    naive_matmul(&q, &r, &mut reconstructed);
+    Naive.matmul(&q, &r).overwrite(&mut reconstructed);
 
     pretty_print(&q);
     pretty_print(&r);
@@ -99,7 +101,7 @@ where
 
     let mut reconstructed = DTensor::<T, 2>::zeros([m, n]);
     let (q, r) = bd.qr(&mut a.clone());
-    naive_matmul(&q, &r, &mut reconstructed);
+    Naive.matmul(&q, &r).overwrite(&mut reconstructed);
 
     pretty_print(a);
     pretty_print(&reconstructed);

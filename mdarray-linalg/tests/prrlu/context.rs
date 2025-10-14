@@ -1,7 +1,7 @@
 use approx::assert_relative_eq;
 
 use mdarray::DTensor;
-use mdarray_linalg::{PRRLU, PRRLUDecomp, naive_matmul};
+use mdarray_linalg::{MatMul, MatMulBuilder, PRRLU, PRRLUDecomp};
 use mdarray_linalg_naive::Naive;
 
 use mdarray_linalg_naive::prrlu::simple::minus_outer_pivot;
@@ -37,9 +37,9 @@ fn reconstruct_from_prrlu(decomp: &PRRLUDecomp<f64>) -> DTensor<f64, 2> {
     let mut temp2 = DTensor::<f64, 2>::zeros([n, m]);
     let mut reconstructed = DTensor::<f64, 2>::zeros([n, m]);
 
-    naive_matmul(l, u, &mut temp1);
-    naive_matmul(&p_inv, &temp1, &mut temp2);
-    naive_matmul(&temp2, &q_inv, &mut reconstructed);
+    Naive.matmul(l, u).overwrite(&mut temp1);
+    Naive.matmul(&p_inv, &temp1).overwrite(&mut temp2);
+    Naive.matmul(&temp2, &q_inv).overwrite(&mut reconstructed);
 
     reconstructed
 }

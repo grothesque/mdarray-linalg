@@ -2,10 +2,10 @@ use mdarray::{DTensor, Tensor, expr, expr::Expression as _, tensor};
 use num_complex::Complex64;
 use openblas_src as _;
 
-use mdarray_linalg::naive_matmul;
 use mdarray_linalg::{MatMul, Side, Triangle, Type, prelude::*};
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_faer::Faer;
+use mdarray_linalg_naive::Naive;
 
 // Helper functions to create test matrices with known values using mdarray expressions
 fn create_test_matrix_f64(
@@ -31,7 +31,7 @@ fn test_matmul_complex_with_scaling_impl(backend: &impl MatMul<Complex64>) {
     let result = backend.matmul(&a, &b).scale(scale_factor).eval();
 
     let mut expected = Tensor::from_elem([2, 2], Complex64::new(0.0, 0.0));
-    naive_matmul(&a, &b, &mut expected);
+    Naive.matmul(&a, &b).overwrite(&mut expected);
     let expected = (expr::fill(scale_factor) * &expected).eval();
 
     assert_eq!(result, expected);
@@ -100,6 +100,7 @@ fn dimension_mismatch_panic() {
 
     let _result = Blas.matmul(&a, &b).eval();
     let _result = Faer.matmul(&a, &b).eval();
+    let _result = Naive.matmul(&a, &b).eval();
 }
 
 #[test]
@@ -109,8 +110,10 @@ fn empty_matrix_multiplication() {
 
     let blas_result = Blas.matmul(&a, &b).eval();
     let faer_result = Faer.matmul(&a, &b).eval();
+    let naive_result = Naive.matmul(&a, &b).eval();
 
     assert_eq!(blas_result, faer_result);
+    assert_eq!(blas_result, naive_result);
 }
 
 #[test]
@@ -120,8 +123,10 @@ fn single_element_matrices() {
 
     let blas_result = Blas.matmul(&a, &b).eval();
     let faer_result = Faer.matmul(&a, &b).eval();
+    let naive_result = Naive.matmul(&a, &b).eval();
 
     assert_eq!(blas_result, faer_result);
+    assert_eq!(blas_result, naive_result);
 }
 
 #[test]
@@ -131,15 +136,13 @@ fn rectangular_matrices() {
 
     let blas_result = Blas.matmul(&a, &b).eval();
     let faer_result = Faer.matmul(&a, &b).eval();
+    let naive_result = Naive.matmul(&a, &b).eval();
 
     assert_eq!(*blas_result.shape(), (3, 4));
     assert_eq!(*faer_result.shape(), (3, 4));
+    assert_eq!(*naive_result.shape(), (3, 4));
 
-    let mut expected = Tensor::from_elem([3, 4], 0.0);
-    naive_matmul(&a, &b, &mut expected);
-
-    assert_eq!(blas_result, expected);
-    assert_eq!(faer_result, expected);
+    assert_eq!(blas_result, naive_result);
     assert_eq!(blas_result, faer_result);
 }
 
@@ -150,13 +153,17 @@ fn zero_matrices() {
 
     let blas_result = Blas.matmul(&a, &b).eval();
     let faer_result = Faer.matmul(&a, &b).eval();
+    let naive_result = Naive.matmul(&a, &b).eval();
 
     assert_eq!(*blas_result.shape(), (2, 2));
     assert_eq!(*faer_result.shape(), (2, 2));
+    assert_eq!(*naive_result.shape(), (2, 2));
 
     assert!(blas_result.iter().all(|&x| x == 0.0));
     assert!(faer_result.iter().all(|&x| x == 0.0));
+    assert!(naive_result.iter().all(|&x| x == 0.0));
     assert_eq!(blas_result, faer_result);
+    assert_eq!(blas_result, naive_result);
 }
 
 #[test]
@@ -168,6 +175,7 @@ fn chained_operations() {
     let scale_factor = 2.0;
     let mut c_blas = create_test_matrix_f64([2, 2]).eval();
     let mut c_faer = c_blas.clone();
+    let mut c_naive = c_blas.clone();
 
     Blas.matmul(&a, &b)
         .scale(scale_factor)
@@ -175,20 +183,20 @@ fn chained_operations() {
     Faer.matmul(&a, &b)
         .scale(scale_factor)
         .overwrite(&mut c_faer);
+    Naive
+        .matmul(&a, &b)
+        .scale(scale_factor)
+        .overwrite(&mut c_naive);
 
-    let mut expected = Tensor::from_elem([2, 2], 0.0);
-    naive_matmul(&a, &b, &mut expected);
-    let expected = (expr::fill(scale_factor) * &expected).eval();
-
-    assert_eq!(c_blas, expected);
-    assert_eq!(c_faer, expected);
     assert_eq!(c_blas, c_faer);
+    assert_eq!(c_blas, c_naive);
 }
 
 #[test]
 fn backend_defaults() {
     let _blas = Blas::default();
     let _faer = Faer::default();
+    let _faer = Naive::default();
 }
 
 #[test]

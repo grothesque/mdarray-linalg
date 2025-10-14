@@ -20,18 +20,6 @@ where
     println!();
 }
 
-/// Textbook implementation of matrix multiplication, useful for
-/// debugging and simple tests without relying on a backend
-pub fn naive_matmul<T: ComplexFloat>(a: &DSlice<T, 2>, b: &DSlice<T, 2>, c: &mut DSlice<T, 2>) {
-    for (mut ci, ai) in c.rows_mut().into_iter().zip(a.rows()) {
-        for (aik, bk) in ai.expr().into_iter().zip(b.rows()) {
-            for (cij, bkj) in ci.expr_mut().into_iter().zip(bk) {
-                *cij = (*aik) * (*bkj) + *cij;
-            }
-        }
-    }
-}
-
 /// Safely casts a value to `i32`
 pub fn into_i32<T>(x: T) -> i32
 where

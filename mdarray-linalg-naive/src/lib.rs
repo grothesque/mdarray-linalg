@@ -1,3 +1,4 @@
+pub mod matmul;
 pub mod matvec;
 pub mod prrlu;
 

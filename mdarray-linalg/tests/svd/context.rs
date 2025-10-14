@@ -3,10 +3,12 @@ use num_complex::Complex;
 
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, tensor};
-use mdarray_linalg::{SVD, SVDDecomp, naive_matmul, pretty_print};
+use mdarray_linalg::{MatMul, MatMulBuilder, SVD, SVDDecomp, pretty_print};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_lapack::SVDConfig;
+
+use mdarray_linalg_naive::Naive;
 
 use num_complex::ComplexFloat;
 use rand::Rng;
@@ -48,13 +50,13 @@ where
         pretty_print(&vt);
     }
 
-    naive_matmul(&u, &sigma, &mut us);
+    Naive.matmul(&u, &sigma).overwrite(&mut us);
     if debug_print {
         println!("=== U × Σ ===");
         pretty_print(&us);
     }
 
-    naive_matmul(&us, &vt, &mut usvt);
+    Naive.matmul(&us, &vt).overwrite(&mut usvt);
     if debug_print {
         println!("=== U × Σ × Vᵀ  ===");
         pretty_print(&usvt);
@@ -146,10 +148,10 @@ fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>>) {
     println!("=== Vᵀ ===");
     pretty_print(&vt);
 
-    naive_matmul(&u, &sigma, &mut us);
+    Naive.matmul(&u, &sigma).overwrite(&mut us);
     println!("=== U × Σ ===");
     pretty_print(&us);
-    naive_matmul(&us, &vt, &mut usvt);
+    Naive.matmul(&us, &vt).overwrite(&mut usvt);
     println!("=== U × Σ × Vᵀ  ===");
     pretty_print(&usvt);
     println!("=== A original ===");

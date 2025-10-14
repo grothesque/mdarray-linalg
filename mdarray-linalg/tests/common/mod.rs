@@ -2,7 +2,9 @@
 // See https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html
 
 use mdarray::{DTensor, expr};
-use mdarray_linalg::naive_matmul;
+use mdarray_linalg::{MatMul, MatMulBuilder};
+
+use mdarray_linalg_naive::Naive;
 
 use rand::Rng;
 
@@ -62,6 +64,6 @@ pub fn rank_k_matrix(m: usize, n: usize, k: usize) -> DTensor<f64, 2> {
     let b = random_matrix(k, n);
     let mut result = DTensor::<f64, 2>::zeros([m, n]);
 
-    naive_matmul(&a, &b, &mut result);
+    Naive.matmul(&a, &b).overwrite(&mut result);
     result
 }

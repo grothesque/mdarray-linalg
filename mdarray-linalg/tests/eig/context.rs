@@ -3,10 +3,11 @@ use approx::assert_relative_eq;
 use crate::common::random_matrix;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, Dense, tensor};
-use mdarray_linalg::{Eig, EigDecomp, SchurDecomp, naive_matmul, pretty_print};
+use mdarray_linalg::{Eig, EigDecomp, MatMul, MatMulBuilder, SchurDecomp, pretty_print};
 // use mdarray_linalg_faer::eig::Faer;
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_naive::Naive;
 use num_complex::{Complex, ComplexFloat};
 
 fn test_eigen_reconstruction<T>(
@@ -436,8 +437,10 @@ fn test_schur(bd: &impl Eig<f64>) {
     println!("{:?}", t);
     println!("{:?}", z);
 
-    naive_matmul(&z, &t, &mut a_reconstructed_tmp);
-    naive_matmul(&a_reconstructed_tmp, &zt, &mut a_reconstructed);
+    Naive.matmul(&z, &t).overwrite(&mut a_reconstructed_tmp);
+    Naive
+        .matmul(&a_reconstructed_tmp, &zt)
+        .overwrite(&mut a_reconstructed);
 
     assert_matrix_eq!(&a, &a_reconstructed);
 }
@@ -477,8 +480,10 @@ fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
     println!("{:?}", t);
     println!("{:?}", z);
 
-    naive_matmul(&z, &t, &mut c_reconstructed_tmp);
-    naive_matmul(&c_reconstructed_tmp, &zt, &mut c_reconstructed);
+    Naive.matmul(&z, &t).overwrite(&mut c_reconstructed_tmp);
+    Naive
+        .matmul(&c_reconstructed_tmp, &zt)
+        .overwrite(&mut c_reconstructed);
 
     println!("---------------------------------------------");
     println!("{:?}", c);

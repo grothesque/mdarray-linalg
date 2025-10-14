@@ -3,9 +3,10 @@ use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
 use mdarray::{DSlice, DTensor, Dense, tensor};
-use mdarray_linalg::{LU, identity, naive_matmul, pretty_print, transpose_in_place};
+use mdarray_linalg::{LU, MatMul, MatMulBuilder, identity, pretty_print, transpose_in_place};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_naive::Naive;
 
 fn test_lu_reconstruction<T>(
     a: &DTensor<T, 2>,
@@ -25,10 +26,10 @@ fn test_lu_reconstruction<T>(
     let (n, m) = *a.shape();
 
     let mut pa = DTensor::<T, 2>::zeros([n, m]);
-    naive_matmul(p, a, &mut pa);
+    Naive.matmul(p, a).overwrite(&mut pa);
 
     let mut lu = DTensor::<T, 2>::zeros([n, m]);
-    naive_matmul(l, u, &mut lu);
+    Naive.matmul(l, u).overwrite(&mut lu);
 
     // Verify that P * A = L * U
     for i in 0..n {
@@ -135,7 +136,7 @@ fn test_inverse(bd: &impl LU<f64>) {
     let a_inv = bd.inv(&mut a.clone()).unwrap();
 
     let mut product = DTensor::<f64, 2>::zeros([n, n]);
-    naive_matmul(&a, &a_inv, &mut product);
+    Naive.matmul(&a, &a_inv).overwrite(&mut product);
 
     for i in 0..n {
         for j in 0..n {
@@ -158,7 +159,7 @@ fn test_inverse_overwrite(bd: &impl LU<f64>) {
     let _ = bd.inv_overwrite(&mut a);
 
     let mut product = DTensor::<f64, 2>::zeros([n, n]);
-    naive_matmul(&a, &a_clone, &mut product);
+    Naive.matmul(&a, &a_clone).overwrite(&mut product);
 
     for i in 0..n {
         for j in 0..n {
@@ -296,7 +297,7 @@ where
 
     // Compute L * L^T
     let mut llt = DTensor::<T, 2>::zeros([n, m]);
-    naive_matmul(&ln, &lt, &mut llt);
+    Naive.matmul(&ln, &lt).overwrite(&mut llt);
 
     // Verify that A = L * L^T
     for i in 0..n {
