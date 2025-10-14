@@ -1,8 +1,9 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Layout};
-use mdarray_linalg::{into_faer, into_faer_mut};
 use num_complex::ComplexFloat;
+
+use crate::{into_faer, into_faer_mut};
 
 pub fn qr_faer<
     T: ComplexFloat + ComplexField + Default + 'static,

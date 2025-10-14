@@ -15,14 +15,12 @@
 
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Layout, tensor};
-use mdarray_linalg::{
-    Solve, SolveError, SolveResult, SolveResultType, identity, into_faer, into_faer_mut,
-};
+use mdarray_linalg::{Solve, SolveError, SolveResult, SolveResultType, identity};
 use num_complex::ComplexFloat;
 
 use faer::linalg::solvers::Solve as FaerSolve;
 
-use crate::Faer;
+use crate::{Faer, into_faer, into_faer_mut};
 
 impl<T> Solve<T> for Faer
 where

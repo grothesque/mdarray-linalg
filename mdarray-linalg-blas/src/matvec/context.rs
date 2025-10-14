@@ -148,6 +148,14 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
+    fn argmax_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool {
+        todo!()
+    }
+
     fn argmax<Lx: Layout, S: Shape>(&self, _x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         todo!()
     }

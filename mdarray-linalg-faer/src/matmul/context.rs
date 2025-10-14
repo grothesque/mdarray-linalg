@@ -10,12 +10,10 @@ use num_complex::ComplexFloat;
 
 use num_traits::One;
 
-use mdarray_linalg::{
-    MatMul, MatMulBuilder, Side, Triangle, Type, into_faer, into_faer_mut, into_mdarray,
-};
+use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
 use num_cpus;
 
-use crate::Faer;
+use crate::{Faer, into_faer, into_faer_mut, into_mdarray};
 
 struct FaerMatMulBuilder<'a, T, La, Lb>
 where

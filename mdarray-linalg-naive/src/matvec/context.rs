@@ -164,13 +164,41 @@ impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> 
         // asum(x)
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+    // fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+    //     if x.is_empty() {
+    //         return None;
+    //     }
+
+    //     if x.rank() == 0 {
+    //         return Some(Vec::new());
+    //     }
+
+    //     let mut max_flat_idx = 0;
+    //     let mut max_val = x.iter().next().unwrap();
+
+    //     for (flat_idx, val) in x.iter().enumerate().skip(1) {
+    //         if val > max_val {
+    //             max_val = val;
+    //             max_flat_idx = flat_idx;
+    //         }
+    //     }
+
+    //     Some(unravel_index(x, max_flat_idx))
+    // }
+
+    fn argmax_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool {
+        output.clear();
+
         if x.is_empty() {
-            return None;
+            return false;
         }
 
         if x.rank() == 0 {
-            return Some(Vec::new());
+            return true;
         }
 
         let mut max_flat_idx = 0;
@@ -183,7 +211,18 @@ impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> 
             }
         }
 
-        Some(unravel_index(x, max_flat_idx))
+        let indices = unravel_index(x, max_flat_idx);
+        output.extend_from_slice(&indices);
+        true
+    }
+
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+        let mut result = Vec::new();
+        if self.argmax_overwrite(x, &mut result) {
+            Some(result)
+        } else {
+            None
+        }
     }
 
     fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {

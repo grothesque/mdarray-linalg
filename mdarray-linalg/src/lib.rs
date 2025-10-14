@@ -6,28 +6,28 @@
 //!
 //! # Backends
 //!
-//! - `Blas` bindings to [BLAS](https://www.netlib.org/blas/)
-//! - `Lapack` bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - `Faer` bindings to [Faer](https://github.com/sarah-ek/faer-rs)
-//! - `Naive` a simple backend with textbook implementations of some algorithms
+//! - `Blas`: bindings to [BLAS](https://www.netlib.org/blas/)
+//! - `Lapack`: bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - `Faer`: bindings to [Faer](https://github.com/sarah-ek/faer-rs)
+//! - `Naive`: a simple backend with textbook implementations of some algorithms
 //!   useful for testing or when other backends do not provide them.
 //! > **Note:** Not all backends support all functionalities.
 //!
-//! <details>
-//! <summary>Click to expand the feature support table</summary>
+// ! <details>
+// ! <summary>Click to expand the feature support table</summary>
 //!
 //! | Functionality | BLAS | LAPACK | Naive | Faer |
 //! |---------------|:----:|:------:|:-----:|:----:|
-//! | `copy/swap`   | ❌   | ⬜     | ❌    | ⬜   |
+//! | `copy/swap`   | 🔧   | ⬜     | 🔧    | ⬜   |
 //! | **▶︎ Basic vector/matrix ops** |||| |
-//! | `norm1`       | ✅   | ⬜     | ❌    | ❌   |
-//! | `norm2`       | ✅   | ⬜     | ❌    | ❌   |
-//! | `dot`         | ✅   | ⬜     | ❌    | ❌   |
-//! | `α·x + y`     | ✅   | ⬜     | ❌    | ❌   |
-//! | `α·A·x + y`   | ✅   | ⬜     | ❌    | ❌   |
-//! | `matmul`      | ✅   | ⬜     | ❌    | ✅   |
-//! | `rank1 update`| ✅   | ⬜     | ❌    | ❌   |
-//! | `argmax_abs`  | ❌   | ⬜     | ❌    | ⬜   |
+//! | `norm1`       | ✅   | ⬜     | 🔧    | 🔧   |
+//! | `norm2`       | ✅   | ⬜     | 🔧    | 🔧   |
+//! | `dot`         | ✅   | ⬜     | 🔧    | 🔧   |
+//! | `α·x + y`     | ✅   | ⬜     | 🔧    | 🔧   |
+//! | `α·A·x + y`   | ✅   | ⬜     | 🔧    | 🔧   |
+//! | `matmul`      | ✅   | ⬜     | 🔧    | ✅   |
+//! | `rank1 update`| ✅   | ⬜     | 🔧    | 🔧   |
+//! | `argmax_abs`  | 🔧   | ⬜     | 🔧    | ⬜   |
 //! | `argmax`      | ⬜   | ⬜     | ✅    | ⬜   |
 //! | **▶︎ Linear algebra** |||| |
 //! | `eigen`       | ⬜   | ✅     | ⬜    | ✅   |
@@ -35,17 +35,17 @@
 //! | `LU`          | ⬜   | ✅     | ⬜    | ✅   |
 //! | `solve/inv`   | ⬜   | ✅     | ⬜    | ✅   |
 //! | `QR`          | ⬜   | ✅     | ⬜    | ✅   |
-//! | `Cholesky`    | ⬜   | ✅     | ⬜    | ❌   |
-//! | `Schur`       | ⬜   | ✅     | ⬜    | ❌   |
+//! | `Cholesky`    | ⬜   | ✅     | ⬜    | 🔧   |
+//! | `Schur`       | ⬜   | ✅     | ⬜    | 🔧   |
 //! | **▶︎ Advanced** |||| |
-//! | `givens rot`  | ❌   | ⬜     | ❌    | ❌   |
+//! | `givens rot`  | 🔧   | ⬜     | 🔧    | 🔧   |
 //! | `prrlu`       | ⬜   | ⬜     | ✅    | ⬜   |
 //!
 //! ✅ = implemented
-//! ❌ = not implemented yet
+//! 🔧 = not implemented yet
 //! ⬜ = not applicable / not part of the backend’s scope
 //!
-//! </details>
+// </details>
 //!
 //! # Example
 //!
@@ -59,6 +59,9 @@
 //! ```rust
 //! use mdarray::{DTensor, tensor};
 //! use mdarray_linalg::prelude::*;
+//! use mdarray_linalg::EigDecomp;
+//! use mdarray_linalg::PRRLUDecomp;
+//! use mdarray_linalg::SVDDecomp;
 //!
 //! // Backends
 //! use mdarray_linalg_blas::Blas;
@@ -142,29 +145,29 @@
 //!
 pub mod prelude;
 
-mod matmul;
+pub mod matmul;
 pub use matmul::*;
 
-mod qr;
+pub mod qr;
 pub use qr::*;
 
-mod svd;
+pub mod svd;
 pub use svd::*;
 
-mod utils;
+pub mod utils;
 pub use utils::*;
 
-mod matvec;
+pub mod matvec;
 pub use matvec::*;
 
-mod prrlu;
+pub mod prrlu;
 pub use prrlu::*;
 
-mod lu;
+pub mod lu;
 pub use lu::*;
 
-mod eig;
+pub mod eig;
 pub use eig::*;
 
-mod solve;
+pub mod solve;
 pub use solve::*;

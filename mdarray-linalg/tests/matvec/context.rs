@@ -2,6 +2,8 @@ use mdarray::{DTensor, tensor};
 
 use mdarray_linalg::prelude::*;
 
+use mdarray_linalg::{Triangle, Type};
+
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_naive::Naive;
 
@@ -253,7 +255,7 @@ fn argmax_real() {
 
     // ----- 1D -----
     let n = 5;
-    let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3., 4., 5.]
+    let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
     let idx = bd.argmax(&x.view(..)).unwrap();
     println!("{:?}", idx);
     assert_eq!(idx, vec![4]);
@@ -272,4 +274,50 @@ fn argmax_real() {
     let idx = bd.argmax(&x.view(.., .., ..).into_dyn()).unwrap();
     println!("{:?}", idx);
     assert_eq!(idx, vec![1, 1, 1]);
+}
+
+#[test]
+fn argmax_overwrite_real() {
+    let bd = Naive;
+    let mut output = Vec::new();
+
+    // ----- Empty tensor -----
+    let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
+    let success = bd.argmax_overwrite(&x, &mut output);
+    assert_eq!(success, false);
+    assert_eq!(output, vec![]);
+
+    // ----- Scalar (rank 0) -----
+    let x = tensor![42.];
+    let success = bd.argmax_overwrite(&x, &mut output);
+    assert_eq!(success, true);
+    assert_eq!(output, vec![0]);
+
+    // ----- 1D -----
+    let n = 5;
+    let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
+    let success = bd.argmax_overwrite(&x.view(..), &mut output);
+    assert_eq!(success, true);
+    assert_eq!(output, vec![4]);
+
+    // ----- 2D -----
+    let x = DTensor::<f64, 2>::from_fn([2, 3], |i| (i[0] * 3 + i[1]) as f64);
+    // [[0., 1., 2.],
+    //  [3., 4., 5.]]
+    let success = bd.argmax_overwrite(&x.view(.., ..).into_dyn(), &mut output);
+    assert_eq!(success, true);
+    assert_eq!(output, vec![1, 2]);
+
+    // ----- 3D -----
+    let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
+    let success = bd.argmax_overwrite(&x.view(.., .., ..).into_dyn(), &mut output);
+    assert_eq!(success, true);
+    assert_eq!(output, vec![1, 1, 1]);
+
+    // ----- Test reuse of output buffer -----
+    output = vec![99, 99, 99];
+    let x = DTensor::<f64, 1>::from_fn([3], |i| (3 - i[0]) as f64);
+    let success = bd.argmax_overwrite(&x.view(..), &mut output);
+    assert_eq!(success, true);
+    assert_eq!(output, vec![0]); // Should be cleared and contain only result
 }

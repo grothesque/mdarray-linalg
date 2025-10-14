@@ -25,12 +25,10 @@ use faer::linalg::gevd::ComputeEigenvectors;
 use faer::{MatMut, MatRef};
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Dense, Layout, tensor};
-use mdarray_linalg::{
-    Eig, EigDecomp, EigError, EigResult, SchurError, SchurResult, into_faer, into_faer_mut,
-};
+use mdarray_linalg::{Eig, EigDecomp, EigError, EigResult, SchurError, SchurResult};
 use num_complex::{Complex, ComplexFloat};
 
-use crate::Faer;
+use crate::{Faer, into_faer, into_faer_mut};
 
 use std::any::TypeId;
 
