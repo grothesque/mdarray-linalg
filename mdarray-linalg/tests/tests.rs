@@ -7,3 +7,4 @@ mod prrlu;
 mod qr;
 mod solve;
 mod svd;
+mod tensordot;

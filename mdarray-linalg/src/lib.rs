@@ -153,6 +153,7 @@ pub mod prrlu;
 pub mod qr;
 pub mod solve;
 pub mod svd;
+pub mod tensordot;
 
 pub mod utils;
 pub use utils::*;
