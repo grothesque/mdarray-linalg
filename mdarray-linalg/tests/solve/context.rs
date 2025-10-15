@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 
 use crate::common::random_matrix;
 use mdarray::DTensor;
-use mdarray_linalg::{Solve, SolveResult};
+use mdarray_linalg::solve::{Solve, SolveResult};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 

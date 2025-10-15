@@ -59,9 +59,9 @@
 //! ```rust
 //! use mdarray::{DTensor, tensor};
 //! use mdarray_linalg::prelude::*;
-//! use mdarray_linalg::EigDecomp;
-//! use mdarray_linalg::PRRLUDecomp;
-//! use mdarray_linalg::SVDDecomp;
+//! use mdarray_linalg::eig::EigDecomp;
+//! use mdarray_linalg::prrlu::PRRLUDecomp;
+//! use mdarray_linalg::svd::SVDDecomp;
 //!
 //! // Backends
 //! use mdarray_linalg_blas::Blas;
@@ -145,29 +145,14 @@
 //!
 pub mod prelude;
 
+pub mod eig;
+pub mod lu;
 pub mod matmul;
-pub use matmul::*;
-
+pub mod matvec;
+pub mod prrlu;
 pub mod qr;
-pub use qr::*;
-
+pub mod solve;
 pub mod svd;
-pub use svd::*;
 
 pub mod utils;
 pub use utils::*;
-
-pub mod matvec;
-pub use matvec::*;
-
-pub mod prrlu;
-pub use prrlu::*;
-
-pub mod lu;
-pub use lu::*;
-
-pub mod eig;
-pub use eig::*;
-
-pub mod solve;
-pub use solve::*;

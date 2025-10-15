@@ -14,7 +14,7 @@ use mdarray_linalg::{get_dims, ipiv_to_permutation_matrix, transpose_in_place};
 use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::into_i32;
-use mdarray_linalg::{InvError, InvResult, LU};
+use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;

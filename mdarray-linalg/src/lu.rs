@@ -1,3 +1,4 @@
+//! LU, Cholesky, matrix inversion, and determinant computation utilities.
 use mdarray::{DSlice, DTensor, Layout};
 use thiserror::Error;
 

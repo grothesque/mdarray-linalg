@@ -2,7 +2,7 @@ use mdarray::{DTensor, tensor};
 
 use mdarray_linalg::prelude::*;
 
-use mdarray_linalg::{Triangle, Type};
+use mdarray_linalg::matmul::{Triangle, Type};
 
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_naive::Naive;

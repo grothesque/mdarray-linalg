@@ -1,12 +1,11 @@
-use num_complex::Complex;
 use num_traits::Zero;
-use std::cmp::Ordering;
 use std::ops::{Add, Mul};
 
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice, View};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
+use mdarray_linalg::matmul::{Triangle, Type};
+use mdarray_linalg::matvec::{MatVec, MatVecBuilder, VecOps};
 
 use crate::Naive;
 

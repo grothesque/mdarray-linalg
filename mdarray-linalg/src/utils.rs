@@ -1,6 +1,5 @@
-use std::mem::ManuallyDrop;
-
-use mdarray::{DSlice, DTensor, Layout, Strided, StridedMapping, View, tensor};
+//! Utility functions for matrix printing, shape retrieval, identity generation, Kronecker product, trace, transpose operations, ...
+use mdarray::{DSlice, DTensor, Layout, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 

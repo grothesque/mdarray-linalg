@@ -2,7 +2,7 @@
 // See https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html
 
 use mdarray::{DTensor, expr};
-use mdarray_linalg::{MatMul, MatMulBuilder};
+use mdarray_linalg::matmul::{MatMul, MatMulBuilder};
 
 use mdarray_linalg_naive::Naive;
 

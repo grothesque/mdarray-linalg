@@ -1,3 +1,4 @@
+//! Eigenvalue, eigenvector, and Schur decomposition utilities for general and Hermitian matrices.
 use mdarray::{DSlice, DTensor, Dense, Layout};
 use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;

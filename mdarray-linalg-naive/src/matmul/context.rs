@@ -3,7 +3,8 @@ use num_traits::{One, Zero};
 
 use mdarray::{DSlice, DTensor, Layout, tensor};
 
-use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
+use mdarray_linalg::matmul::{Side, Triangle, Type};
+use mdarray_linalg::prelude::*;
 
 use crate::Naive;
 

@@ -3,7 +3,9 @@ use num_complex::Complex;
 
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::{DTensor, tensor};
-use mdarray_linalg::{MatMul, MatMulBuilder, SVD, SVDDecomp, pretty_print};
+use mdarray_linalg::prelude::*;
+use mdarray_linalg::pretty_print;
+use mdarray_linalg::svd::{SVD, SVDDecomp};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_lapack::SVDConfig;

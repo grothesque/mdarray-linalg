@@ -11,7 +11,7 @@ use dyn_stack::{MemBuffer, MemStack};
 use super::simple::lu_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::{InvError, InvResult, LU};
+use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use crate::{Faer, into_faer_mut, into_mdarray};

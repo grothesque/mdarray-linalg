@@ -5,7 +5,7 @@ use openblas_src as _;
 
 use crate::common::example_matrix;
 
-use mdarray_linalg::{MatMul, MatMulBuilder};
+use mdarray_linalg::matmul::{MatMul, MatMulBuilder};
 
 use mdarray_linalg_naive::Naive;
 

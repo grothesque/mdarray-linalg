@@ -10,7 +10,8 @@ use num_complex::ComplexFloat;
 
 use num_traits::One;
 
-use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
+use mdarray_linalg::matmul::{Side, Triangle, Type};
+use mdarray_linalg::prelude::*;
 use num_cpus;
 
 use crate::{Faer, into_faer, into_faer_mut, into_mdarray};

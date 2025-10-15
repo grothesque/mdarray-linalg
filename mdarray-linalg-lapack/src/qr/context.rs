@@ -14,8 +14,8 @@ use mdarray_linalg::get_dims;
 
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::QR;
 use mdarray_linalg::into_i32;
+use mdarray_linalg::qr::QR;
 use num_complex::ComplexFloat;
 
 use crate::Lapack;

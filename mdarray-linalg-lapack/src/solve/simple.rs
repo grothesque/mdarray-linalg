@@ -1,6 +1,7 @@
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, Layout};
-use mdarray_linalg::{SolveError, get_dims, into_i32, to_col_major, transpose_in_place};
+use mdarray_linalg::solve::SolveError;
+use mdarray_linalg::{get_dims, into_i32, to_col_major, transpose_in_place};
 use num_complex::ComplexFloat;
 
 pub fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar>(

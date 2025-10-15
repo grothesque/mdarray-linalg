@@ -4,7 +4,7 @@ use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatMul, MatMulBuilder, Side, Triangle, Type};
+use mdarray_linalg::matmul::{MatMul, MatMulBuilder, Side, Triangle, Type};
 
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};

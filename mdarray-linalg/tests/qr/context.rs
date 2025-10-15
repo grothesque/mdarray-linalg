@@ -1,6 +1,7 @@
 use mdarray::DTensor;
 
-use mdarray_linalg::{MatMul, MatMulBuilder, QR};
+use mdarray_linalg::prelude::*;
+use mdarray_linalg::qr::QR;
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_naive::Naive;

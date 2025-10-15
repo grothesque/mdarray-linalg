@@ -1,6 +1,7 @@
 use super::scalar::{LapackScalar, NeedsRwork};
 use mdarray::{DSlice, Layout};
-use mdarray_linalg::{EigError, SchurError, transpose_in_place};
+use mdarray_linalg::eig::{EigError, SchurError};
+use mdarray_linalg::transpose_in_place;
 
 use mdarray_linalg::{get_dims, into_i32};
 use num_complex::ComplexFloat;

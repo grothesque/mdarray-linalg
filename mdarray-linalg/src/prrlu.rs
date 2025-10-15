@@ -1,3 +1,4 @@
+//! Partial rank-revealing LU decomposition utilities.
 use mdarray::{DSlice, DTensor, Layout};
 
 /// Holds the results of a pivoted, rank-revealing LU decomposition,

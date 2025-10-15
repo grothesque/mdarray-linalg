@@ -15,8 +15,9 @@ use mdarray_linalg::get_dims;
 
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, Dense, Layout, tensor};
-use mdarray_linalg::{Solve, ipiv_to_permutation_matrix};
-use mdarray_linalg::{SolveError, SolveResult, SolveResultType, into_i32};
+use mdarray_linalg::into_i32;
+use mdarray_linalg::ipiv_to_permutation_matrix;
+use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;

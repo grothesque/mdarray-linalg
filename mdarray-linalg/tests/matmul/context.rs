@@ -2,7 +2,8 @@ use mdarray::{DTensor, Tensor, expr, expr::Expression as _, tensor};
 use num_complex::Complex64;
 use openblas_src as _;
 
-use mdarray_linalg::{MatMul, Side, Triangle, Type, prelude::*};
+use mdarray_linalg::matmul::{Side, Triangle, Type};
+use mdarray_linalg::prelude::*;
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_naive::Naive;

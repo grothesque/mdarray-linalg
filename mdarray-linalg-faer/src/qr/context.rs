@@ -9,7 +9,8 @@
 use super::simple::qr_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::{QR, identity};
+use mdarray_linalg::identity;
+use mdarray_linalg::qr::QR;
 use num_complex::ComplexFloat;
 
 use crate::Faer;

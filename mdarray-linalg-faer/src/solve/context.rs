@@ -15,7 +15,8 @@
 
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Layout, tensor};
-use mdarray_linalg::{Solve, SolveError, SolveResult, SolveResultType, identity};
+use mdarray_linalg::identity;
+use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
 use num_complex::ComplexFloat;
 
 use faer::linalg::solvers::Solve as FaerSolve;

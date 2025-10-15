@@ -1,14 +1,16 @@
+use num_complex::{Complex, ComplexFloat};
+
 use approx::assert_relative_eq;
 
 use crate::common::random_matrix;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use mdarray::{DTensor, Dense, tensor};
-use mdarray_linalg::{Eig, EigDecomp, MatMul, MatMulBuilder, SchurDecomp, pretty_print};
-// use mdarray_linalg_faer::eig::Faer;
+use mdarray::DTensor;
+use mdarray_linalg::eig::EigDecomp;
+use mdarray_linalg::eig::SchurDecomp;
+use mdarray_linalg::{prelude::*, pretty_print};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_naive::Naive;
-use num_complex::{Complex, ComplexFloat};
 
 fn test_eigen_reconstruction<T>(
     a: &DTensor<T, 2>,

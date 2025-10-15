@@ -2,7 +2,7 @@ use num_traits::{Float, One, Signed};
 
 use mdarray::{DSlice, Layout};
 
-use mdarray_linalg::{PRRLU, PRRLUDecomp};
+use mdarray_linalg::prrlu::{PRRLU, PRRLUDecomp};
 
 use super::simple::{eye, prrlu};
 

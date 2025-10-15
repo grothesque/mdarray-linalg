@@ -1,7 +1,8 @@
 use approx::assert_relative_eq;
 
 use mdarray::DTensor;
-use mdarray_linalg::{MatMul, MatMulBuilder, PRRLU, PRRLUDecomp};
+use mdarray_linalg::matmul::{MatMul, MatMulBuilder};
+use mdarray_linalg::prrlu::{PRRLU, PRRLUDecomp};
 use mdarray_linalg_naive::Naive;
 
 use mdarray_linalg_naive::prrlu::simple::minus_outer_pivot;

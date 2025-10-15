@@ -3,7 +3,8 @@ use num_complex::ComplexFloat;
 
 use crate::common::random_matrix;
 use mdarray::{DSlice, DTensor, Dense, tensor};
-use mdarray_linalg::{LU, MatMul, MatMulBuilder, identity, pretty_print, transpose_in_place};
+use mdarray_linalg::prelude::*;
+use mdarray_linalg::{identity, pretty_print, transpose_in_place};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_naive::Naive;

@@ -1,3 +1,4 @@
+//! Matrix multiplication and specialized products for triangular and Hermitian matrices.
 use mdarray::{DSlice, DTensor, Layout};
 
 /// Specifies whether the left or right matrix has the special property

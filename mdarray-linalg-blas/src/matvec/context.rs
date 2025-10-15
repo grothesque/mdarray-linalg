@@ -2,7 +2,8 @@ use cblas_sys::CBLAS_UPLO;
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::{MatVec, MatVecBuilder, Triangle, Type, VecOps};
+use mdarray_linalg::matmul::{Triangle, Type};
+use mdarray_linalg::matvec::{MatVec, MatVecBuilder, VecOps};
 
 use crate::Blas;
 

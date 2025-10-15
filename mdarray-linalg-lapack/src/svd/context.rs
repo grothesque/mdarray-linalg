@@ -13,7 +13,7 @@ use mdarray_linalg::{get_dims, into_i32};
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 
 use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray_linalg::{SVD, SVDDecomp, SVDError};
+use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
 use crate::Lapack;
