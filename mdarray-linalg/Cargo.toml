@@ -2,9 +2,15 @@
 name = "mdarray-linalg"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/grothesque/mdarray-linalg"
+license = "MIT AND Apache-2.0"
+keywords = ["linear-algebra", "tensor", "multidimensional", "backend", "scientific"]
+description = "Linear algebra library built on top of mdarray for type-agnostic tensor operations, supporting BLAS/LAPACK and Faer backends."
+categories = ["mathematics", "science"]
+author = ["Pierre Wulles", "Christoph Groth"]
 
 [dependencies]
-mdarray = { workspace = true }
+mdarray = { git = "https://github.com/fre-hu/mdarray.git" }
 thiserror = "2.0.12"
 num-complex = "0.4.6"
 num-traits = "0.2.19"

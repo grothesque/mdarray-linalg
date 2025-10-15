@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
 cblas-sys = "0.2.0"
-mdarray = { workspace = true }
+mdarray = { git = "https://github.com/fre-hu/mdarray.git" }
 num-complex = "0.4.6"
 paste = "1.0.15"
 thiserror = "2.0.12"
