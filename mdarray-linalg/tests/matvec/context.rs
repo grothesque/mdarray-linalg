@@ -174,7 +174,7 @@ fn dot_complex() {
     let expected = Complex64::new(0.0, 28.0);
 
     assert_eq!(Blas.dot(&x, &y), expected);
-    // println!("{:?}", Naive.dot(&x, &y));
+    assert_eq!(Naive.dot(&x, &y), expected);
 }
 
 #[test]

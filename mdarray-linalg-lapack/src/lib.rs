@@ -15,14 +15,22 @@ pub enum SVDConfig {
 #[derive(Debug, Default, Clone)]
 pub struct Lapack {
     svd_config: SVDConfig,
-    qr_config: qr::LapackQRConfig,
+    qr_config: LapackQRConfig,
+}
+
+#[derive(Default, Debug, Clone)]
+pub enum LapackQRConfig {
+    #[default]
+    Full,
+    Pivoting,
+    TallSkinny,
 }
 
 impl Lapack {
     pub fn new() -> Self {
         Self {
             svd_config: SVDConfig::default(),
-            qr_config: qr::LapackQRConfig::default(),
+            qr_config: LapackQRConfig::default(),
         }
     }
 
@@ -31,8 +39,7 @@ impl Lapack {
         self
     }
 
-    pub fn config_qr(mut self, config: qr::LapackQRConfig) -> Self {
-        self.qr_config = config;
-        self
+    pub fn config_qr(mut self, _config: LapackQRConfig) -> Self {
+        todo!()
     }
 }

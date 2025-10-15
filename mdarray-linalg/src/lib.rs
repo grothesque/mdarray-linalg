@@ -54,6 +54,8 @@
 //! > When running doctests with Blas or Lapack, linking issues may occur due to this Rust issue:
 //! > [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In that case, run the doctests with:
 //! > `RUSTDOCFLAGS="-L native=/usr/lib -C link-arg=-lopenblas" cargo test --doc`
+//! >
+//! > See also the section **Troubleshoot** below.
 //!
 //! The following example demonstrates core functionality:
 //!
@@ -158,6 +160,26 @@
 //! - **Errors**: Convergence issues return a Result; other problems
 //!   (dimension mismatch) may panic.
 //!
+//! # Troubleshoot
+//!
+//! If you encounter linking issues with BLAS or LAPACK on Linux,
+//! one solution is to add a `build.rs` file and configure it to link the libraries manually.  
+//! In your `Cargo.toml`, add:
+//!
+//! ```toml
+//! [package]
+//! build = "build.rs"
+//! ```
+//!
+//! Then, create a `build.rs` file with the following content:
+//!
+//! ```rust
+//! fn main() {
+//!     println!("cargo:rustc-link-lib=openblas");
+//!     println!("cargo:rustc-link-search=native=/usr/lib");
+//! }
+//! ```
+
 pub mod prelude;
 
 pub mod eig;

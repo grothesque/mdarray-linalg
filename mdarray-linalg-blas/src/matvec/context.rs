@@ -3,7 +3,7 @@ use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::matmul::{Triangle, Type};
-use mdarray_linalg::matvec::{MatVec, MatVecBuilder, VecOps};
+use mdarray_linalg::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
 
 use crate::Blas;
 
@@ -149,17 +149,6 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         asum(x)
     }
 
-    fn argmax_overwrite<Lx: Layout, S: Shape>(
-        &self,
-        _x: &Slice<T, S, Lx>,
-        _output: &mut Vec<usize>,
-    ) -> bool {
-        todo!()
-    }
-
-    fn argmax<Lx: Layout, S: Shape>(&self, _x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
-        todo!()
-    }
     fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
         todo!()
     }
@@ -179,5 +168,24 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
         T: ComplexFloat,
     {
         todo!()
+    }
+}
+
+impl<T: ComplexFloat + 'static + std::cmp::PartialOrd> Argmax<T> for Blas {
+    fn argmax_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool {
+        todo!()
+    }
+
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+        let mut result = Vec::new();
+        if self.argmax_overwrite(x, &mut result) {
+            Some(result)
+        } else {
+            None
+        }
     }
 }

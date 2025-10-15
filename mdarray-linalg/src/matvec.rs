@@ -80,15 +80,6 @@ pub trait VecOps<T: ComplexFloat> {
     where
         T: ComplexFloat;
 
-    fn argmax_overwrite<Lx: Layout, S: Shape>(
-        &self,
-        x: &Slice<T, S, Lx>,
-        output: &mut Vec<usize>,
-    ) -> bool;
-
-    /// Index of max |xᵢ| (argmaxᵢ |xᵢ|) (**TODO**)
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
-
     /// Copy vector: `y := x` (**TODO**)
     fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>);
 
@@ -107,4 +98,16 @@ pub trait VecOps<T: ComplexFloat> {
         s: T,
     ) where
         T: ComplexFloat;
+}
+
+/// Argmax for tensors, unlike other traits: it requires `T: PartialOrd` and works on tensor of any rank.
+pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
+    fn argmax_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool;
+
+    /// Index of max |xᵢ| (argmaxᵢ |xᵢ|)
+    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
 }

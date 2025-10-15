@@ -5,7 +5,7 @@ use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::matmul::{Triangle, Type};
-use mdarray_linalg::matvec::{MatVec, MatVecBuilder, VecOps};
+use mdarray_linalg::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
 
 use crate::Naive;
 
@@ -124,8 +124,8 @@ where
     }
 }
 
-impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy>
-    VecOps<T> for Naive
+impl<T: ComplexFloat + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy> VecOps<T>
+    for Naive
 {
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
@@ -163,28 +163,34 @@ impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> 
         // asum(x)
     }
 
-    // fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
-    //     if x.is_empty() {
-    //         return None;
-    //     }
+    fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
+        todo!()
+    }
 
-    //     if x.rank() == 0 {
-    //         return Some(Vec::new());
-    //     }
+    fn scal<Lx: Layout>(&self, _alpha: T, _x: &mut DSlice<T, 1, Lx>) {
+        todo!()
+    }
 
-    //     let mut max_flat_idx = 0;
-    //     let mut max_val = x.iter().next().unwrap();
+    fn swap<Lx: Layout, Ly: Layout>(&self, _x: &mut DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
+        todo!()
+    }
 
-    //     for (flat_idx, val) in x.iter().enumerate().skip(1) {
-    //         if val > max_val {
-    //             max_val = val;
-    //             max_flat_idx = flat_idx;
-    //         }
-    //     }
+    fn rot<Lx: Layout, Ly: Layout>(
+        &self,
+        _x: &mut DSlice<T, 1, Lx>,
+        _y: &mut DSlice<T, 1, Ly>,
+        _c: T::Real,
+        _s: T,
+    ) where
+        T: ComplexFloat,
+    {
+        todo!()
+    }
+}
 
-    //     Some(unravel_index(x, max_flat_idx))
-    // }
-
+impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy>
+    Argmax<T> for Naive
+{
     fn argmax_overwrite<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
@@ -222,27 +228,6 @@ impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> 
         } else {
             None
         }
-    }
-
-    fn copy<Lx: Layout, Ly: Layout>(&self, _x: &DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
-        todo!()
-    }
-    fn scal<Lx: Layout>(&self, _alpha: T, _x: &mut DSlice<T, 1, Lx>) {
-        todo!()
-    }
-    fn swap<Lx: Layout, Ly: Layout>(&self, _x: &mut DSlice<T, 1, Lx>, _y: &mut DSlice<T, 1, Ly>) {
-        todo!()
-    }
-    fn rot<Lx: Layout, Ly: Layout>(
-        &self,
-        _x: &mut DSlice<T, 1, Lx>,
-        _y: &mut DSlice<T, 1, Ly>,
-        _c: T::Real,
-        _s: T,
-    ) where
-        T: ComplexFloat,
-    {
-        todo!()
     }
 }
 
