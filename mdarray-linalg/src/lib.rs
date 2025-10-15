@@ -92,7 +92,7 @@
 //!
 //!     // ----- Eigenvalue decomposition -----
 //!     // Note: we must clone `a` here because decomposition routines destroy the input.
-//!     let bd = Lapack::default();
+//!     let bd = Lapack::new();
 //!     let EigDecomp {
 //!        eigenvalues,
 //!        right_eigenvectors,
@@ -105,7 +105,7 @@
 //!     }
 //!
 //!     // ----- Singular Value Decomposition (SVD) -----
-//!     let bd = Lapack::default().config_svd(SVDConfig::DivideConquer);
+//!     let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
 //!     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //!     println!("Singular values: {:?}", s);
 //!     println!("Left singular vectors U: {:?}", u);
@@ -116,7 +116,7 @@
 //!     let mut q = DTensor::<f64, 2>::zeros([m, m]);
 //!     let mut r = DTensor::<f64, 2>::zeros([m, n]);
 //!
-//!     let bd = Lapack::default();
+//!     let bd = Lapack::new();
 //!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
 //!     println!("Q: {:?}", q);
 //!     println!("R: {:?}", r);

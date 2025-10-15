@@ -371,7 +371,7 @@ where
         }
 
         if info != 0 {
-            panic!("Error during workspace query: info = {}", info);
+            panic!("Error during workspace query: info = {info}");
         }
         T::lwork_from_query(&work[0])
     };
@@ -484,10 +484,7 @@ pub fn gees_complex<
         }
 
         if info != 0 {
-            panic!(
-                "Error during workspace query (complex gees): info = {}",
-                info
-            );
+            panic!("Error during workspace query (complex gees): info = {info}");
         }
         T::lwork_from_query(&work[0])
     };

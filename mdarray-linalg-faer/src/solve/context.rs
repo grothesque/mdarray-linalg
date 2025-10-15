@@ -92,7 +92,7 @@ where
             return Err(SolveError::InvalidDimensions);
         }
 
-        let par = faer::get_global_parallelism();
+        let _par = faer::get_global_parallelism();
         let a_faer = into_faer(a);
 
         let solver = a_faer.partial_piv_lu();

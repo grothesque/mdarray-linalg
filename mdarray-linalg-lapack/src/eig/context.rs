@@ -100,81 +100,81 @@ where
     }
 
     /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
-    fn eig_full<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
+    fn eig_full<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> EigResult<T> {
         todo!(); // fix bug in complex case
-        let (m, n) = get_dims!(a);
-        if m != n {
-            return Err(EigError::NotSquareMatrix);
-        }
+        // let (m, n) = get_dims!(a);
+        // if m != n {
+        //     return Err(EigError::NotSquareMatrix);
+        // }
 
-        let x = T::default();
+        // let x = T::default();
 
-        let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
-        let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
-        let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
+        // let mut eigenvalues_real = tensor![[T::default(); n as usize]; 1];
+        // let mut eigenvalues_imag = tensor![[T::default(); n as usize]; 1];
+        // let mut eigenvalues = tensor![[Complex::new(x.re(), x.re()); n as usize]; 1];
 
-        let mut left_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
-        let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+        // let mut left_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
+        // let mut right_eigenvectors_tmp = tensor![[T::default(); n as usize]; n as usize];
 
-        let x = T::default();
-        let mut left_eigenvectors = tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
-        let mut right_eigenvectors =
-            tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
+        // let x = T::default();
+        // let mut left_eigenvectors = tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
+        // let mut right_eigenvectors =
+        //     tensor![[Complex::new(x.re(), x.re()); n as usize]; n as usize];
 
-        match geig(
-            a,
-            &mut eigenvalues_real,
-            &mut eigenvalues_imag,
-            Some(&mut left_eigenvectors_tmp),
-            Some(&mut right_eigenvectors_tmp),
-        ) {
-            Ok(_) => {
-                for i in 0..(n as usize) {
-                    eigenvalues[[0, i]] =
-                        Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
-                }
+        // match geig(
+        //     a,
+        //     &mut eigenvalues_real,
+        //     &mut eigenvalues_imag,
+        //     Some(&mut left_eigenvectors_tmp),
+        //     Some(&mut right_eigenvectors_tmp),
+        // ) {
+        //     Ok(_) => {
+        //         for i in 0..(n as usize) {
+        //             eigenvalues[[0, i]] =
+        //                 Complex::new(eigenvalues_real[[0, i]].re(), eigenvalues_imag[[0, i]].re());
+        //         }
 
-                // Process right eigenvectors
-                let mut j = 0_usize;
-                while j < n as usize {
-                    let imag = eigenvalues_imag[[0, j]];
-                    if imag == T::default() {
-                        // Real eigenvalue
-                        for i in 0..(n as usize) {
-                            let re_right = right_eigenvectors_tmp[[i, j]];
-                            let re_left = left_eigenvectors_tmp[[i, j]];
-                            right_eigenvectors[[i, j]] = Complex::new(re_right.re(), re_right.im());
-                            left_eigenvectors[[i, j]] = Complex::new(re_left.re(), re_left.im());
-                        }
-                        j += 1;
-                    } else {
-                        // Complex conjugate pair
-                        for i in 0..(n as usize) {
-                            let re_right = right_eigenvectors_tmp[[i, j]];
-                            let im_right = right_eigenvectors_tmp[[i, j + 1]];
-                            let re_left = left_eigenvectors_tmp[[i, j]];
-                            let im_left = left_eigenvectors_tmp[[i, j + 1]];
+        //         // Process right eigenvectors
+        //         let mut j = 0_usize;
+        //         while j < n as usize {
+        //             let imag = eigenvalues_imag[[0, j]];
+        //             if imag == T::default() {
+        //                 // Real eigenvalue
+        //                 for i in 0..(n as usize) {
+        //                     let re_right = right_eigenvectors_tmp[[i, j]];
+        //                     let re_left = left_eigenvectors_tmp[[i, j]];
+        //                     right_eigenvectors[[i, j]] = Complex::new(re_right.re(), re_right.im());
+        //                     left_eigenvectors[[i, j]] = Complex::new(re_left.re(), re_left.im());
+        //                 }
+        //                 j += 1;
+        //             } else {
+        //                 // Complex conjugate pair
+        //                 for i in 0..(n as usize) {
+        //                     let re_right = right_eigenvectors_tmp[[i, j]];
+        //                     let im_right = right_eigenvectors_tmp[[i, j + 1]];
+        //                     let re_left = left_eigenvectors_tmp[[i, j]];
+        //                     let im_left = left_eigenvectors_tmp[[i, j + 1]];
 
-                            right_eigenvectors[[i, j]] = Complex::new(re_right.re(), im_right.re());
-                            right_eigenvectors[[i, j + 1]] =
-                                ComplexFloat::conj(Complex::new(re_right.re(), im_right.re()));
+        //                     right_eigenvectors[[i, j]] = Complex::new(re_right.re(), im_right.re());
+        //                     right_eigenvectors[[i, j + 1]] =
+        //                         ComplexFloat::conj(Complex::new(re_right.re(), im_right.re()));
 
-                            left_eigenvectors[[i, j]] = Complex::new(re_left.re(), im_left.re());
-                            left_eigenvectors[[i, j + 1]] =
-                                ComplexFloat::conj(Complex::new(re_left.re(), im_left.re()));
-                        }
-                        j += 2;
-                    }
-                }
+        //                     left_eigenvectors[[i, j]] = Complex::new(re_left.re(), im_left.re());
+        //                     left_eigenvectors[[i, j + 1]] =
+        //                         ComplexFloat::conj(Complex::new(re_left.re(), im_left.re()));
+        //                 }
+        //                 j += 2;
+        //             }
+        //         }
 
-                Ok(EigDecomp {
-                    eigenvalues,
-                    left_eigenvectors: Some(left_eigenvectors),
-                    right_eigenvectors: Some(right_eigenvectors),
-                })
-            }
-            Err(e) => Err(e),
-        }
+        //         Ok(EigDecomp {
+        //             eigenvalues,
+        //             left_eigenvectors: Some(left_eigenvectors),
+        //             right_eigenvectors: Some(right_eigenvectors),
+        //         })
+        //     }
+        //     Err(e) => Err(e),
+        // }
     }
 
     /// Compute only eigenvalues with new allocated vectors

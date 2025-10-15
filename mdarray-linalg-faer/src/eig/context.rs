@@ -19,18 +19,12 @@
 //     - Z is n × n         (unitary Schur vectors)
 //     - T is n × n         (upper triangular for complex, quasi-upper triangular for real)
 
-use dyn_stack::{MemBuffer, MemStack};
-
-use faer::linalg::gevd::ComputeEigenvectors;
-use faer::{MatMut, MatRef};
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Dense, Layout, tensor};
 use mdarray_linalg::eig::{Eig, EigDecomp, EigError, EigResult, SchurError, SchurResult};
 use num_complex::{Complex, ComplexFloat};
 
 use crate::{Faer, into_faer, into_faer_mut};
-
-use std::any::TypeId;
 
 macro_rules! complex_from_faer {
     ($val:expr, $t:ty) => {{
@@ -142,167 +136,167 @@ where
     //     }
     // }
 
-    fn eig_full<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<EigDecomp<T>, EigError> {
+    fn eig_full<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> Result<EigDecomp<T>, EigError> {
         todo!();
-        let (m, n) = *a.shape();
-        if m != n {
-            return Err(EigError::NotSquareMatrix);
-        }
+        // let (m, n) = *a.shape();
+        // if m != n {
+        //     return Err(EigError::NotSquareMatrix);
+        // }
 
-        let par = faer::get_global_parallelism();
+        // let par = faer::get_global_parallelism();
 
-        let x = T::default();
+        // let x = T::default();
 
-        let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
-        let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re()); n]; n];
-        let mut left_vecs_mda = tensor![[Complex::new(x.re(), x.re()); n]; n];
+        // let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
+        // let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re()); n]; n];
+        // let mut left_vecs_mda = tensor![[Complex::new(x.re(), x.re()); n]; n];
 
-        let a_faer = into_faer_mut(a);
+        // let a_faer = into_faer_mut(a);
 
-        let params = <faer::linalg::evd::EvdParams as faer::Auto<T>>::auto();
+        // let params = <faer::linalg::evd::EvdParams as faer::Auto<T>>::auto();
 
-        // let eig_result = if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
-        //     || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
-        // {
-        let eig_result = if true {
-            let mut eigenvalues_faer = into_faer_mut(&mut eigenvalues_mda);
-            let mut right_vecs_faer = into_faer_mut(&mut right_vecs_mda);
-            let mut left_vecs_faer = into_faer_mut(&mut left_vecs_mda);
+        // // let eig_result = if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
+        // //     || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
+        // // {
+        // let eig_result = if true {
+        //     let mut eigenvalues_faer = into_faer_mut(&mut eigenvalues_mda);
+        //     let mut right_vecs_faer = into_faer_mut(&mut right_vecs_mda);
+        //     let mut left_vecs_faer = into_faer_mut(&mut left_vecs_mda);
 
-            let a_faer_complex: MatRef<'_, Complex<<T as faer::traits::ComplexField>::Real>> = unsafe {
-                faer::hacks::coerce::<_, MatRef<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
-                    a_faer,
-                )
-            };
+        //     let a_faer_complex: MatRef<'_, Complex<<T as faer::traits::ComplexField>::Real>> = unsafe {
+        //         faer::hacks::coerce::<_, MatRef<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
+        //             a_faer,
+        //         )
+        //     };
 
-            let mut left_vecs_complex: MatMut<
-                '_,
-                Complex<<T as faer::traits::ComplexField>::Real>,
-            > = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
-                    left_vecs_faer,
-                )
-            };
+        //     let mut left_vecs_complex: MatMut<
+        //         '_,
+        //         Complex<<T as faer::traits::ComplexField>::Real>,
+        //     > = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
+        //             left_vecs_faer,
+        //         )
+        //     };
 
-            let mut right_vecs_complex: MatMut<
-                '_,
-                Complex<<T as faer::traits::ComplexField>::Real>,
-            > = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
-                    right_vecs_faer,
-                )
-            };
+        //     let mut right_vecs_complex: MatMut<
+        //         '_,
+        //         Complex<<T as faer::traits::ComplexField>::Real>,
+        //     > = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
+        //             right_vecs_faer,
+        //         )
+        //     };
 
-            let mut stack_buf = MemBuffer::new(faer::linalg::evd::evd_scratch::<T>(
-                n,
-                ComputeEigenvectors::Yes,
-                ComputeEigenvectors::Yes,
-                par,
-                params.into(),
-            ));
-            let stack = MemStack::new(&mut stack_buf);
+        //     let mut stack_buf = MemBuffer::new(faer::linalg::evd::evd_scratch::<T>(
+        //         n,
+        //         ComputeEigenvectors::Yes,
+        //         ComputeEigenvectors::Yes,
+        //         par,
+        //         params.into(),
+        //     ));
+        //     let stack = MemStack::new(&mut stack_buf);
 
-            let col0 = eigenvalues_faer.col_mut(0);
+        //     let col0 = eigenvalues_faer.col_mut(0);
 
-            let col0_as_matmut: MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>> = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
-                    col0,
-                )
-            };
+        //     let col0_as_matmut: MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>> = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, Complex<<T as faer::traits::ComplexField>::Real>>>(
+        //             col0,
+        //         )
+        //     };
 
-            let diag_mut = col0_as_matmut.diagonal_mut();
+        //     let diag_mut = col0_as_matmut.diagonal_mut();
 
-            faer::linalg::evd::evd_cplx::<<T as faer::traits::ComplexField>::Real>(
-                a_faer_complex,
-                diag_mut,
-                Some(left_vecs_complex.as_mut()),
-                Some(right_vecs_complex.as_mut()),
-                par,
-                stack,
-                params.into(),
-            )
-        } else {
-            let mut s_re_mda = tensor![[x.re(); n]; 1];
-            let mut s_im_mda = tensor![[x.re(); n]; 1];
+        //     faer::linalg::evd::evd_cplx::<<T as faer::traits::ComplexField>::Real>(
+        //         a_faer_complex,
+        //         diag_mut,
+        //         Some(left_vecs_complex.as_mut()),
+        //         Some(right_vecs_complex.as_mut()),
+        //         par,
+        //         stack,
+        //         params.into(),
+        //     )
+        // } else {
+        //     let mut s_re_mda = tensor![[x.re(); n]; 1];
+        //     let mut s_im_mda = tensor![[x.re(); n]; 1];
 
-            let mut right_vecs_faer = into_faer_mut(&mut right_vecs_mda);
-            let mut left_vecs_faer = into_faer_mut(&mut left_vecs_mda);
-            let mut s_re_faer = into_faer_mut(&mut s_re_mda);
-            let mut s_im_faer = into_faer_mut(&mut s_im_mda);
+        //     let mut right_vecs_faer = into_faer_mut(&mut right_vecs_mda);
+        //     let mut left_vecs_faer = into_faer_mut(&mut left_vecs_mda);
+        //     let mut s_re_faer = into_faer_mut(&mut s_re_mda);
+        //     let mut s_im_faer = into_faer_mut(&mut s_im_mda);
 
-            let a_faer_real: MatRef<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
-                faer::hacks::coerce::<_, MatRef<'_, <T as faer::traits::ComplexField>::Real>>(
-                    a_faer,
-                )
-            };
+        //     let a_faer_real: MatRef<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
+        //         faer::hacks::coerce::<_, MatRef<'_, <T as faer::traits::ComplexField>::Real>>(
+        //             a_faer,
+        //         )
+        //     };
 
-            println!("ici");
+        //     println!("ici");
 
-            let mut left_vecs_real: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
-                    left_vecs_faer,
-                )
-            };
+        //     let mut left_vecs_real: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
+        //             left_vecs_faer,
+        //         )
+        //     };
 
-            let mut right_vecs_real: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
-                    right_vecs_faer,
-                )
-            };
+        //     let mut right_vecs_real: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
+        //             right_vecs_faer,
+        //         )
+        //     };
 
-            let mut stack_buf = MemBuffer::new(faer::linalg::evd::evd_scratch::<T>(
-                n,
-                ComputeEigenvectors::Yes,
-                ComputeEigenvectors::Yes,
-                par,
-                params.into(),
-            ));
-            let stack = MemStack::new(&mut stack_buf);
+        //     let mut stack_buf = MemBuffer::new(faer::linalg::evd::evd_scratch::<T>(
+        //         n,
+        //         ComputeEigenvectors::Yes,
+        //         ComputeEigenvectors::Yes,
+        //         par,
+        //         params.into(),
+        //     ));
+        //     let stack = MemStack::new(&mut stack_buf);
 
-            let s_re_col0 = s_re_faer.col_mut(0);
-            let s_re_as_matmut: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
-                    s_re_col0,
-                )
-            };
-            let s_re_diag = s_re_as_matmut.diagonal_mut();
+        //     let s_re_col0 = s_re_faer.col_mut(0);
+        //     let s_re_as_matmut: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
+        //             s_re_col0,
+        //         )
+        //     };
+        //     let s_re_diag = s_re_as_matmut.diagonal_mut();
 
-            let s_im_col0 = s_im_faer.col_mut(0);
-            let s_im_as_matmut: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
-                faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
-                    s_im_col0,
-                )
-            };
-            let s_im_diag = s_im_as_matmut.diagonal_mut();
+        //     let s_im_col0 = s_im_faer.col_mut(0);
+        //     let s_im_as_matmut: MatMut<'_, <T as faer::traits::ComplexField>::Real> = unsafe {
+        //         faer::hacks::coerce::<_, MatMut<'_, <T as faer::traits::ComplexField>::Real>>(
+        //             s_im_col0,
+        //         )
+        //     };
+        //     let s_im_diag = s_im_as_matmut.diagonal_mut();
 
-            let result = faer::linalg::evd::evd_real::<<T as faer::traits::ComplexField>::Real>(
-                a_faer_real,
-                s_re_diag,
-                s_im_diag,
-                Some(left_vecs_real.as_mut()),
-                Some(right_vecs_real.as_mut()),
-                par,
-                stack,
-                params.into(),
-            );
+        //     let result = faer::linalg::evd::evd_real::<<T as faer::traits::ComplexField>::Real>(
+        //         a_faer_real,
+        //         s_re_diag,
+        //         s_im_diag,
+        //         Some(left_vecs_real.as_mut()),
+        //         Some(right_vecs_real.as_mut()),
+        //         par,
+        //         stack,
+        //         params.into(),
+        //     );
 
-            if result.is_ok() {
-                for i in 0..n {
-                    eigenvalues_mda[[0, i]] = Complex::new(s_re_mda[[0, i]], s_im_mda[[0, i]]);
-                }
-            }
+        //     if result.is_ok() {
+        //         for i in 0..n {
+        //             eigenvalues_mda[[0, i]] = Complex::new(s_re_mda[[0, i]], s_im_mda[[0, i]]);
+        //         }
+        //     }
 
-            result
-        };
+        //     result
+        // };
 
-        match eig_result {
-            Ok(_) => Ok(EigDecomp {
-                eigenvalues: eigenvalues_mda,
-                left_eigenvectors: Some(left_vecs_mda),
-                right_eigenvectors: Some(right_vecs_mda),
-            }),
-            Err(_) => Err(EigError::BackendDidNotConverge { iterations: 0 }),
-        }
+        // match eig_result {
+        //     Ok(_) => Ok(EigDecomp {
+        //         eigenvalues: eigenvalues_mda,
+        //         left_eigenvectors: Some(left_vecs_mda),
+        //         right_eigenvectors: Some(right_vecs_mda),
+        //     }),
+        //     Err(_) => Err(EigError::BackendDidNotConverge { iterations: 0 }),
+        // }
     }
     /// Compute only eigenvalues with new allocated vectors
     fn eig_values<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
@@ -386,31 +380,31 @@ where
     }
 
     /// Compute Schur decomposition with new allocated matrices
-    fn schur<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
+    fn schur<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
         todo!();
     }
 
     /// Compute Schur decomposition overwriting existing matrices
     fn schur_overwrite<L: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
-        t: &mut DSlice<T, 2, Dense>,
-        z: &mut DSlice<T, 2, Dense>,
+        _a: &mut DSlice<T, 2, L>,
+        _t: &mut DSlice<T, 2, Dense>,
+        _z: &mut DSlice<T, 2, Dense>,
     ) -> Result<(), SchurError> {
         todo!();
     }
 
     /// Compute Schur (complex) decomposition with new allocated matrices
-    fn schur_complex<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
+    fn schur_complex<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
         todo!();
     }
 
     /// Compute Schur (complex) decomposition overwriting existing matrices
     fn schur_complex_overwrite<L: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
-        t: &mut DSlice<T, 2, Dense>,
-        z: &mut DSlice<T, 2, Dense>,
+        _a: &mut DSlice<T, 2, L>,
+        _t: &mut DSlice<T, 2, Dense>,
+        _z: &mut DSlice<T, 2, Dense>,
     ) -> Result<(), SchurError> {
         todo!();
     }

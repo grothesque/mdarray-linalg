@@ -65,7 +65,7 @@ where
     ipiv
 }
 
-pub fn getri<La: Layout, Lai: Layout, T: ComplexFloat + Default + LapackScalar + Workspace>(
+pub fn getri<La: Layout, T: ComplexFloat + Default + LapackScalar + Workspace>(
     a: &mut DSlice<T, 2, La>,
     ipiv: &mut [i32],
 ) -> i32
@@ -107,8 +107,7 @@ where
     }
     assert_eq!(
         info, 0,
-        "LAPACK GETRI workspace query failed with info = {}",
-        info
+        "LAPACK GETRI workspace query failed with info = {info}"
     );
 
     let lwork = T::lwork_from_query(work_query.first().expect("Query buffer is empty"));
@@ -131,7 +130,7 @@ where
     info
 }
 
-pub fn potrf<La: Layout, Ll: Layout, T: ComplexFloat + Default + LapackScalar>(
+pub fn potrf<La: Layout, T: ComplexFloat + Default + LapackScalar>(
     a: &mut DSlice<T, 2, La>,
     uplo: char,
 ) -> i32

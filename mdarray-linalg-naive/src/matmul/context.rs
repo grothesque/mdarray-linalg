@@ -82,7 +82,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> DTensor<T, 2> {
         todo!()
     }
 }

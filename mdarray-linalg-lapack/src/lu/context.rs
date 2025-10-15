@@ -69,7 +69,7 @@ where
         let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
         let mut ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
 
-        match getri::<_, Dense, T>(a, &mut ipiv) {
+        match getri::<_, T>(a, &mut ipiv) {
             0 => Ok(()),
             i if i > 0 => Err(InvError::Singular { pivot: i }),
             i => Err(InvError::BackendError(i)),
@@ -94,7 +94,7 @@ where
         let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
         let mut ipiv = getrf::<_, Dense, Dense, T>(&mut a_inv, &mut l, &mut u);
 
-        match getri::<_, Dense, T>(&mut a_inv, &mut ipiv) {
+        match getri::<_, T>(&mut a_inv, &mut ipiv) {
             0 => Ok(a_inv),
             i if i > 0 => Err(InvError::Singular { pivot: i }),
             i => Err(InvError::BackendError(i)),
@@ -131,7 +131,7 @@ where
 
         let mut l = DTensor::<T, 2>::zeros([m as usize, n as usize]);
 
-        match potrf::<_, Dense, T>(a, 'L') {
+        match potrf::<_, T>(a, 'L') {
             0 => {
                 for i in 0..(m as usize) {
                     for j in 0..(n as usize) {
@@ -154,7 +154,7 @@ where
         let (m, n) = get_dims!(a);
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 
-        match potrf::<_, Dense, T>(a, 'L') {
+        match potrf::<_, T>(a, 'L') {
             0 => {
                 transpose_in_place(a);
                 Ok(())
