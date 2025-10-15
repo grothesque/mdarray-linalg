@@ -1,4 +1,24 @@
 //! Tensor contraction (generalized dot product) for arbitrary rank tensors.
+//!```rust
+//!use mdarray::tensor;
+//!use mdarray_linalg_blas::Blas;
+//!use mdarray_linalg_naive::Naive;
+//!use crate::mdarray_linalg::tensordot::{Tensordot, TensordotBuilder};
+//!let a = tensor![[1., 2.], [3., 4.]].into_dyn(); // requires dynamic tensor
+//!let b = tensor![[5., 6.], [7., 8.]].into_dyn();
+//!
+//!let expected_all = tensor![[70.0]].into_dyn();
+//!let result_all = Naive.tensordot(&a, &b).eval();
+//!let result_contract_k = Blas.tensordot(&a, &b).contract_k(2).eval();
+//!assert_eq!(result_contract_k, expected_all);
+//!
+//!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
+//!let result_specific = Blas
+//!    .tensordot(&a, &b)
+//!    .specific(Box::new([1]), Box::new([0]))
+//!    .eval();
+//!assert_eq!(result_specific, expected_matmul);
+//!```
 use mdarray::{Slice, Tensor};
 
 /// Tensor contraction operations

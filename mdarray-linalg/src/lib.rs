@@ -40,6 +40,7 @@
 //! | **▶︎ Advanced** |||| |
 //! | `givens rot`  | 🔧   | ⬜     | 🔧    | 🔧   |
 //! | `prrlu`       | ⬜   | ⬜     | ✅    | ⬜   |
+//! | `tensordot`   | ✅   | ⬜     | ✅    |🔧    |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet
@@ -128,6 +129,20 @@
 //!         "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",
 //!         p, l, u, q, rank
 //!     );
+//!
+//!     // ----- Tensordot: full contraction between two 3D tensors -----
+//!     let a = tensor![
+//!         [[1., 2.], [3., 4.]],
+//!         [[5., 6.], [7., 8.]]
+//!     ].into_dyn();
+//!
+//!     let b = tensor![
+//!         [[9., 10.], [11., 12.]],
+//!         [[13., 14.], [15., 16.]]
+//!     ].into_dyn();
+//!
+//!     let result = Blas.tensordot(&a, &b).eval();
+//!     println!("Full contraction result (tensordot over all axes): {:?}", result);
 //! }
 //! ```
 //!Some notes:

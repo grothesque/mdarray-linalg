@@ -8,3 +8,4 @@ pub use super::matvec::{MatVec, MatVecBuilder, VecOps};
 pub use super::prrlu::PRRLU;
 pub use super::qr::QR;
 pub use super::svd::SVD;
+pub use super::tensordot::{Tensordot, TensordotBuilder};
