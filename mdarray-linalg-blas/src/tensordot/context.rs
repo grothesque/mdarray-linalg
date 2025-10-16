@@ -22,8 +22,11 @@ where
         self
     }
 
-    fn specific(mut self, axes_a: Box<[isize]>, axes_b: Box<[isize]>) -> Self {
-        self.axes = Axes::Specific(axes_a, axes_b);
+    fn specific(mut self, axes_a: &[isize], axes_b: &[isize]) -> Self {
+        self.axes = Axes::Specific(
+            axes_a.to_vec().into_boxed_slice(),
+            axes_b.to_vec().into_boxed_slice(),
+        );
         self
     }
 

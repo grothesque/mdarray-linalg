@@ -61,7 +61,7 @@
 //!
 //! ```rust
 //! use mdarray::{DTensor, tensor};
-//! use mdarray_linalg::prelude::*;
+//! use mdarray_linalg::prelude::*; // Imports only traits
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::prrlu::PRRLUDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
@@ -95,7 +95,7 @@
 //!
 //!     // ----- Eigenvalue decomposition -----
 //!     // Note: we must clone `a` here because decomposition routines destroy the input.
-//!     let bd = Lapack::new();
+//!     let bd = Lapack::new(); // Unlike Blas, Lapack is not a zero-sized backend so `new` must be called.
 //!     let EigDecomp {
 //!        eigenvalues,
 //!        right_eigenvectors,
@@ -120,7 +120,7 @@
 //!     let mut r = DTensor::<f64, 2>::zeros([m, n]);
 //!
 //!     let bd = Lapack::new();
-//!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r);
+//!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
 //!     println!("Q: {:?}", q);
 //!     println!("R: {:?}", r);
 //!

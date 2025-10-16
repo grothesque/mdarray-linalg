@@ -40,10 +40,7 @@ fn tensordot_specific_axes_matrix_multiplication_impl(backend: &impl Tensordot<f
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
     let expected = tensor![[19., 22.], [43., 50.]].into_dyn();
-    let result = backend
-        .tensordot(&a, &b)
-        .specific(Box::new([1]), Box::new([0]))
-        .eval();
+    let result = backend.tensordot(&a, &b).specific(&[1], &[0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -92,10 +89,7 @@ fn tensordot_increase_deep_impl(backend: &impl Tensordot<f64>) {
     let r = tensor![[[1.]]].into_dyn();
     let mps = tensor![[[1.], [0.]]].into_dyn();
     let expected = tensor![[[[1.0], [0.]]]].into_dyn();
-    let result = backend
-        .tensordot(&r, &mps)
-        .specific(Box::new([1]), Box::new([0]))
-        .eval();
+    let result = backend.tensordot(&r, &mps).specific(&[1], &[0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -125,10 +119,7 @@ fn tensordot_specific_negative_axes_impl(backend: &impl Tensordot<f64>) {
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
     let expected = tensor![[19., 22.], [43., 50.]].into_dyn();
-    let result = backend
-        .tensordot(&a, &b)
-        .specific(Box::new([-1]), Box::new([0]))
-        .eval();
+    let result = backend.tensordot(&a, &b).specific(&[-1], &[0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -181,7 +172,7 @@ fn tensordot_overwrite_impl(backend: &impl Tensordot<f64>) {
     let mut c = tensor![[0., 0.], [0., 0.]].into_dyn();
     backend
         .tensordot(&a, &b)
-        .specific(Box::new([1]), Box::new([0]))
+        .specific(&[1], &[0])
         .overwrite(&mut c);
 
     assert_eq!(c, expected);
