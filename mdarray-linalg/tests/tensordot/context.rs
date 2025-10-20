@@ -10,7 +10,7 @@ fn tensordot_all_axes_impl(backend: &impl MatMul<f64>) {
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
     let expected = tensor![[70.0]].into_dyn();
-    let result = backend.contract(&a, &b).eval();
+    let result = backend.contract_all(&a, &b).eval();
     assert_eq!(result, expected);
 }
 
@@ -40,7 +40,7 @@ fn tensordot_specific_axes_matrix_multiplication_impl(backend: &impl MatMul<f64>
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
     let expected = tensor![[19., 22.], [43., 50.]].into_dyn();
-    let result = backend.contract_axes(&a, &b, vec![1], vec![0]).eval();
+    let result = backend.contract(&a, &b, vec![1], vec![0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -75,7 +75,7 @@ fn tensordot_scalar_inputs_should_multiply_impl(backend: &impl MatMul<f64>) {
     let a = tensor![3.].into_dyn();
     let b = tensor![5.].into_dyn();
     let expected = tensor![[15.0]].into_dyn();
-    let result = backend.contract(&a, &b).eval();
+    let result = backend.contract_all(&a, &b).eval();
     assert_eq!(result, expected);
 }
 
@@ -89,7 +89,7 @@ fn tensordot_increase_deep_impl(backend: &impl MatMul<f64>) {
     let r = tensor![[[1.]]].into_dyn();
     let mps = tensor![[[1.], [0.]]].into_dyn();
     let expected = tensor![[[[1.0], [0.]]]].into_dyn();
-    let result = backend.contract_axes(&r, &mps, vec![1], vec![0]).eval();
+    let result = backend.contract(&r, &mps, vec![1], vec![0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -104,7 +104,7 @@ fn tensordot_vector_dot_product_impl(backend: &impl MatMul<f64>) {
     let a = tensor![1., 2., 3.].into_dyn();
     let b = tensor![4., 5., 6.].into_dyn();
     let expected = tensor![[32.0]].into_dyn(); // 1*4 + 2*5 + 3*6
-    let result = backend.contract(&a, &b).eval();
+    let result = backend.contract_all(&a, &b).eval();
     assert_eq!(result, expected);
 }
 
@@ -120,7 +120,7 @@ fn tensordot_mismatched_dimensions_should_panic_impl(
     // Should panic when dimensions are not aligned
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[1., 2., 3.]].into_dyn(); // shape mismatch
-    let result = std::panic::catch_unwind(|| backend.contract(&a, &b).eval());
+    let result = std::panic::catch_unwind(|| backend.contract_all(&a, &b).eval());
     assert!(result.is_err());
 }
 
@@ -156,7 +156,7 @@ fn tensordot_outer_should_match_manual_kronecker() {
 
 //     let mut c = tensor![[0., 0.], [0., 0.]].into_dyn();
 //     backend
-//         .contract_axes(&a, &b, vec![1], vec![0])
+//         .contract(&a, &b, vec![1], vec![0])
 //         .overwrite(&mut c);
 
 //     assert_eq!(c, expected);
@@ -174,7 +174,7 @@ fn tensordot_outer_should_match_manual_kronecker() {
 //     let expected = tensor![[70.0]].into_dyn();
 
 //     let mut c = tensor![[0.0]].into_dyn();
-//     backend.contract(&a, &b).overwrite(&mut c);
+//     backend.contract_all(&a, &b).overwrite(&mut c);
 
 //     assert_eq!(c, expected);
 // }

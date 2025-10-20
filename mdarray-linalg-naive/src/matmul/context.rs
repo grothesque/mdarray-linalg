@@ -141,7 +141,7 @@ where
     }
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract<'a, La, Lb>(
+    fn contract_all<'a, La, Lb>(
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
@@ -181,11 +181,11 @@ where
         }
     }
 
-    /// Specifies exactly which axes to contract.
+    /// Specifies exactly which axes to contract_all.
     /// # Example
     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
     /// with axes 3 and 4 of `b`.
-    fn contract_axes<'a, La, Lb>(
+    fn contract<'a, La, Lb>(
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,

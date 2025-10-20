@@ -10,13 +10,13 @@
 //!let b = tensor![[5., 6.], [7., 8.]].into_dyn();
 //!
 //!let expected_all = tensor![[70.0]].into_dyn();
-//!let result_all = Naive.contract(&a, &b).eval();
+//!let result_all = Naive.contract_all(&a, &b).eval();
 //!let result_contract_k = Blas.contract_n(&a, &b, 2).eval();
 //!assert_eq!(result_contract_k, expected_all);
 //!
 //!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
 //!let result_specific = Blas
-//!    .contract_axes(&a, &b, vec![1], vec![0])
+//!    .contract(&a, &b, vec![1], vec![0])
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
@@ -57,7 +57,7 @@ pub trait MatMul<T: One> {
         Lb: Layout;
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract<'a, La, Lb>(
+    fn contract_all<'a, La, Lb>(
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
@@ -81,11 +81,11 @@ pub trait MatMul<T: One> {
         La: Layout,
         Lb: Layout;
 
-    /// Specifies exactly which axes to contract.
+    /// Specifies exactly which axes to contract_all.
     /// # Example
     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
     /// with axes 3 and 4 of `b`.
-    fn contract_axes<'a, La, Lb>(
+    fn contract<'a, La, Lb>(
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
