@@ -2,10 +2,12 @@ use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, DTensor, Dense, DynRank, Layout, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::matmul::{MatMul, MatMulBuilder, Side, Triangle, Type};
+use mdarray_linalg::matmul::{
+    Axes, MatMul, MatMulBuilder, Side, TensordotBuilder, Triangle, Type, tensordot,
+};
 
 use super::scalar::BlasScalar;
 use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};
@@ -20,6 +22,17 @@ where
     alpha: T,
     a: &'a DSlice<T, 2, La>,
     b: &'a DSlice<T, 2, Lb>,
+}
+
+struct BlasTensordotBuilder<'a, T, La, Lb>
+where
+    La: Layout,
+    Lb: Layout,
+{
+    alpha: T,
+    a: &'a Slice<T, DynRank, La>,
+    b: &'a Slice<T, DynRank, Lb>,
+    axes: Axes,
 }
 
 impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for BlasMatMulBuilder<'a, T, La, Lb>
@@ -102,6 +115,26 @@ where
     }
 }
 
+impl<'a, T, La, Lb> TensordotBuilder<'a, T, La, Lb> for BlasTensordotBuilder<'a, T, La, Lb>
+where
+    La: Layout,
+    Lb: Layout,
+    T: BlasScalar + ComplexFloat + Zero + One,
+{
+    fn scale(mut self, factor: T) -> Self {
+        self.alpha = self.alpha * factor;
+        self
+    }
+
+    fn eval(self) -> Tensor<T> {
+        tensordot(self.a, self.b, self.axes, Blas, self.alpha)
+    }
+
+    fn overwrite(self, c: &mut Slice<T>) {
+        todo!()
+    }
+}
+
 impl<T> MatMul<T> for Blas
 where
     T: BlasScalar + ComplexFloat,
@@ -121,6 +154,67 @@ where
             alpha: T::one(),
             a,
             b,
+        }
+    }
+
+    /// Contracts all axes of the first tensor with all axes of the second tensor.
+    fn contract<'a, La, Lb>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+    {
+        BlasTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::All,
+        }
+    }
+
+    /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
+    /// # Example
+    /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
+    fn contract_n<'a, La: Layout, Lb: Layout>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+        n: usize,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+    {
+        BlasTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::LastFirst { k: (n) },
+        }
+    }
+
+    /// Specifies exactly which axes to contract.
+    /// # Example
+    /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
+    /// with axes 3 and 4 of `b`.
+    fn contract_axes<'a, La: Layout, Lb: Layout>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+        axes_a: impl Into<Box<[usize]>>,
+        axes_b: impl Into<Box<[usize]>>,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+    {
+        BlasTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::Specific(axes_a.into(), axes_b.into()),
         }
     }
 }

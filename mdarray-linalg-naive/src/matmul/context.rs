@@ -1,9 +1,9 @@
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
 
-use mdarray_linalg::matmul::{Side, Triangle, Type};
+use mdarray_linalg::matmul::{Axes, Side, Triangle, Type, tensordot};
 use mdarray_linalg::prelude::*;
 
 use crate::Naive;
@@ -18,6 +18,17 @@ where
     alpha: T,
     a: &'a DSlice<T, 2, La>,
     b: &'a DSlice<T, 2, Lb>,
+}
+
+struct NaiveTensordotBuilder<'a, T, La, Lb>
+where
+    La: Layout,
+    Lb: Layout,
+{
+    alpha: T,
+    a: &'a Slice<T, DynRank, La>,
+    b: &'a Slice<T, DynRank, Lb>,
+    axes: Axes,
 }
 
 impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for NaiveMatMulBuilder<'a, T, La, Lb>
@@ -87,6 +98,26 @@ where
     }
 }
 
+impl<'a, T, La, Lb> TensordotBuilder<'a, T, La, Lb> for NaiveTensordotBuilder<'a, T, La, Lb>
+where
+    La: Layout,
+    Lb: Layout,
+    T: ComplexFloat + Zero + One,
+{
+    fn scale(mut self, factor: T) -> Self {
+        self.alpha = self.alpha * factor;
+        self
+    }
+
+    fn eval(self) -> Tensor<T> {
+        tensordot(self.a, self.b, self.axes, Naive, self.alpha)
+    }
+
+    fn overwrite(self, c: &mut Slice<T>) {
+        todo!()
+    }
+}
+
 impl<T> MatMul<T> for Naive
 where
     T: ComplexFloat,
@@ -106,6 +137,71 @@ where
             alpha: T::one(),
             a,
             b,
+        }
+    }
+
+    /// Contracts all axes of the first tensor with all axes of the second tensor.
+    fn contract<'a, La, Lb>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+    {
+        NaiveTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::All,
+        }
+    }
+
+    /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
+    /// # Example
+    /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
+    fn contract_n<'a, La, Lb>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+        n: usize,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+    {
+        NaiveTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::LastFirst { k: (n) },
+        }
+    }
+
+    /// Specifies exactly which axes to contract.
+    /// # Example
+    /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
+    /// with axes 3 and 4 of `b`.
+    fn contract_axes<'a, La, Lb>(
+        &self,
+        a: &'a Slice<T, DynRank, La>,
+        b: &'a Slice<T, DynRank, Lb>,
+        axes_a: impl Into<Box<[usize]>>,
+        axes_b: impl Into<Box<[usize]>>,
+    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+    {
+        NaiveTensordotBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::Specific(axes_a.into(), axes_b.into()),
         }
     }
 }

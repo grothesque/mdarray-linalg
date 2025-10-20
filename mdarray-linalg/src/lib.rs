@@ -143,7 +143,7 @@
 //!         [[13., 14.], [15., 16.]]
 //!     ].into_dyn();
 //!
-//!     let result = Blas.tensordot(&a, &b).eval();
+//!     let result = Blas.contract(&a, &b).eval();
 //!     println!("Full contraction result (tensordot over all axes): {:?}", result);
 //! }
 //! ```
@@ -190,7 +190,6 @@ pub mod prrlu;
 pub mod qr;
 pub mod solve;
 pub mod svd;
-pub mod tensordot;
 
 pub mod utils;
 pub use utils::*;
