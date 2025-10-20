@@ -10,7 +10,7 @@ categories = ["mathematics", "science"]
 author = ["Pierre Wulles", "Christoph Groth"]
 
 [dependencies]
-mdarray = { git = "https://github.com/fre-hu/mdarray.git" }
+mdarray = "0.7.1"
 thiserror = "2.0.12"
 num-complex = "0.4.6"
 num-traits = "0.2.19"
