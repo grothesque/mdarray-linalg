@@ -8,6 +8,7 @@ keywords = ["linear-algebra", "tensor", "multidimensional", "backend", "scientif
 description = "Linear algebra library built on top of mdarray for type-agnostic tensor operations, supporting BLAS/LAPACK and Faer backends."
 categories = ["mathematics", "science"]
 author = ["Pierre Wulles", "Christoph Groth"]
+exclude = ["tests/*"]
 
 [dependencies]
 mdarray = "0.7.1"
