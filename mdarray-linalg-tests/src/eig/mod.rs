@@ -2,15 +2,12 @@ use num_complex::{Complex, ComplexFloat};
 
 use approx::assert_relative_eq;
 
-use crate::common::random_matrix;
+use crate::common::{naive_matmul, random_matrix};
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::DTensor;
 use mdarray_linalg::eig::EigDecomp;
 use mdarray_linalg::eig::SchurDecomp;
 use mdarray_linalg::{prelude::*, pretty_print};
-use mdarray_linalg_faer::Faer;
-use mdarray_linalg_lapack::Lapack;
-use mdarray_linalg_naive::Naive;
 
 fn test_eigen_reconstruction<T>(
     a: &DTensor<T, 2>,
@@ -49,14 +46,7 @@ fn test_eigen_reconstruction<T>(
     }
 }
 
-#[test]
-#[should_panic]
-fn non_square_matrix() {
-    test_non_square_matrix(&Lapack::default());
-    test_non_square_matrix(&Faer);
-}
-
-fn test_non_square_matrix(bd: &impl Eig<f64>) {
+pub fn test_non_square_matrix(bd: &impl Eig<f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
@@ -66,13 +56,7 @@ fn test_non_square_matrix(bd: &impl Eig<f64>) {
         .expect("Eigenvalue decomposition failed");
 }
 
-#[test]
-fn square_matrix() {
-    test_square_matrix(&Lapack::default());
-    test_square_matrix(&Faer);
-}
-
-fn test_square_matrix(bd: &impl Eig<f64>) {
+pub fn test_square_matrix(bd: &impl Eig<f64>) {
     let n = 2;
     let a = random_matrix(n, n);
 
@@ -87,13 +71,7 @@ fn test_square_matrix(bd: &impl Eig<f64>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-#[test]
-fn cplx_square_matrix() {
-    test_eig_cplx_square_matrix(&Lapack::default());
-    test_eig_cplx_square_matrix(&Faer);
-}
-
-fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
+pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     let n = 4;
     let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
@@ -171,7 +149,7 @@ fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
 //     );
 // }
 
-fn test_eigen_reconstruction_full<T>(
+pub fn test_eigen_reconstruction_full<T>(
     a: &DTensor<T, 2>,
     eigenvalues: &DTensor<Complex<T::Real>, 2>,
     left_eigenvectors: &DTensor<Complex<T::Real>, 2>,
@@ -217,13 +195,7 @@ fn test_eigen_reconstruction_full<T>(
     }
 }
 
-#[test]
-fn eig_values_only() {
-    test_eig_values_only(&Lapack::default());
-    test_eig_values_only(&Faer);
-}
-
-fn test_eig_values_only(bd: &impl Eig<f64>) {
+pub fn test_eig_values_only(bd: &impl Eig<f64>) {
     let n = 3;
     let a = random_matrix(n, n);
 
@@ -294,13 +266,7 @@ fn test_eig_values_only(bd: &impl Eig<f64>) {
 //     test_eigen_reconstruction(&original_a, &eigenvalues, &complex_eigenvectors);
 // }
 
-#[test]
-fn eigh_symmetric() {
-    test_eigh_symmetric(&Lapack::default());
-    test_eigh_symmetric(&Faer);
-}
-
-fn test_eigh_symmetric(bd: &impl Eig<f64>) {
+pub fn test_eigh_symmetric(bd: &impl Eig<f64>) {
     let n = 3;
     let mut a = random_matrix(n, n);
 
@@ -336,13 +302,7 @@ fn test_eigh_symmetric(bd: &impl Eig<f64>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-#[test]
-fn eigh_complex_hermitian() {
-    test_eigh_complex_hermitian(&Lapack::default());
-    test_eigh_complex_hermitian(&Faer);
-}
-
-fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
+pub fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
     let n = 3;
     let mut a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
@@ -382,14 +342,7 @@ fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-#[test]
-#[should_panic]
-fn eig_full_non_square() {
-    test_eig_full_non_square(&Lapack::default());
-    test_eig_full_non_square(&Faer);
-}
-
-fn test_eig_full_non_square(bd: &impl Eig<f64>) {
+pub fn test_eig_full_non_square(bd: &impl Eig<f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
@@ -399,13 +352,7 @@ fn test_eig_full_non_square(bd: &impl Eig<f64>) {
         .expect("Full eigenvalue decomposition failed");
 }
 
-#[test]
-#[should_panic]
-fn eig_values_non_square() {
-    test_eig_values_non_square(&Lapack::default());
-}
-
-fn test_eig_values_non_square(bd: &impl Eig<f64>) {
+pub fn test_eig_values_non_square(bd: &impl Eig<f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
@@ -415,12 +362,7 @@ fn test_eig_values_non_square(bd: &impl Eig<f64>) {
         .expect("Eigenvalues computation failed");
 }
 
-#[test]
-fn schur_decomp() {
-    test_schur(&Lapack::default());
-}
-
-fn test_schur(bd: &impl Eig<f64>) {
+pub fn test_schur(bd: &impl Eig<f64>) {
     let n = 4;
     let a = random_matrix(n, n);
 
@@ -431,28 +373,19 @@ fn test_schur(bd: &impl Eig<f64>) {
     assert_eq!(t.shape(), &(n, n));
     assert_eq!(z.shape(), &(n, n));
 
-    let mut a_reconstructed_tmp = DTensor::<f64, 2>::zeros([n, n]);
-    let mut a_reconstructed = DTensor::<f64, 2>::zeros([n, n]);
     let zt = z.transpose().to_tensor();
 
     println!("{:?}", a);
     println!("{:?}", t);
     println!("{:?}", z);
 
-    Naive.matmul(&z, &t).overwrite(&mut a_reconstructed_tmp);
-    Naive
-        .matmul(&a_reconstructed_tmp, &zt)
-        .overwrite(&mut a_reconstructed);
+    let reconstructed_tmp = naive_matmul(&z, &t);
+    let a_reconstructed = naive_matmul(&reconstructed_tmp, &zt);
 
     assert_matrix_eq!(&a, &a_reconstructed);
 }
 
-#[test]
-fn schur_decomp_cplx() {
-    test_schur_cplx(&Lapack::default());
-}
-
-fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
+pub fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
     let n = 4;
     let a = random_matrix(n, n);
     let b = random_matrix(n, n);
@@ -482,10 +415,8 @@ fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
     println!("{:?}", t);
     println!("{:?}", z);
 
-    Naive.matmul(&z, &t).overwrite(&mut c_reconstructed_tmp);
-    Naive
-        .matmul(&c_reconstructed_tmp, &zt)
-        .overwrite(&mut c_reconstructed);
+    let c_reconstructed_tmp = naive_matmul(&z, &t);
+    let c_reconstructed = naive_matmul(&c_reconstructed_tmp, &zt);
 
     println!("---------------------------------------------");
     println!("{:?}", c);

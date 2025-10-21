@@ -2,6 +2,7 @@
 name = "mdarray-linalg-lapack"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
@@ -15,5 +16,7 @@ num-traits = "0.2.19"
 
 [dev-dependencies]
 lapack-src = { version = "0.11", features = ["openblas"] }
+openblas-src = { version = "0.10.11", features = ["system"] }
+mdarray-linalg-tests = { version = "0.1.0", path = "../mdarray-linalg-tests" }
 
 

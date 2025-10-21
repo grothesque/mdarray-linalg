@@ -1,15 +1,12 @@
 use approx::assert_relative_eq;
 use num_complex::ComplexFloat;
 
-use crate::common::random_matrix;
+use crate::common::{naive_matmul, random_matrix};
 use mdarray::{DSlice, DTensor, Dense, tensor};
 use mdarray_linalg::prelude::*;
 use mdarray_linalg::{identity, pretty_print, transpose_in_place};
-use mdarray_linalg_faer::Faer;
-use mdarray_linalg_lapack::Lapack;
-use mdarray_linalg_naive::Naive;
 
-fn test_lu_reconstruction<T>(
+pub fn test_lu_reconstruction<T>(
     a: &DTensor<T, 2>,
     l: &DTensor<T, 2>,
     u: &DTensor<T, 2>,
@@ -26,11 +23,8 @@ fn test_lu_reconstruction<T>(
 {
     let (n, m) = *a.shape();
 
-    let mut pa = DTensor::<T, 2>::zeros([n, m]);
-    Naive.matmul(p, a).overwrite(&mut pa);
-
-    let mut lu = DTensor::<T, 2>::zeros([n, m]);
-    Naive.matmul(l, u).overwrite(&mut lu);
+    let pa = naive_matmul(p, a);
+    let lu = naive_matmul(l, u);
 
     // Verify that P * A = L * U
     for i in 0..n {
@@ -41,13 +35,7 @@ fn test_lu_reconstruction<T>(
     }
 }
 
-#[test]
-fn lu_decomposition() {
-    test_lu_decomposition(&Lapack::default());
-    test_lu_decomposition(&Faer);
-}
-
-fn test_lu_decomposition(bd: &impl LU<f64>) {
+pub fn test_lu_decomposition(bd: &impl LU<f64>) {
     let n = 2;
     let mut a = random_matrix(n, n);
     let mut a = tensor![
@@ -67,13 +55,7 @@ fn test_lu_decomposition(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-#[test]
-fn lu_decomposition_rectangular() {
-    test_lu_decomposition_rectangular(&Lapack::default());
-    test_lu_decomposition_rectangular(&Faer);
-}
-
-fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
+pub fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
     let n = 5;
     let m = 3;
     let mut a = random_matrix(n, m);
@@ -84,13 +66,7 @@ fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-#[test]
-fn lu_overwrite() {
-    test_lu_overwrite(&Lapack::default());
-    test_lu_overwrite(&Faer);
-}
-
-fn test_lu_overwrite(bd: &impl LU<f64>) {
+pub fn test_lu_overwrite(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let original_a = a.clone();
@@ -104,13 +80,7 @@ fn test_lu_overwrite(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-#[test]
-fn lu_overwrite_rectangular() {
-    test_lu_overwrite_rectangular(&Lapack::default());
-    test_lu_overwrite_rectangular(&Faer);
-}
-
-fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
+pub fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
     let n = 5;
     let m = 3;
     let mut a = random_matrix(n, m);
@@ -125,19 +95,12 @@ fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-#[test]
-fn inverse() {
-    test_inverse(&Lapack::default());
-    test_inverse(&Faer);
-}
-
-fn test_inverse(bd: &impl LU<f64>) {
+pub fn test_inverse(bd: &impl LU<f64>) {
     let n = 4;
     let a = random_matrix(n, n);
     let a_inv = bd.inv(&mut a.clone()).unwrap();
 
-    let mut product = DTensor::<f64, 2>::zeros([n, n]);
-    Naive.matmul(&a, &a_inv).overwrite(&mut product);
+    let product = naive_matmul(&a, &a_inv);
 
     for i in 0..n {
         for j in 0..n {
@@ -147,20 +110,13 @@ fn test_inverse(bd: &impl LU<f64>) {
     }
 }
 
-#[test]
-fn inverse_overwrite() {
-    test_inverse_overwrite(&Lapack::default());
-    test_inverse_overwrite(&Faer);
-}
-
-fn test_inverse_overwrite(bd: &impl LU<f64>) {
+pub fn test_inverse_overwrite(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let a_clone = a.clone();
     let _ = bd.inv_overwrite(&mut a);
 
-    let mut product = DTensor::<f64, 2>::zeros([n, n]);
-    Naive.matmul(&a, &a_clone).overwrite(&mut product);
+    let product = naive_matmul(&a, &a_clone);
 
     for i in 0..n {
         for j in 0..n {
@@ -170,25 +126,13 @@ fn test_inverse_overwrite(bd: &impl LU<f64>) {
     }
 }
 
-#[test]
-#[should_panic]
-fn inverse_singular_should_panic() {
-    test_inverse_singular_should_panic(&Lapack::default());
-}
-
-fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
+pub fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = DTensor::<f64, 2>::from_elem([n, n], 1.);
     let _ = bd.inv(&mut a);
 }
 
-#[test]
-fn determinant() {
-    test_determinant(&Lapack::default());
-    test_determinant(&Faer);
-}
-
-fn test_determinant(bd: &impl LU<f64>) {
+pub fn test_determinant(bd: &impl LU<f64>) {
     let n = 4;
     let a = random_matrix(n, n);
 
@@ -197,13 +141,7 @@ fn test_determinant(bd: &impl LU<f64>) {
     assert_relative_eq!(det_permutations(&a), d, epsilon = 1e-6);
 }
 
-#[test]
-fn determinant_dummy() {
-    test_determinant_dummy(&Lapack::default());
-    test_determinant_dummy(&Faer);
-}
-
-fn test_determinant_dummy(bd: &impl LU<f64>) {
+pub fn test_determinant_dummy(bd: &impl LU<f64>) {
     let a = identity(3);
     let d = bd.det(&mut a.clone());
     println!("{}", d);
@@ -252,7 +190,7 @@ where
     det
 }
 
-fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
+pub fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
     // A^T + A + nI is positive definite
     let a = random_matrix(n, n);
     let mut a_t = a.clone();
@@ -264,7 +202,7 @@ fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
     b
 }
 
-fn test_cholesky_reconstruction<T>(a: &DTensor<T, 2>, l: &DTensor<T, 2>)
+pub fn test_cholesky_reconstruction<T>(a: &DTensor<T, 2>, l: &DTensor<T, 2>)
 where
     T: Default
         + ComplexFloat
@@ -297,8 +235,7 @@ where
     }
 
     // Compute L * L^T
-    let mut llt = DTensor::<T, 2>::zeros([n, m]);
-    Naive.matmul(&ln, &lt).overwrite(&mut llt);
+    let llt = naive_matmul(&ln, &lt);
 
     // Verify that A = L * L^T
     for i in 0..n {
@@ -309,12 +246,7 @@ where
     }
 }
 
-#[test]
-fn cholesky_decomposition() {
-    test_cholesky_decomposition(&Lapack::default());
-}
-
-fn test_cholesky_decomposition(bd: &impl LU<f64>) {
+pub fn test_cholesky_decomposition(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_positive_definite_matrix(n);
     let original_a = a.clone();
@@ -326,12 +258,7 @@ fn test_cholesky_decomposition(bd: &impl LU<f64>) {
     test_cholesky_reconstruction(&original_a, &l);
 }
 
-#[test]
-fn cholesky_overwrite() {
-    test_cholesky_overwrite(&Lapack::default());
-}
-
-fn test_cholesky_overwrite(bd: &impl LU<f64>) {
+pub fn test_cholesky_overwrite(bd: &impl LU<f64>) {
     let n = 4;
     let a = random_positive_definite_matrix(n);
     let original_a = a.clone();
@@ -346,12 +273,7 @@ fn test_cholesky_overwrite(bd: &impl LU<f64>) {
     test_cholesky_reconstruction(&original_a, &a_copy);
 }
 
-#[test]
-fn cholesky_not_positive_definite() {
-    test_cholesky_not_positive_definite(&Lapack::default());
-}
-
-fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
+pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
     let n = 4;
     // Create a matrix that is not positive definite (has negative eigenvalues)
     let mut a = DTensor::<f64, 2>::zeros([n, n]);
@@ -372,12 +294,7 @@ fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
     assert!(result.is_err());
 }
 
-#[test]
-fn cholesky_identity_matrix() {
-    test_cholesky_identity_matrix(&Lapack::default());
-}
-
-fn test_cholesky_identity_matrix(bd: &impl LU<f64>) {
+pub fn test_cholesky_identity_matrix(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = DTensor::<f64, 2>::zeros([n, n]);
 

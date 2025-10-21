@@ -1,12 +1,9 @@
 use approx::assert_relative_eq;
 
 use mdarray::DTensor;
-use mdarray_linalg::matmul::{MatMul, MatMulBuilder};
 use mdarray_linalg::prrlu::{PRRLU, PRRLUDecomp};
-use mdarray_linalg_naive::Naive;
 
-use mdarray_linalg_naive::prrlu::simple::minus_outer_pivot;
-
+use crate::common::naive_matmul;
 use crate::{
     assert_matrix_eq,
     common::{random_matrix, rank_k_matrix},
@@ -34,19 +31,14 @@ fn reconstruct_from_prrlu(decomp: &PRRLUDecomp<f64>) -> DTensor<f64, 2> {
     let p_inv = invert_permutation(p);
     let q_inv = invert_permutation(q);
 
-    let mut temp1 = DTensor::<f64, 2>::zeros([n, m]);
-    let mut temp2 = DTensor::<f64, 2>::zeros([n, m]);
-    let mut reconstructed = DTensor::<f64, 2>::zeros([n, m]);
-
-    Naive.matmul(l, u).overwrite(&mut temp1);
-    Naive.matmul(&p_inv, &temp1).overwrite(&mut temp2);
-    Naive.matmul(&temp2, &q_inv).overwrite(&mut reconstructed);
+    let temp1 = naive_matmul(&l, &u);
+    let temp2 = naive_matmul(&p_inv, &temp1);
+    let reconstructed = naive_matmul(&temp2, &q_inv);
 
     reconstructed
 }
 
-#[test]
-fn rank_deficient() {
+pub fn test_rank_deficient(bd: impl PRRLU<f64>) {
     let n = 10;
     let m = 5;
     let k = 2; // rank
@@ -55,8 +47,7 @@ fn rank_deficient() {
     let original = rank_k_matrix(n, m, k);
     let mut a = original.clone();
 
-    // Perform PRR-LU
-    let decomp = Naive.prrlu(&mut a);
+    let decomp = bd.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
     println!("{:?}", decomp.u);
@@ -65,8 +56,7 @@ fn rank_deficient() {
     assert_matrix_eq!(original, reconstructed);
 }
 
-#[test]
-fn full_rank() {
+pub fn test_full_rank(bd: impl PRRLU<f64>) {
     let n = 10;
     let m = 10;
 
@@ -74,16 +64,14 @@ fn full_rank() {
     let original = random_matrix(m, n);
     let mut a = original.clone();
 
-    // Perform full PRR-LU
-    let decomp = Naive.prrlu(&mut a);
+    let decomp = bd.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
     assert_eq!(decomp.rank, n);
     assert_matrix_eq!(original, reconstructed);
 }
 
-#[test]
-fn rectangular() {
+pub fn test_rectangular(bd: impl PRRLU<f64>) {
     let n = 4;
     let m = 6;
     let k = 2;
@@ -92,7 +80,7 @@ fn rectangular() {
     let original = rank_k_matrix(n, m, k);
     let mut a = original.clone();
 
-    let decomp = Naive.prrlu(&mut a);
+    let decomp = bd.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
     println!("{:?}", decomp.u);
@@ -106,14 +94,13 @@ fn gen_hilbert_matrix(n: usize) -> DTensor<f64, 2> {
     DTensor::<f64, 2>::from_fn([n, n], |idx| 1.0 / (idx[0] + idx[1] + 1) as f64)
 }
 
-#[test]
-fn hilbert_matrix() {
+pub fn test_hilbert_matrix(bd: impl PRRLU<f64>) {
     let n = 20;
 
     let original = gen_hilbert_matrix(n);
     let mut a = original.clone();
 
-    let decomp = Naive.prrlu(&mut a);
+    let decomp = bd.prrlu(&mut a);
     let reconstructed = reconstruct_from_prrlu(&decomp);
 
     assert_matrix_eq!(original, reconstructed);
