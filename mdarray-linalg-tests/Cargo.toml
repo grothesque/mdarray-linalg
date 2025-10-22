@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 repository = "https://github.com/grothesque/mdarray-linalg"
 license = "MIT AND Apache-2.0"
-keywords = ["linear-algebra", "tensor", "multidimensional", "backend", "scientific"]
-description = "Linear algebra library built on top of mdarray for type-agnostic tensor operations, supporting BLAS/LAPACK and Faer backends."
+keywords = ["linear-algebra", "tensor", "multidimensional", "test", "scientific"]
+description = "Set of tests for mdarra-linalg and its backends."
 categories = ["mathematics", "science"]
 author = ["Pierre Wulles", "Christoph Groth"]
 

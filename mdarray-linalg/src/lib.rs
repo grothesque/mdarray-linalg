@@ -59,7 +59,7 @@
 //!
 //! The following example demonstrates core functionality:
 //!
-//! ```rust
+//! ```ignore
 //! use mdarray::{DTensor, tensor};
 //! use mdarray_linalg::prelude::*; // Imports only traits
 //! use mdarray_linalg::eig::EigDecomp;

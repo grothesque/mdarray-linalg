@@ -2,6 +2,13 @@
 name = "mdarray-linalg-lapack"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/grothesque/mdarray-linalg"
+license = "MIT AND Apache-2.0"
+keywords = ["linear-algebra", "tensor", "multidimensional", "LAPACK", "scientific"]
+description = "LAPACK backend for mdarray-linalg library."
+categories = ["mathematics", "science"]
+authors = ["Pierre Wulles", "Christoph Groth"]
+documentation = "https://docs.rs/mdarray-linalg"
 build = "build.rs"
 
 [dependencies]

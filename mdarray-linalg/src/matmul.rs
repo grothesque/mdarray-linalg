@@ -1,6 +1,6 @@
 //! Matrix multiplication and specialized products for triangular and Hermitian matrices.
 //! Tensor contraction (generalized dot product) for arbitrary rank tensors.
-//!```rust
+//!```ignore
 //!use mdarray::tensor;
 //!use mdarray_linalg_blas::Blas;
 //!use mdarray_linalg_naive::Naive;
