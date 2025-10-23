@@ -8,7 +8,6 @@ keywords = ["linear-algebra", "tensor", "multidimensional", "LAPACK", "scientifi
 description = "LAPACK backend for mdarray-linalg"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
-documentation = "https://docs.rs/mdarray-linalg"
 build = "build.rs"
 
 [dependencies]

@@ -8,7 +8,6 @@ keywords = ["linear-algebra", "tensor", "multidimensional", "backend", "scientif
 description = "Linear algebra operations for mdarray, with multiple exchangeable backends"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
-documentation = "https://docs.rs/mdarray-linalg"
 readme = "../README.md"
 
 [dependencies]

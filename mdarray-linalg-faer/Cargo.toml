@@ -8,7 +8,6 @@ keywords = ["linear-algebra", "tensor", "multidimensional", "Faer", "scientific"
 description = "Faer backend for mdarray-linalg"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
-documentation = "https://docs.rs/mdarray-linalg"
 
 [dependencies]
 cblas-sys.workspace = true

@@ -8,7 +8,6 @@ keywords = ["linear-algebra", "tensor", "multidimensional", "BLAS", "scientific"
 description = "BLAS backend for mdarray-linalg"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
-documentation = "https://docs.rs/mdarray-linalg"
 build = "build.rs"
 
 [dependencies]
