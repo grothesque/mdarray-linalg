@@ -12,16 +12,14 @@ documentation = "https://docs.rs/mdarray-linalg"
 readme = "README.md"
 
 [dependencies]
-approx = "0.5.1"
-mdarray = "0.7.1"
-thiserror = "2.0.12"
-num-complex = "0.4.6"
-num-traits = "0.2.19"
-itertools = "0.14.0"
-rand = "0.9.2"
+approx.workspace = true
+itertools.workspace = true
+mdarray.workspace = true
+num-complex.workspace = true
+num-traits.workspace = true
+rand.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
-approx = "0.5.1"
-rand = "0.9.2"
-openblas-src = { version = "0.10.11", features = ["system"] }
-lapack-src = { version = "0.11", features = ["openblas"] }
+lapack-src.workspace = true
+openblas-src.workspace = true

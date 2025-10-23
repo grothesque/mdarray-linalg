@@ -12,15 +12,15 @@ documentation = "https://docs.rs/mdarray-linalg"
 build = "build.rs"
 
 [dependencies]
-mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
-cblas-sys = "0.2.0"
-mdarray = "0.7.1"
-num-complex = "0.4.6"
-paste = "1.0.15"
-lapack-sys = "0.15.0"
-thiserror = "2.0.12"
-num-traits = "0.2.19"
+cblas-sys.workspace = true
+lapack-sys.workspace = true
+mdarray-linalg.workspace = true
+mdarray.workspace = true
+num-complex.workspace = true
+num-traits.workspace = true
+paste.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
-lapack-src = { version = "0.11", features = ["openblas"] }
-openblas-src = { version = "0.10.11", features = ["system"] }
+lapack-src.workspace = true
+openblas-src.workspace = true

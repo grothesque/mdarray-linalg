@@ -11,14 +11,14 @@ authors = ["Pierre Wulles", "Christoph Groth"]
 documentation = "https://docs.rs/mdarray-linalg"
 
 [dependencies]
-mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
-cblas-sys = "0.2.0"
-mdarray = "0.7.1"
-num-complex = "0.4.6"
-paste = "1.0.15"
-thiserror = "2.0.12"
-dyn-stack = "0.13.0"
-num-traits = "0.2.19"
-num_cpus = "1.17.0"
-faer = "0.23.2"
-faer-traits = "0.23.2"
+cblas-sys.workspace = true
+dyn-stack.workspace = true
+faer-traits.workspace = true
+faer.workspace = true
+mdarray-linalg.workspace = true
+mdarray.workspace = true
+num-complex.workspace = true
+num-traits.workspace = true
+num_cpus.workspace = true
+paste.workspace = true
+thiserror.workspace = true
