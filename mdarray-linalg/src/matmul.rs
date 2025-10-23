@@ -2,9 +2,9 @@
 //! Tensor contraction (generalized dot product) for arbitrary rank tensors.
 //!```ignore
 //!use mdarray::tensor;
+//!use mdarray_linalg::prelude::*;
+//!use mdarray_linalg::Naive;
 //!use mdarray_linalg_blas::Blas;
-//!use mdarray_linalg_naive::Naive;
-//!use crate::mdarray_linalg::matmul::{MatMul, TensordotBuilder};
 //!
 //!let a = tensor![[1., 2.], [3., 4.]].into_dyn(); // requires dynamic tensor
 //!let b = tensor![[5., 6.], [7., 8.]].into_dyn();

@@ -67,9 +67,9 @@
 //! use mdarray_linalg::svd::SVDDecomp;
 //!
 //! // Backends
+//! use mdarray_linalg::Naive;
 //! use mdarray_linalg_blas::Blas;
 //! use mdarray_linalg_faer::Faer;
-//! use mdarray_linalg_naive::Naive;
 //! use mdarray_linalg_lapack::Lapack;
 //! use mdarray_linalg_lapack::SVDConfig;
 //!
