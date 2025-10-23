@@ -147,7 +147,7 @@ where
         tensordot(self.a, self.b, self.axes, Faer, self.alpha)
     }
 
-    fn overwrite(self, c: &mut Slice<T>) {
+    fn overwrite(self, _c: &mut Slice<T>) {
         todo!()
     }
 }

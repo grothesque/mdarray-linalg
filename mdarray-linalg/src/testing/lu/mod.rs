@@ -36,8 +36,6 @@ pub fn test_lu_reconstruction<T>(
 }
 
 pub fn test_lu_decomposition(bd: &impl LU<f64>) {
-    let n = 2;
-    let mut a = random_matrix(n, n);
     let mut a = tensor![
         [0.16931568150114162, 0.5524301997803323],
         [0.10477204466703971, 0.33895423448188766]

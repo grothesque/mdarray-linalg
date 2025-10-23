@@ -401,8 +401,6 @@ pub fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
     assert_eq!(t.shape(), &(n, n));
     assert_eq!(z.shape(), &(n, n));
 
-    let mut c_reconstructed_tmp = DTensor::<Complex<f64>, 2>::zeros([n, n]);
-    let mut c_reconstructed = DTensor::<Complex<f64>, 2>::zeros([n, n]);
     let mut zt = z.transpose().to_tensor();
 
     for i in 0..n {

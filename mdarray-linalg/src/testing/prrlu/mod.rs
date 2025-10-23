@@ -23,7 +23,6 @@ fn invert_permutation(p: &DTensor<f64, 2>) -> DTensor<f64, 2> {
 /// Reconstruct matrix from PRRLU decomposition: A = P^-1 * L * U * Q^-1
 fn reconstruct_from_prrlu(decomp: &PRRLUDecomp<f64>) -> DTensor<f64, 2> {
     let PRRLUDecomp { p, l, u, q, .. } = decomp;
-    let (n, m) = (l.shape().0, u.shape().1);
 
     let p_inv = invert_permutation(p);
     let q_inv = invert_permutation(q);
