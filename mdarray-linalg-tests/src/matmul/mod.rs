@@ -1,6 +1,5 @@
 use mdarray::{DTensor, Tensor, expr, expr::Expression as _};
 use num_complex::Complex64;
-use openblas_src as _;
 
 use crate::common::*;
 use mdarray_linalg::prelude::*;
