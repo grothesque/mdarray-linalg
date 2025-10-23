@@ -15,7 +15,7 @@ thiserror = "2.0.12"
 num-complex = "0.4.6"
 num-traits = "0.2.19"
 itertools = "0.14.0"
-mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }    
+mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
 approx = "0.5.1"
 rand = "0.9.2"
 openblas-src = { version = "0.10.11", features = ["system"] }
@@ -25,7 +25,7 @@ approx = "0.5.1"
 rand = "0.9.2"
 openblas-src = { version = "0.10.11", features = ["system"] }
 lapack-src = { version = "0.11", features = ["openblas"] }
-# mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }    
+# mdarray-linalg = { version = "0.1.0", path = "../mdarray-linalg" }
 # mdarray-linalg-blas = { version = "0.1.0", path = "../mdarray-linalg-blas" }
 # mdarray-linalg-lapack = { version = "0.1.0", path = "../mdarray-linalg-lapack" }
 # mdarray-linalg-faer = { version = "0.1.0", path = "../mdarray-linalg-faer" }

@@ -128,5 +128,3 @@ if __name__ == "__main__":
         os.path.join(script_dir, "../src/matvec", "scalar.rs"), "w", encoding="utf-8"
     ) as f:
         f.write(output_scalar_matvec)
-
-

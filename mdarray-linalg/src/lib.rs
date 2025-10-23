@@ -163,7 +163,7 @@
 //! # Troubleshoot
 //!
 //! If you encounter linking issues with BLAS or LAPACK on Linux,
-//! one solution is to add a `build.rs` file and configure it to link the libraries manually.  
+//! one solution is to add a `build.rs` file and configure it to link the libraries manually.
 //! In your `Cargo.toml`, add:
 //!
 //! ```toml

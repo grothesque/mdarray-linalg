@@ -23,7 +23,7 @@ openblas-src = { version = "0.10", features = ["system"] }
  [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In
  that case, run the doctests with: `RUSTDOCFLAGS="-L native=/usr/lib
  -C link-arg=-lopenblas" cargo test --doc`
- 
+
 If you encounter linking issues with BLAS or LAPACK on Linux, one solution is to add a build.rs file and configure it to link the libraries manually.
 In your Cargo.toml, add:
 
