@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "mdarray-linalg",
-  "mdarray-linalg-naive",
   "mdarray-linalg-blas",
   "mdarray-linalg-lapack",
   "mdarray-linalg-faer",

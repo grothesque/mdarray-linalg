@@ -4,8 +4,8 @@ use std::ops::{Add, Mul};
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use mdarray_linalg::matmul::{Triangle, Type};
-use mdarray_linalg::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
+use crate::matmul::{Triangle, Type};
+use crate::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
 
 use crate::Naive;
 

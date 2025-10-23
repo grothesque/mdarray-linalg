@@ -194,4 +194,7 @@ pub mod svd;
 pub mod utils;
 pub use utils::*;
 
+mod naive;
+pub use naive::Naive;
+
 pub mod testing;

@@ -5,7 +5,7 @@ use mdarray_linalg::testing::matvec::*;
 
 use mdarray_linalg::matmul::{Triangle, Type};
 
-use mdarray_linalg_naive::Naive;
+use mdarray_linalg::Naive;
 
 // #[test]
 // fn eval_and_overwrite() {

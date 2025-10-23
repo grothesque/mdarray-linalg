@@ -1,4 +1,4 @@
-use mdarray_linalg_naive::Naive;
+use mdarray_linalg::Naive;
 use mdarray_linalg::testing::prrlu::*;
 
 #[test]
