@@ -1,4 +1,4 @@
-use mdarray_linalg_tests::svd::*;
+use mdarray_linalg::testing::svd::*;
 
 use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg_lapack::SVDConfig;

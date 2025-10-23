@@ -1,8 +1,8 @@
 use mdarray::{DTensor, Tensor, expr, expr::Expression as _};
 use num_complex::Complex64;
 
-use crate::common::*;
-use mdarray_linalg::prelude::*;
+use super::common::*;
+use crate::prelude::*;
 
 pub fn create_test_matrix_f64(
     shape: [usize; 2],

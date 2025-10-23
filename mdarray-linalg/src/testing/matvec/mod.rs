@@ -2,9 +2,9 @@ use num_complex::Complex;
 
 use mdarray::{DTensor, tensor};
 
-use mdarray_linalg::prelude::*;
+use crate::prelude::*;
 
-use mdarray_linalg::matmul::{Triangle, Type};
+use crate::matmul::{Triangle, Type};
 
 pub fn test_eval_and_overwrite(bd: impl MatVec<f64>) {
     let n = 3;

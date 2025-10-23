@@ -1,15 +1,14 @@
 use mdarray::DTensor;
 
-use mdarray_linalg::prelude::*;
-use mdarray_linalg::qr::QR;
+use crate::qr::QR;
 
 use approx::assert_relative_eq;
 use num_complex::Complex;
 use rand::prelude::*;
 
-use crate::common::naive_matmul;
+use super::common::naive_matmul;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use mdarray_linalg::pretty_print;
+use crate::pretty_print;
 
 pub fn test_qr_random_matrix(bd: &impl QR<f64>) {
     let (m, n) = (5, 5);

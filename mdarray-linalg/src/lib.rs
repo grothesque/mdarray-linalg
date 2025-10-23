@@ -193,3 +193,5 @@ pub mod svd;
 
 pub mod utils;
 pub use utils::*;
+
+pub mod testing;

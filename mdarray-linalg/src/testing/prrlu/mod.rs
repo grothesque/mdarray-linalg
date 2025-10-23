@@ -1,13 +1,10 @@
 use approx::assert_relative_eq;
 
 use mdarray::DTensor;
-use mdarray_linalg::prrlu::{PRRLU, PRRLUDecomp};
+use crate::prrlu::{PRRLU, PRRLUDecomp};
 
-use crate::common::naive_matmul;
-use crate::{
-    assert_matrix_eq,
-    common::{random_matrix, rank_k_matrix},
-};
+use crate::assert_matrix_eq;
+use super::common::{naive_matmul, random_matrix, rank_k_matrix};
 
 // Matrix inversion for permutation matrices (transpose)
 fn invert_permutation(p: &DTensor<f64, 2>) -> DTensor<f64, 2> {

@@ -3,8 +3,7 @@
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
-use mdarray::{DSlice, DTensor, Layout, expr, tensor};
-use mdarray_linalg::matmul::{MatMul, MatMulBuilder};
+use mdarray::{DSlice, DTensor, expr, tensor};
 
 use rand::Rng;
 

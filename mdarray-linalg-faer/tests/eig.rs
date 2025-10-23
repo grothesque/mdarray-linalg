@@ -1,5 +1,5 @@
 use mdarray_linalg_faer::Faer;
-use mdarray_linalg_tests::eig::*;
+use mdarray_linalg::testing::eig::*;
 
 #[test]
 #[should_panic]

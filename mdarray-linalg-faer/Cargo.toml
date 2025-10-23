@@ -22,6 +22,3 @@ num-traits = "0.2.19"
 num_cpus = "1.17.0"
 faer = "0.23.2"
 faer-traits = "0.23.2"
-
-[dev-dependencies]
-mdarray-linalg-tests = { version = "0.1.0", path = "../mdarray-linalg-tests" }

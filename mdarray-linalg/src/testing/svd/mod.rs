@@ -4,10 +4,10 @@ use num_complex::Complex;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::DTensor;
 
-use mdarray_linalg::pretty_print;
-use mdarray_linalg::svd::{SVD, SVDDecomp};
+use crate::pretty_print;
+use crate::svd::{SVD, SVDDecomp};
 
-use crate::common::naive_matmul;
+use super::common::naive_matmul;
 
 use num_complex::ComplexFloat;
 use rand::Rng;

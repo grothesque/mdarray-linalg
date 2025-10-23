@@ -1,5 +1,5 @@
 use mdarray_linalg_lapack::Lapack;
-use mdarray_linalg_tests::lu::*;
+use mdarray_linalg::testing::lu::*;
 
 #[test]
 fn lu_decomposition() {

@@ -1,8 +1,8 @@
 use approx::assert_relative_eq;
 
-use crate::common::random_matrix;
+use super::common::random_matrix;
 use mdarray::DTensor;
-use mdarray_linalg::solve::{Solve, SolveResult};
+use crate::solve::{Solve, SolveResult};
 
 fn test_solve_verification<T>(original_a: &DTensor<T, 2>, x: &DTensor<T, 2>, b: &DTensor<T, 2>)
 where

@@ -1,10 +1,10 @@
 use approx::assert_relative_eq;
 use num_complex::ComplexFloat;
 
-use crate::common::{naive_matmul, random_matrix};
+use super::common::{naive_matmul, random_matrix};
 use mdarray::{DSlice, DTensor, Dense, tensor};
-use mdarray_linalg::prelude::*;
-use mdarray_linalg::{identity, pretty_print, transpose_in_place};
+use crate::prelude::*;
+use crate::{identity, pretty_print, transpose_in_place};
 
 pub fn test_lu_reconstruction<T>(
     a: &DTensor<T, 2>,

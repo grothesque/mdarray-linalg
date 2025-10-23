@@ -1,5 +1,5 @@
 use mdarray_linalg_naive::Naive;
-use mdarray_linalg_tests::prrlu::*;
+use mdarray_linalg::testing::prrlu::*;
 
 #[test]
 fn rank_deficient() {

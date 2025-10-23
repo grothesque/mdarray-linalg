@@ -6,8 +6,8 @@ use mdarray_linalg::prelude::*;
 use mdarray_linalg_blas::Blas;
 use mdarray_linalg_blas::gemm;
 
-use mdarray_linalg_tests::common::*;
-use mdarray_linalg_tests::matmul::*;
+use mdarray_linalg::testing::common::*;
+use mdarray_linalg::testing::matmul::*;
 
 use mdarray_linalg::matmul::{Side, Triangle, Type};
 
