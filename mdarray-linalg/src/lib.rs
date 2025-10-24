@@ -132,7 +132,7 @@
 //!         p, l, u, q, rank
 //!     );
 //!
-//!     // ----- Tensordot: full contraction between two 3D tensors -----
+//!     // ----- Contract: full contraction between two 3D tensors -----
 //!     let a = tensor![
 //!         [[1., 2.], [3., 4.]],
 //!         [[5., 6.], [7., 8.]]

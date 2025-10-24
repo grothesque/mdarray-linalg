@@ -20,7 +20,7 @@ where
     b: &'a DSlice<T, 2, Lb>,
 }
 
-struct NaiveTensordotBuilder<'a, T, La, Lb>
+struct NaiveContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<'a, T, La, Lb> TensordotBuilder<'a, T, La, Lb> for NaiveTensordotBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for NaiveContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -145,13 +145,13 @@ where
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        NaiveTensordotBuilder {
+        NaiveContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -167,13 +167,13 @@ where
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
         n: usize,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        NaiveTensordotBuilder {
+        NaiveContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -191,13 +191,13 @@ where
         b: &'a Slice<T, DynRank, Lb>,
         axes_a: impl Into<Box<[usize]>>,
         axes_b: impl Into<Box<[usize]>>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        NaiveTensordotBuilder {
+        NaiveContractBuilder {
             alpha: T::one(),
             a,
             b,

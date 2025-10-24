@@ -10,7 +10,7 @@ use num_complex::ComplexFloat;
 
 use num_traits::{One, Zero};
 
-use mdarray_linalg::matmul::{Axes, Side, TensordotBuilder, Triangle, Type, tensordot};
+use mdarray_linalg::matmul::{Axes, Side, ContractBuilder, Triangle, Type, tensordot};
 use mdarray_linalg::prelude::*;
 use num_cpus;
 
@@ -27,7 +27,7 @@ where
     par: Par,
 }
 
-struct FaerTensordotBuilder<'a, T, La, Lb>
+struct FaerContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -132,7 +132,7 @@ where
     }
 }
 
-impl<'a, T, La, Lb> TensordotBuilder<'a, T, La, Lb> for FaerTensordotBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for FaerContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -178,13 +178,13 @@ where
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        FaerTensordotBuilder {
+        FaerContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -200,13 +200,13 @@ where
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
         n: usize,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        FaerTensordotBuilder {
+        FaerContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -224,13 +224,13 @@ where
         b: &'a Slice<T, DynRank, Lb>,
         axes_a: impl Into<Box<[usize]>>,
         axes_b: impl Into<Box<[usize]>>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        FaerTensordotBuilder {
+        FaerContractBuilder {
             alpha: T::one(),
             a,
             b,

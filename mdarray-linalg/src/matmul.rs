@@ -61,7 +61,7 @@ pub trait MatMul<T: One> {
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
@@ -75,7 +75,7 @@ pub trait MatMul<T: One> {
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
         n: usize,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
@@ -91,7 +91,7 @@ pub trait MatMul<T: One> {
         b: &'a Slice<T, DynRank, Lb>,
         axes_a: impl Into<Box<[usize]>>,
         axes_b: impl Into<Box<[usize]>>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
@@ -148,7 +148,7 @@ where
 }
 
 /// Builder interface for configuring tensor contraction operations
-pub trait TensordotBuilder<'a, T, La, Lb>
+pub trait ContractBuilder<'a, T, La, Lb>
 where
     T: 'a,
     La: Layout,

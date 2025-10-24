@@ -6,7 +6,7 @@ use mdarray::{DSlice, DTensor, Dense, DynRank, Layout, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::matmul::{
-    Axes, MatMul, MatMulBuilder, Side, TensordotBuilder, Triangle, Type, tensordot,
+    Axes, MatMul, MatMulBuilder, Side, ContractBuilder, Triangle, Type, tensordot,
 };
 
 use super::scalar::BlasScalar;
@@ -24,7 +24,7 @@ where
     b: &'a DSlice<T, 2, Lb>,
 }
 
-struct BlasTensordotBuilder<'a, T, La, Lb>
+struct BlasContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -115,7 +115,7 @@ where
     }
 }
 
-impl<'a, T, La, Lb> TensordotBuilder<'a, T, La, Lb> for BlasTensordotBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for BlasContractBuilder<'a, T, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -162,13 +162,13 @@ where
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
     {
-        BlasTensordotBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -184,11 +184,11 @@ where
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
         n: usize,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
     {
-        BlasTensordotBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -206,11 +206,11 @@ where
         b: &'a Slice<T, DynRank, Lb>,
         axes_a: impl Into<Box<[usize]>>,
         axes_b: impl Into<Box<[usize]>>,
-    ) -> impl TensordotBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
     {
-        BlasTensordotBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
