@@ -1,4 +1,19 @@
 //! Partial rank-revealing LU decomposition utilities.
+//!```rust
+//!use mdarray::tensor;
+//!use mdarray_linalg::Naive;
+//!use mdarray_linalg::prrlu::PRRLUDecomp;
+//!use crate::mdarray_linalg::prelude::PRRLU;
+//!// ----- Naive backend -----
+//!let a = tensor![[1., 2.], [3., 4.]];
+//!let PRRLUDecomp { p, l, u, q, rank } = Naive.prrlu(&mut a.clone());
+//!println!("PRRLU decomposition done (Naive backend)");
+//!println!(
+//!    "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",
+//!    p, l, u, q, rank
+//!);
+//!```
+
 use mdarray::{DSlice, DTensor, Layout};
 
 /// Holds the results of a pivoted, rank-revealing LU decomposition,

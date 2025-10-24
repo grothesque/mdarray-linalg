@@ -57,21 +57,14 @@
 //! >
 //! > See also the section **Troubleshoot** below.
 //!
-//! The following example demonstrates core functionality:
+//! The following example demonstrates basic functionality:
 //!
-//! ```ignore
+//! ```rust
 //! use mdarray::{DTensor, tensor};
 //! use mdarray_linalg::prelude::*; // Imports only traits
-//! use mdarray_linalg::eig::EigDecomp;
-//! use mdarray_linalg::prrlu::PRRLUDecomp;
-//! use mdarray_linalg::svd::SVDDecomp;
 //!
-//! // Backends
 //! use mdarray_linalg::Naive;
-//! use mdarray_linalg_blas::Blas;
-//! use mdarray_linalg_faer::Faer;
-//! use mdarray_linalg_lapack::Lapack;
-//! use mdarray_linalg_lapack::SVDConfig;
+//! // Use other backends for improved performance and more extensive functionality.
 //!
 //! fn main() {
 //!     // Declare two vectors
@@ -83,68 +76,12 @@
 //!     let b = tensor![[5., 6.], [7., 8.]];
 //!
 //!     // ----- Vector operations -----
-//!     let dot_result = Blas.dot(&x, &y);
+//!     let dot_result = Naive.dot(&x, &y);
 //!     println!("dot(x, y) = {}", dot_result);
 //!
-//!     let y_result = Blas.matvec(&a, &x).scale(2.).eval();
-//!     println!("A * x * 2 = {:?}", y_result);
-//!
 //!     // ----- Matrix multiplication -----
-//!     let c = Faer.matmul(&a, &b).eval();
+//!     let c = Naive.matmul(&a, &b).eval();
 //!     println!("A * B = {:?}", c);
-//!
-//!     // ----- Eigenvalue decomposition -----
-//!     // Note: we must clone `a` here because decomposition routines destroy the input.
-//!     let bd = Lapack::new(); // Unlike Blas, Lapack is not a zero-sized backend so `new` must be called.
-//!     let EigDecomp {
-//!        eigenvalues,
-//!        right_eigenvectors,
-//!        ..
-//!      } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
-//!
-//!     println!("Eigenvalues: {:?}", eigenvalues);
-//!     if let Some(vectors) = right_eigenvectors {
-//!         println!("Right eigenvectors: {:?}", vectors);
-//!     }
-//!
-//!     // ----- Singular Value Decomposition (SVD) -----
-//!     let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
-//!     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
-//!     println!("Singular values: {:?}", s);
-//!     println!("Left singular vectors U: {:?}", u);
-//!     println!("Right singular vectors V^T: {:?}", vt);
-//!
-//!     // ----- QR Decomposition -----
-//!     let (m, n) = *a.shape();
-//!     let mut q = DTensor::<f64, 2>::zeros([m, m]);
-//!     let mut r = DTensor::<f64, 2>::zeros([m, n]);
-//!
-//!     let bd = Lapack::new();
-//!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
-//!     println!("Q: {:?}", q);
-//!     println!("R: {:?}", r);
-//!
-//!     // ----- Naive backend -----
-//!     let PRRLUDecomp { p, l, u, q, rank } = Naive.prrlu(&mut a.clone());
-//!     println!("PRRLU decomposition done (Naive backend)");
-//!     println!(
-//!         "p: {:?}, l: {:?}, u: {:?}, q: {:?}, rank: {:?}",
-//!         p, l, u, q, rank
-//!     );
-//!
-//!     // ----- Contract: full contraction between two 3D tensors -----
-//!     let a = tensor![
-//!         [[1., 2.], [3., 4.]],
-//!         [[5., 6.], [7., 8.]]
-//!     ].into_dyn();
-//!
-//!     let b = tensor![
-//!         [[9., 10.], [11., 12.]],
-//!         [[13., 14.], [15., 16.]]
-//!     ].into_dyn();
-//!
-//!     let result = Blas.contract_all(&a, &b).eval();
-//!     println!("Full contraction result (tensordot over all axes): {:?}", result);
 //! }
 //! ```
 //!Some notes:

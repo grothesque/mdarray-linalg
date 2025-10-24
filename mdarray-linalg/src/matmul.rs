@@ -1,21 +1,20 @@
 //! Matrix multiplication and specialized products for triangular and Hermitian matrices.
 //! Tensor contraction (generalized dot product) for arbitrary rank tensors.
-//!```ignore
+//!```rust
 //!use mdarray::tensor;
 //!use mdarray_linalg::prelude::*;
 //!use mdarray_linalg::Naive;
-//!use mdarray_linalg_blas::Blas;
 //!
 //!let a = tensor![[1., 2.], [3., 4.]].into_dyn(); // requires dynamic tensor
 //!let b = tensor![[5., 6.], [7., 8.]].into_dyn();
 //!
 //!let expected_all = tensor![[70.0]].into_dyn();
 //!let result_all = Naive.contract_all(&a, &b).eval();
-//!let result_contract_k = Blas.contract_n(&a, &b, 2).eval();
+//!let result_contract_k = Naive.contract_n(&a, &b, 2).eval();
 //!assert_eq!(result_contract_k, expected_all);
 //!
 //!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
-//!let result_specific = Blas
+//!let result_specific = Naive
 //!    .contract(&a, &b, vec![1], vec![0])
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
