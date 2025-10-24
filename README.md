@@ -4,15 +4,13 @@ Efficient, flexible, and idiomatic linear algebra bindings (BLAS, LAPACK, etc.)
 to the Rust [mdarray](https://crates.io/crates/mdarray) crate.
 
 ## Usage
-These crates are released on crates.io. To depend on the main crate
-and one of the backends (for example `mdarray-linalg-blas`) add the following
-to your `Cargo.toml`:
-```toml
-[dependencies]
-mdarray = "0.7.1"
-mdarray-linalg = "0.1"
-mdarray-linalg-blas = "0.1"
-openblas-src = { version = "0.10", features = ["system"] }
+These crates are released on crates.io:
+```bash
+cargo add mdarray-linalg
+```
+and if you need a backend:
+```bash
+cargo add mdarray-linalg-blas 
 ```
 
 **Important notes:**
@@ -40,26 +38,7 @@ fn main() {
 }
 ```
 
-See the tests and doc for a “tutorial”.
-
-### Example: Matrix Multiplication
-```rust
-use mdarray::tensor;
-use mdarray_linalg::{MatMul, MatMulBuilder};
-use mdarray_linalg_blas::Blas;
-
-use openblas_src as _;
-
-fn main() {
-    let a = tensor![[1., 2.], [3., 4.]];
-    let b = tensor![[5., 6.], [7., 8.]];
-    let c = Blas.matmul(&a, &b).eval();
-    println!("{:?}", c);
-}
-```
-
-Should output: `[[19.0, 22.0], [43.0, 50.0]]`
-```
+See [docs.rs](https://docs.rs/mdarray/latest/mdarray-linalg/) documentation for code examples and usage instructions.
 
 ## License
 Dual-licensed (Apache and MIT) to be compatible with the Rust project.

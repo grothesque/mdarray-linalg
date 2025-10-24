@@ -1,5 +1,5 @@
 //! ```rust
-//! use mdarray::{DTensor, tensor};
+//! use mdarray::tensor;
 //! use mdarray_linalg::prelude::*; // Imports only traits
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
@@ -8,40 +8,38 @@
 //! use mdarray_linalg_lapack::Lapack;
 //! use mdarray_linalg_lapack::SVDConfig;
 //!
-//! fn main() {
-//!     let a = tensor![[1., 2.], [3., 4.]];
+//! let a = tensor![[1., 2.], [3., 4.]];
 //!
-//!     // ----- Eigenvalue decomposition -----
-//!     // Note: we must clone `a` here because decomposition routines destroy the input.
-//!     let bd = Lapack::new(); // Unlike Blas, Lapack is not a zero-sized backend so `new` must be called.
-//!     let EigDecomp {
-//!        eigenvalues,
-//!        right_eigenvectors,
-//!        ..
-//!      } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//! // ----- Eigenvalue decomposition -----
+//! // Note: we must clone `a` here because decomposition routines destroy the input.
+//! let bd = Lapack::new(); // Unlike Blas, Lapack is not a zero-sized backend so `new` must be called.
+//! let EigDecomp {
+//!     eigenvalues,
+//!     right_eigenvectors,
+//!     ..
+//! } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
 //!
-//!     println!("Eigenvalues: {:?}", eigenvalues);
-//!     if let Some(vectors) = right_eigenvectors {
-//!         println!("Right eigenvectors: {:?}", vectors);
-//!     }
-//!
-//!     // ----- Singular Value Decomposition (SVD) -----
-//!     let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
-//!     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
-//!     println!("Singular values: {:?}", s);
-//!     println!("Left singular vectors U: {:?}", u);
-//!     println!("Right singular vectors V^T: {:?}", vt);
-//!
-//!     // ----- QR Decomposition -----
-//!     let (m, n) = *a.shape();
-//!     let mut q = DTensor::<f64, 2>::zeros([m, m]);
-//!     let mut r = DTensor::<f64, 2>::zeros([m, n]);
-//!
-//!     let bd = Lapack::new();
-//!     bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
-//!     println!("Q: {:?}", q);
-//!     println!("R: {:?}", r);
+//! println!("Eigenvalues: {:?}", eigenvalues);
+//! if let Some(vectors) = right_eigenvectors {
+//!     println!("Right eigenvectors: {:?}", vectors);
 //! }
+//!
+//! // ----- Singular Value Decomposition (SVD) -----
+//! let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
+//! let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
+//! println!("Singular values: {:?}", s);
+//! println!("Left singular vectors U: {:?}", u);
+//! println!("Right singular vectors V^T: {:?}", vt);
+//!
+//! // ----- QR Decomposition -----
+//! let (m, n) = *a.shape();
+//! let mut q = DTensor::<f64, 2>::zeros([m, m]);
+//! let mut r = DTensor::<f64, 2>::zeros([m, n]);
+//!
+//! let bd = Lapack::new();
+//! bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
+//! println!("Q: {:?}", q);
+//! println!("R: {:?}", r);
 //! ```
 
 pub mod eig;
