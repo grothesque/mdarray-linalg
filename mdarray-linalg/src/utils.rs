@@ -1,4 +1,10 @@
-//! Utility functions for matrix printing, shape retrieval, identity generation, Kronecker product, trace, transpose operations, ...
+//! Utility functions for matrix printing, shape retrieval, identity
+//! generation, Kronecker product, trace, transpose operations, ...
+//!
+//! These functions were necessary for implementing this crate.  They are
+//! exposed because they can be generally useful, but this is not meant to be
+//! a complete collection of linear algebra utilities at this time.
+
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};

@@ -1,4 +1,4 @@
-//! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray).
+//! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray)
 //!
 //! This crate defines a set of traits (`MatVec`, `MatMul`, `Eig`, `SVD`, …) that are
 //! implemented by different backends, allowing users to switch between them depending
@@ -47,7 +47,7 @@
 //! > [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In that case, run the doctests with:
 //! > `RUSTDOCFLAGS="-L native=/usr/lib -C link-arg=-lopenblas" cargo test --doc`
 //! >
-//! > See also the section **Troubleshoot** below.
+//! > See also the section **Troubleshooting** below.
 //!
 //! The following example demonstrates basic functionality:
 //!
@@ -93,7 +93,7 @@
 //! - **Errors**: Convergence issues return a Result; other problems
 //!   (dimension mismatch) may panic.
 //!
-//! # Troubleshoot
+//! # Troubleshooting
 //!
 //! If you encounter linking issues with BLAS or LAPACK on Linux,
 //! one solution is to add a `build.rs` file and configure it to link the libraries manually.

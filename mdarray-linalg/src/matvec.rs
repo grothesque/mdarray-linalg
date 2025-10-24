@@ -1,4 +1,4 @@
-//! Basic vector and matrix-vector operation utilities, including Ax, Ax + βy, Givens rotations, argmax, and rank-1 updates.
+//! Basic vector and matrix-vector operations, including Ax, Ax + βy, Givens rotations, argmax, and rank-1 updates
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 
 use crate::matmul::{Triangle, Type};
