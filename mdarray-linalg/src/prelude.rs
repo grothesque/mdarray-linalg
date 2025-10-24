@@ -3,8 +3,7 @@
 
 pub use super::eig::Eig;
 pub use super::lu::LU;
-pub use super::matmul::{MatMul, MatMulBuilder, ContractBuilder};
+pub use super::matmul::{ContractBuilder, MatMul, MatMulBuilder};
 pub use super::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
-pub use super::prrlu::PRRLU;
 pub use super::qr::QR;
 pub use super::svd::SVD;

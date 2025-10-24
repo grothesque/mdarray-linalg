@@ -33,7 +33,6 @@
 //! | [Schur decomposition](crate::eig::Eig)         | ⬜ | ✅ | ⬜ | 🔧 |
 //! | **▶︎ Advanced**                                   |||||
 //! | [Tensor contraction](crate::matmul::MatMul)        | ✅ | ⬜ | ✅ | ✅ |
-//! | [Partial rank-revealing LU decomposition](crate::prrlu::PRRLU) | ⬜ | ⬜ | ✅ | ⬜ |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented
@@ -117,7 +116,6 @@ pub mod eig;
 pub mod lu;
 pub mod matmul;
 pub mod matvec;
-pub mod prrlu;
 pub mod qr;
 pub mod solve;
 pub mod svd;
