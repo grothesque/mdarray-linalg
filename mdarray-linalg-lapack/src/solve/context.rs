@@ -16,7 +16,7 @@ use mdarray_linalg::get_dims;
 use super::scalar::LapackScalar;
 use mdarray::{DSlice, Dense, Layout, tensor};
 use mdarray_linalg::into_i32;
-use mdarray_linalg::ipiv_to_permutation_matrix;
+use mdarray_linalg::ipiv_to_perm_mat;
 use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
 use num_complex::ComplexFloat;
 
@@ -35,7 +35,7 @@ where
     ) -> Result<(), SolveError> {
         let ipiv = gesv::<_, Lb, T>(a, b).unwrap();
         let (n, _) = *a.shape();
-        let p_matrix = ipiv_to_permutation_matrix(&ipiv, n);
+        let p_matrix = ipiv_to_perm_mat(&ipiv, n);
         for i in 0..n {
             for j in 0..n {
                 p[[i, j]] = p_matrix[[i, j]];
@@ -61,7 +61,7 @@ where
         match gesv::<_, Dense, T>(a, &mut b_copy) {
             Ok(ipiv) => Ok(SolveResult {
                 x: b_copy,
-                p: ipiv_to_permutation_matrix(&ipiv, n as usize),
+                p: ipiv_to_perm_mat(&ipiv, n as usize),
             }),
             Err(e) => Err(e),
         }

@@ -16,24 +16,24 @@
 // ! <details>
 // ! <summary>Click to expand the feature support table</summary>
 //!
-//! | Functionality                            | BLAS | LAPACK | Naive | Faer |
-//! |------------------------------------------|:----:|:------:|:-----:|:----:|
-//! | **▶︎ Basic vector/matrix ops** |||| |
-//! | [`MatVec`](crate::matvec::MatVec)        | ✅   | ⬜     | 🔧    | 🔧   |
-//! | [`VecOps`](crate::matvec::VecOps)        | ✅   | ⬜     | 🔧    | 🔧   |
-//! | [`MatMul`](crate::matmul::MatMul)        | ✅   | ⬜     | 🔧    | 🔧   |
-//! | [`Argmax`](crate::matvec::Argmax)        | 🔧   | ⬜     | ✅    | ⬜   |
-//! | **▶︎ Linear algebra** |||| |
-//! | [`Eigen`](crate::eig::Eig)             | ⬜   | ✅     | ⬜    | ✅   |
-//! | [`SVD`](crate::svd::SVD)                 | ⬜   | ✅     | ⬜    | ✅   |
-//! | [`LU`](crate::lu::LU)                    | ⬜   | ✅     | ⬜    | ✅   |
-//! | [`Solve`](crate::solve::Solve)           | ⬜   | ✅     | ⬜    | ✅   |
-//! | [`QR`](crate::qr::QR)                    | ⬜   | ✅     | ⬜    | ✅   |
-//! | [`Cholesky`](crate::lu::LU)              | ⬜   | ✅     | ⬜    | 🔧   |
-//! | [`Schur`](crate::eig::Eig)               | ⬜   | ✅     | ⬜    | 🔧   |
-//! | **▶︎ Advanced** |||| |
-//! | [`Contract`](crate::matmul::MatMul)      | ✅   | ⬜     | ✅    | ✅   |
-//! | [`PRRLU`](crate::prrlu::PRRLU)           | ⬜   | ⬜     | ✅    | ⬜   |
+//! | Functionality                                     | BLAS | LAPACK | Naive | Faer |
+//! |---------------------------------------------------|:----:|:------:|:-----:|:----:|
+//! | **▶︎ Basic vector/matrix operations**              |||||
+//! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | 🔧 | 🔧 |
+//! | [Operations on vectors](crate::matvec::VecOps)     | ✅ | ⬜ | 🔧 | 🔧 |
+//! | [Matrix multiplication](crate::matmul::MatMul)     | ✅ | ⬜ | ✅ | ✅ |
+//! | [Argmax](crate::matvec::Argmax)                    | 🔧 | ⬜ | ✅ | ⬜ |
+//! | **▶︎ Linear algebra**                              |||||
+//! | [Eigen decomposition](crate::eig::Eig)             | ⬜ | ✅ | ⬜ | ✅ |
+//! | [SVD decomposition](crate::svd::SVD)               | ⬜ | ✅ | ⬜ | ✅ |
+//! | [LU decomposition](crate::lu::LU)                  | ⬜ | ✅ | ⬜ | ✅ |
+//! | [Solve and inverse](crate::solve::Solve)           | ⬜ | ✅ | ⬜ | ✅ |
+//! | [QR decomposition](crate::qr::QR)                  | ⬜ | ✅ | ⬜ | ✅ |
+//! | [Cholesky decomposition](crate::lu::LU)| ⬜ | ✅ | ⬜ | 🔧 |
+//! | [Schur decomposition](crate::eig::Eig)         | ⬜ | ✅ | ⬜ | 🔧 |
+//! | **▶︎ Advanced**                                   |||||
+//! | [Tensor contraction](crate::matmul::MatMul)        | ✅ | ⬜ | ✅ | ✅ |
+//! | [Partial rank-revealing LU decomposition](crate::prrlu::PRRLU) | ⬜ | ⬜ | ✅ | ⬜ |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented

@@ -129,7 +129,7 @@ where
 }
 
 /// Convert pivot indices to permutation matrix
-pub fn ipiv_to_permutation_matrix<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2> {
+pub fn ipiv_to_perm_mat<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2> {
     let mut p = tensor![[T::zero(); m]; m];
 
     for i in 0..m {
