@@ -3,7 +3,7 @@ use num_traits::{One, Zero};
 
 use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
 
-use crate::matmul::{Axes, Side, Triangle, Type, tensordot};
+use crate::matmul::{Axes, Side, Triangle, Type, _contract};
 use crate::prelude::*;
 
 use crate::Naive;
@@ -110,7 +110,7 @@ where
     }
 
     fn eval(self) -> Tensor<T> {
-        tensordot(self.a, self.b, self.axes, Naive, self.alpha)
+        _contract(Naive, self.a, self.b, self.axes, self.alpha)
     }
 
     fn overwrite(self, _c: &mut Slice<T>) {

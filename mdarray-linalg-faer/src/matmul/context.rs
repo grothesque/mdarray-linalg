@@ -10,7 +10,7 @@ use num_complex::ComplexFloat;
 
 use num_traits::{One, Zero};
 
-use mdarray_linalg::matmul::{Axes, Side, ContractBuilder, Triangle, Type, tensordot};
+use mdarray_linalg::matmul::{Axes, Side, ContractBuilder, Triangle, Type, _contract};
 use mdarray_linalg::prelude::*;
 use num_cpus;
 
@@ -144,7 +144,7 @@ where
     }
 
     fn eval(self) -> Tensor<T, DynRank> {
-        tensordot(self.a, self.b, self.axes, Faer, self.alpha)
+        _contract(Faer, self.a, self.b, self.axes, self.alpha)
     }
 
     fn overwrite(self, _c: &mut Slice<T>) {
