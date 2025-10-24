@@ -1,8 +1,8 @@
 use approx::assert_relative_eq;
 
 use super::common::random_matrix;
-use mdarray::DTensor;
 use crate::solve::{Solve, SolveResult};
+use mdarray::DTensor;
 
 fn test_solve_verification<T>(original_a: &DTensor<T, 2>, x: &DTensor<T, 2>, b: &DTensor<T, 2>)
 where
@@ -109,18 +109,18 @@ pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>>) {
     let mut a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new(re[[i[0], i[1]]], im[[i[0], i[1]]])
     });
-    println!("a={:?}", a);
+    println!("a={a:?}");
     let original_a = a.clone();
 
     // Create random complex right-hand side
     let b = DTensor::<Complex<f64>, 2>::from_fn([n, nrhs], |i| {
         Complex::new((i[0] + 2 * i[1] + 1) as f64, (2 * i[0] + i[1] + 1) as f64)
     });
-    println!("b={:?}", b);
+    println!("b={b:?}");
 
     let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
 
-    println!("{:?}", x);
+    println!("{x:?}");
 
     // Verify A * X = B for complex matrices
     for i in 0..n {

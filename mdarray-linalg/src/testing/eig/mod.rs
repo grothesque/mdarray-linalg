@@ -3,11 +3,11 @@ use num_complex::{Complex, ComplexFloat};
 use approx::assert_relative_eq;
 
 use super::common::{naive_matmul, random_matrix};
-use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use mdarray::DTensor;
 use crate::eig::EigDecomp;
 use crate::eig::SchurDecomp;
+use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use crate::{prelude::*, pretty_print};
+use mdarray::DTensor;
 
 fn test_eigen_reconstruction<T>(
     a: &DTensor<T, 2>,
@@ -76,7 +76,7 @@ pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
     });
-    println!("{:?}", a);
+    println!("{a:?}");
     let EigDecomp {
         eigenvalues,
         right_eigenvectors,
@@ -84,8 +84,8 @@ pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>>) {
     } = bd
         .eig(&mut a.clone())
         .expect("Eigenvalue decomposition failed");
-    println!("{:?}", eigenvalues);
-    println!("{:?}", right_eigenvectors);
+    println!("{eigenvalues:?}");
+    println!("{right_eigenvectors:?}");
 
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
@@ -280,7 +280,7 @@ pub fn test_eigh_symmetric(bd: &impl Eig<f64>) {
     }
 
     let mut a_clone = a.clone();
-    println!("{:?}", a_clone);
+    println!("{a_clone:?}");
 
     let EigDecomp {
         eigenvalues,
@@ -290,9 +290,9 @@ pub fn test_eigh_symmetric(bd: &impl Eig<f64>) {
         .eigs(&mut a_clone)
         .expect("Hermitian eigenvalue decomposition failed");
 
-    println!("{:?}", a_clone);
-    println!("{:?}", right_eigenvectors);
-    println!("{:?}", eigenvalues);
+    println!("{a_clone:?}");
+    println!("{right_eigenvectors:?}");
+    println!("{eigenvalues:?}");
 
     // For symmetric real matrices, eigenvalues should be real
     for i in 0..n {
@@ -332,7 +332,7 @@ pub fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>>) {
         .expect("Complex Hermitian eigenvalue decomposition failed");
 
     pretty_print(&right_eigenvectors.clone().unwrap());
-    println!("{:?}", eigenvalues);
+    println!("{eigenvalues:?}");
 
     // For Hermitian matrices, eigenvalues should be real
     for i in 0..n {
@@ -375,9 +375,9 @@ pub fn test_schur(bd: &impl Eig<f64>) {
 
     let zt = z.transpose().to_tensor();
 
-    println!("{:?}", a);
-    println!("{:?}", t);
-    println!("{:?}", z);
+    println!("{a:?}");
+    println!("{t:?}");
+    println!("{z:?}");
 
     let reconstructed_tmp = naive_matmul(&z, &t);
     let a_reconstructed = naive_matmul(&reconstructed_tmp, &zt);
@@ -409,16 +409,16 @@ pub fn test_schur_cplx(bd: &impl Eig<Complex<f64>>) {
         }
     }
 
-    println!("{:?}", c);
-    println!("{:?}", t);
-    println!("{:?}", z);
+    println!("{c:?}");
+    println!("{t:?}");
+    println!("{z:?}");
 
     let c_reconstructed_tmp = naive_matmul(&z, &t);
     let c_reconstructed = naive_matmul(&c_reconstructed_tmp, &zt);
 
     println!("---------------------------------------------");
-    println!("{:?}", c);
-    println!("{:?}", c_reconstructed);
+    println!("{c:?}");
+    println!("{c_reconstructed:?}");
 
     assert_complex_matrix_eq!(&c, &c_reconstructed);
 }

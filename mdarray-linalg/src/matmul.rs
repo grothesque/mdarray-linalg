@@ -229,17 +229,8 @@ pub fn tensordot<T: Zero + ComplexFloat, La: Layout, Lb: Layout>(
     let keep_size_a = compute_size(&keep_axes_a, &shape_a);
     let keep_size_b = compute_size(&keep_axes_b, &shape_b);
 
-    let order_a: Vec<usize> = keep_axes_a
-        .iter()
-        .chain(axes_a.iter())
-        .map(|&x| x)
-        .collect();
-
-    let order_b: Vec<usize> = axes_b
-        .iter()
-        .chain(keep_axes_b.iter())
-        .map(|&x| x)
-        .collect();
+    let order_a: Vec<usize> = keep_axes_a.iter().chain(axes_a.iter()).copied().collect();
+    let order_b: Vec<usize> = axes_b.iter().chain(keep_axes_b.iter()).copied().collect();
 
     let trans_a = a.permute(order_a).to_tensor();
     let trans_b = b.permute(order_b).to_tensor();

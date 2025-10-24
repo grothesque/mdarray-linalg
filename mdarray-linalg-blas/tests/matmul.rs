@@ -205,7 +205,7 @@ fn test_gemm() {
     let c_expr = || example_matrix([2, 4]);
     let mut c = c_expr().eval();
     let ab_plus_c = {
-        let mut ab = naive_matmul(&a, &b);
+        let ab = naive_matmul(&a, &b);
         ab + &c
     };
 
@@ -235,7 +235,7 @@ fn test_gemm() {
         for b in [&b, &b_cmajor] {
             for c in [&mut c, &mut c_cmajor] {
                 c.assign(c_expr());
-                gemm(1.0, a, &b, 1.0, c);
+                gemm(1.0, a, b, 1.0, c);
                 assert!(*c == ab_plus_c);
             }
         }

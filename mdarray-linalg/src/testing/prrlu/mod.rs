@@ -1,10 +1,10 @@
 use approx::assert_relative_eq;
 
-use mdarray::DTensor;
 use crate::prrlu::{PRRLU, PRRLUDecomp};
+use mdarray::DTensor;
 
-use crate::assert_matrix_eq;
 use super::common::{naive_matmul, random_matrix, rank_k_matrix};
+use crate::assert_matrix_eq;
 
 // Matrix inversion for permutation matrices (transpose)
 fn invert_permutation(p: &DTensor<f64, 2>) -> DTensor<f64, 2> {
@@ -27,11 +27,9 @@ fn reconstruct_from_prrlu(decomp: &PRRLUDecomp<f64>) -> DTensor<f64, 2> {
     let p_inv = invert_permutation(p);
     let q_inv = invert_permutation(q);
 
-    let temp1 = naive_matmul(&l, &u);
+    let temp1 = naive_matmul(l, u);
     let temp2 = naive_matmul(&p_inv, &temp1);
-    let reconstructed = naive_matmul(&temp2, &q_inv);
-
-    reconstructed
+    naive_matmul(&temp2, &q_inv)
 }
 
 pub fn test_rank_deficient(bd: impl PRRLU<f64>) {

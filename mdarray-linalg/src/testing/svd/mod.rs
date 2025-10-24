@@ -57,7 +57,7 @@ where
         println!("=== U × Σ × Vᵀ  ===");
         pretty_print(&usvt);
         println!("=== A original ===");
-        pretty_print(&a);
+        pretty_print(a);
     }
 
     assert_matrix_eq!(*a, usvt);

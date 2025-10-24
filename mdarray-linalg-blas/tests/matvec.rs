@@ -1,10 +1,4 @@
-use mdarray::{DTensor, tensor};
-
-use mdarray_linalg::prelude::*;
 use mdarray_linalg::testing::matvec::*;
-
-use mdarray_linalg::matmul::{Triangle, Type};
-
 use mdarray_linalg_blas::Blas;
 
 #[test]

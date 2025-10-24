@@ -2,9 +2,9 @@ use approx::assert_relative_eq;
 use num_complex::ComplexFloat;
 
 use super::common::{naive_matmul, random_matrix};
-use mdarray::{DSlice, DTensor, Dense, tensor};
 use crate::prelude::*;
 use crate::{identity, pretty_print, transpose_in_place};
+use mdarray::{DSlice, DTensor, Dense, tensor};
 
 pub fn test_lu_reconstruction<T>(
     a: &DTensor<T, 2>,
@@ -45,7 +45,7 @@ pub fn test_lu_decomposition(bd: &impl LU<f64>) {
 
     let (l, u, p) = bd.lu(&mut a);
 
-    println!("{:?}", a);
+    println!("{a:?}");
     pretty_print(&a);
     pretty_print(&l);
     pretty_print(&u);
@@ -142,7 +142,7 @@ pub fn test_determinant(bd: &impl LU<f64>) {
 pub fn test_determinant_dummy(bd: &impl LU<f64>) {
     let a = identity(3);
     let d = bd.det(&mut a.clone());
-    println!("{}", d);
+    println!("{d}");
     assert_relative_eq!(1., d, epsilon = 1e-6);
 }
 
@@ -251,7 +251,7 @@ pub fn test_cholesky_decomposition(bd: &impl LU<f64>) {
 
     let l = bd.choleski(&mut a).unwrap();
 
-    println!("{:?}", l);
+    println!("{l:?}");
 
     test_cholesky_reconstruction(&original_a, &l);
 }
@@ -265,8 +265,8 @@ pub fn test_cholesky_overwrite(bd: &impl LU<f64>) {
     let l = bd.choleski(&mut a_copy.clone()).unwrap();
     bd.choleski_overwrite(&mut a_copy).unwrap();
 
-    println!("{:?}", l);
-    println!("{:?}", a_copy);
+    println!("{l:?}");
+    println!("{a_copy:?}");
 
     test_cholesky_reconstruction(&original_a, &a_copy);
 }

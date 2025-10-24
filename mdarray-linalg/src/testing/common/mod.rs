@@ -84,6 +84,5 @@ pub fn naive_matmul<T: ComplexFloat + Zero>(a: &DSlice<T, 2>, b: &DSlice<T, 2>) 
             }
         }
     }
-
-    return c;
+    c
 }

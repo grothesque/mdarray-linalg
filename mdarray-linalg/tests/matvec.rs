@@ -1,11 +1,5 @@
-use mdarray::{DTensor, tensor};
-
-use mdarray_linalg::prelude::*;
-use mdarray_linalg::testing::matvec::*;
-
-use mdarray_linalg::matmul::{Triangle, Type};
-
 use mdarray_linalg::Naive;
+use mdarray_linalg::testing::matvec::*;
 
 // #[test]
 // fn eval_and_overwrite() {

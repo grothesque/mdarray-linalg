@@ -176,7 +176,7 @@ pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>>) {
 
     let result = bd.dotc(&x, &y);
 
-    println!("{:?}", result);
+    println!("{result:?}");
 
     // dotc(x, y) = conj(x1)*y1 + conj(x2)*y2
     let expected = x[[0]].conj() * y[[0]] + x[[1]].conj() * y[[1]];
@@ -196,8 +196,8 @@ pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>>) {
 
     let result = bd.norm1(&x);
 
-    println!("{}", result);
-    println!("{}", expected);
+    println!("{result}");
+    println!("{expected}");
 
     assert!((result - expected).abs() < 1e-12);
 }
@@ -224,20 +224,20 @@ pub fn test_argmax_real(bd: impl Argmax<f64>) {
     // ----- Empty tensor -----
     let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
     let idx = bd.argmax(&x);
-    println!("Empty: {:?}", idx);
+    println!("Empty: {idx:?}");
     assert_eq!(idx, None);
 
     // ----- Scalar (rank 0) -----
     let x = tensor![42.];
     let idx = bd.argmax(&x).unwrap();
-    println!("Scalar: {:?}", idx);
+    println!("Scalar: {idx:?}");
     assert_eq!(idx, vec![0]); // Empty vec for scalar
 
     // ----- 1D -----
     let n = 5;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
     let idx = bd.argmax(&x.view(..)).unwrap();
-    println!("{:?}", idx);
+    println!("{idx:?}");
     assert_eq!(idx, vec![4]);
 
     // ----- 2D -----
@@ -246,13 +246,13 @@ pub fn test_argmax_real(bd: impl Argmax<f64>) {
     // [[0., 1., 2.],
     //  [3., 4., 5.]]
     let idx = bd.argmax(&x.view(.., ..).into_dyn()).unwrap();
-    println!("{:?}", idx);
+    println!("{idx:?}");
     assert_eq!(idx, vec![1, 2]);
 
     // ----- 3D -----
     let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
     let idx = bd.argmax(&x.view(.., .., ..).into_dyn()).unwrap();
-    println!("{:?}", idx);
+    println!("{idx:?}");
     assert_eq!(idx, vec![1, 1, 1]);
 }
 
@@ -262,20 +262,20 @@ pub fn test_argmax_overwrite_real(bd: impl Argmax<f64>) {
     // ----- Empty tensor -----
     let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
     let success = bd.argmax_overwrite(&x, &mut output);
-    assert_eq!(success, false);
+    assert!(!success);
     assert_eq!(output, vec![]);
 
     // ----- Scalar (rank 0) -----
     let x = tensor![42.];
     let success = bd.argmax_overwrite(&x, &mut output);
-    assert_eq!(success, true);
+    assert!(success);
     assert_eq!(output, vec![0]);
 
     // ----- 1D -----
     let n = 5;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
     let success = bd.argmax_overwrite(&x.view(..), &mut output);
-    assert_eq!(success, true);
+    assert!(success);
     assert_eq!(output, vec![4]);
 
     // ----- 2D -----
@@ -283,19 +283,19 @@ pub fn test_argmax_overwrite_real(bd: impl Argmax<f64>) {
     // [[0., 1., 2.],
     //  [3., 4., 5.]]
     let success = bd.argmax_overwrite(&x.view(.., ..).into_dyn(), &mut output);
-    assert_eq!(success, true);
+    assert!(success);
     assert_eq!(output, vec![1, 2]);
 
     // ----- 3D -----
     let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
     let success = bd.argmax_overwrite(&x.view(.., .., ..).into_dyn(), &mut output);
-    assert_eq!(success, true);
+    assert!(success);
     assert_eq!(output, vec![1, 1, 1]);
 
     // ----- Test reuse of output buffer -----
     output = vec![99, 99, 99];
     let x = DTensor::<f64, 1>::from_fn([3], |i| (3 - i[0]) as f64);
     let success = bd.argmax_overwrite(&x.view(..), &mut output);
-    assert_eq!(success, true);
+    assert!(success);
     assert_eq!(output, vec![0]); // Should be cleared and contain only result
 }
