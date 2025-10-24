@@ -1,5 +1,5 @@
-//! Matrix multiplication and specialized products for triangular and Hermitian matrices.
-//! Tensor contraction (generalized dot product) for arbitrary rank tensors.
+//! Matrix multiplication and tensor contraction
+//!
 //!```rust
 //!use mdarray::tensor;
 //!use mdarray_linalg::prelude::*;
@@ -169,11 +169,12 @@ pub enum Axes {
     Specific(Box<[usize]>, Box<[usize]>),
 }
 
-pub fn tensordot<T: Zero + ComplexFloat, La: Layout, Lb: Layout>(
+/// Helper for implementing contraction through matrix multiplication
+pub fn _contract<T: Zero + ComplexFloat, La: Layout, Lb: Layout>(
+    bd: impl MatMul<T>,
     a: &Slice<T, DynRank, La>,
     b: &Slice<T, DynRank, Lb>,
     axes: Axes,
-    bd: impl MatMul<T>,
     alpha: T,
 ) -> Tensor<T, DynRank> {
     let rank_a = a.rank();

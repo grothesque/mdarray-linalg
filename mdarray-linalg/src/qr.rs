@@ -1,4 +1,4 @@
-//! QR decomposition utilities.
+//! QR decomposition
 use mdarray::{DSlice, DTensor, Layout};
 
 /// QR decomposition for orthogonal-triangular factorization

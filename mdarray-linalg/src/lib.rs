@@ -1,4 +1,4 @@
-//! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray).
+//! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray)
 //!
 //! This crate defines a set of traits (`MatVec`, `MatMul`, `Eig`, `SVD`, …) that are
 //! implemented by different backends, allowing users to switch between them depending
@@ -47,16 +47,19 @@
 //! > [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In that case, run the doctests with:
 //! > `RUSTDOCFLAGS="-L native=/usr/lib -C link-arg=-lopenblas" cargo test --doc`
 //! >
-//! > See also the section **Troubleshoot** below.
+//! > See also the section **Troubleshooting** below.
 //!
 //! The following example demonstrates basic functionality:
 //!
 //! ```rust
-//! use mdarray::{DTensor, tensor};
-//! use mdarray_linalg::prelude::*; // Imports only traits
+//! use mdarray::tensor;
 //!
+//! // The prelude does not expose any names.  It only provides traits as _.
+//! use mdarray_linalg::prelude::*;
+//!
+//! // Backends are provided in partner crates (e.g. mdarray-linalg-blas or mdarray-linalg-faer),
+//! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
-//! // Use other backends for improved performance and more extensive functionality.
 //!
 //! fn main() {
 //!     // Declare two vectors
@@ -67,14 +70,14 @@
 //!     let a = tensor![[1., 2.], [3., 4.]];
 //!     let b = tensor![[5., 6.], [7., 8.]];
 //!
-//!     // ----- Vector operations -----
+//!     // ----- Scalar product -----
 //!     let dot_result = Naive.dot(&x, &y);
-//!     println!("dot(x, y) = {}", dot_result); // x·y
+//!     println!("dot(x, y) = {}", dot_result); // x · y
 //!
 //!     // ----- Matrix multiplication -----
-//!     let mut c = Naive.matmul(&a, &b).eval(); // A * B
-//!     Naive.matmul(&b, &a).add_to(&mut c);
-//!     println!("A * B + B * A= {:?}", c);
+//!     let mut c = Naive.matmul(&a, &b).eval(); // C ← A ✕ B
+//!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
+//!     println!("A * B + B * A = {:?}", c);
 //! }
 //! ```
 //!Some notes:
@@ -90,7 +93,7 @@
 //! - **Errors**: Convergence issues return a Result; other problems
 //!   (dimension mismatch) may panic.
 //!
-//! # Troubleshoot
+//! # Troubleshooting
 //!
 //! If you encounter linking issues with BLAS or LAPACK on Linux,
 //! one solution is to add a `build.rs` file and configure it to link the libraries manually.

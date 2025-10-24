@@ -1,4 +1,4 @@
-//! Singular Value Decomposition (SVD) utilities.
+//! Singular Value Decomposition (SVD)
 use mdarray::{DSlice, DTensor, Layout};
 use thiserror::Error;
 

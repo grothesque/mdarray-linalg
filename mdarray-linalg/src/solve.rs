@@ -1,4 +1,4 @@
-//! Linear system solving utilities for equations of the form Ax = B.
+//! Linear system solving utilities for equations of the form Ax = B
 use mdarray::{DSlice, DTensor, Layout};
 use thiserror::Error;
 

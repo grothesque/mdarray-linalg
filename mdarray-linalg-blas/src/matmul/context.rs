@@ -6,7 +6,7 @@ use mdarray::{DSlice, DTensor, Dense, DynRank, Layout, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 
 use mdarray_linalg::matmul::{
-    Axes, MatMul, MatMulBuilder, Side, ContractBuilder, Triangle, Type, tensordot,
+    Axes, MatMul, MatMulBuilder, Side, ContractBuilder, Triangle, Type, _contract,
 };
 
 use super::scalar::BlasScalar;
@@ -127,7 +127,7 @@ where
     }
 
     fn eval(self) -> Tensor<T> {
-        tensordot(self.a, self.b, self.axes, Blas, self.alpha)
+        _contract(Blas, self.a, self.b, self.axes, self.alpha)
     }
 
     fn overwrite(self, _c: &mut Slice<T>) {
