@@ -8,9 +8,8 @@
 //!
 //! - [`Blas`](https://docs.rs/mdarray-linalg-blas): bindings to [BLAS](https://www.netlib.org/blas/)
 //! - [`Lapack`](https://docs.rs/mdarray-linalg-lapack): bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [Faer](https://github.com/sarah-ek/faer-rs)
-//! - `Naive`: a simple backend with textbook implementations of some algorithms
-//!   useful for testing or when other backends do not provide them.
+//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [Faer](https://faer.veganb.tw/)
+//! - `Naive`: simple demo backend, integrated into this crate
 //! > **Note:** Not all backends support all functionalities.
 //!
 // ! <details>
