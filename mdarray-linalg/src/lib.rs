@@ -52,11 +52,14 @@
 //! The following example demonstrates basic functionality:
 //!
 //! ```rust
-//! use mdarray::{DTensor, tensor};
-//! use mdarray_linalg::prelude::*; // Imports only traits
+//! use mdarray::tensor;
 //!
+//! // The prelude does not expose any names.  It only provides traits as _.
+//! use mdarray_linalg::prelude::*;
+//!
+//! // Backends are provided in partner crates (e.g. mdarray-linalg-blas or mdarray-linalg-faer),
+//! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
-//! // Use other backends for improved performance and more extensive functionality.
 //!
 //! fn main() {
 //!     // Declare two vectors
@@ -67,14 +70,14 @@
 //!     let a = tensor![[1., 2.], [3., 4.]];
 //!     let b = tensor![[5., 6.], [7., 8.]];
 //!
-//!     // ----- Vector operations -----
+//!     // ----- Scalar product -----
 //!     let dot_result = Naive.dot(&x, &y);
-//!     println!("dot(x, y) = {}", dot_result); // x·y
+//!     println!("dot(x, y) = {}", dot_result); // x · y
 //!
 //!     // ----- Matrix multiplication -----
-//!     let mut c = Naive.matmul(&a, &b).eval(); // A * B
-//!     Naive.matmul(&b, &a).add_to(&mut c);
-//!     println!("A * B + B * A= {:?}", c);
+//!     let mut c = Naive.matmul(&a, &b).eval(); // C ← A ✕ B
+//!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
+//!     println!("A * B + B * A = {:?}", c);
 //! }
 //! ```
 //!Some notes:
