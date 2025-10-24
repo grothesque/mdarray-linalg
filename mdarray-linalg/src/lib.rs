@@ -70,11 +70,12 @@
 //!
 //!     // ----- Vector operations -----
 //!     let dot_result = Naive.dot(&x, &y);
-//!     println!("dot(x, y) = {}", dot_result);
+//!     println!("dot(x, y) = {}", dot_result); // x·y
 //!
 //!     // ----- Matrix multiplication -----
-//!     let c = Naive.matmul(&a, &b).eval();
-//!     println!("A * B = {:?}", c);
+//!     let mut c = Naive.matmul(&a, &b).eval(); // A * B
+//!     Naive.matmul(&b, &a).add_to(&mut c);
+//!     println!("A * B + B * A= {:?}", c);
 //! }
 //! ```
 //!Some notes:
