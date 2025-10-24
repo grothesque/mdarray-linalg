@@ -6,9 +6,9 @@
 //!
 //! # Backends
 //!
-//! - `Blas`: bindings to [BLAS](https://www.netlib.org/blas/)
-//! - `Lapack`: bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - `Faer`: bindings to [Faer](https://github.com/sarah-ek/faer-rs)
+//! - [`Blas`](https://docs.rs/mdarray-linalg-blas): bindings to [BLAS](https://www.netlib.org/blas/)
+//! - [`Lapack`](https://docs.rs/mdarray-linalg-lapack): bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [Faer](https://github.com/sarah-ek/faer-rs)
 //! - `Naive`: a simple backend with textbook implementations of some algorithms
 //!   useful for testing or when other backends do not provide them.
 //! > **Note:** Not all backends support all functionalities.
@@ -16,34 +16,27 @@
 // ! <details>
 // ! <summary>Click to expand the feature support table</summary>
 //!
-//! | Functionality | BLAS | LAPACK | Naive | Faer |
-//! |---------------|:----:|:------:|:-----:|:----:|
-//! | `copy/swap`   | 🔧   | ⬜     | 🔧    | ⬜   |
+//! | Functionality                            | BLAS | LAPACK | Naive | Faer |
+//! |------------------------------------------|:----:|:------:|:-----:|:----:|
 //! | **▶︎ Basic vector/matrix ops** |||| |
-//! | `norm1`       | ✅   | ⬜     | 🔧    | 🔧   |
-//! | `norm2`       | ✅   | ⬜     | 🔧    | 🔧   |
-//! | `dot`         | ✅   | ⬜     | 🔧    | 🔧   |
-//! | `α·x + y`     | ✅   | ⬜     | 🔧    | 🔧   |
-//! | `α·A·x + y`   | ✅   | ⬜     | 🔧    | 🔧   |
-//! | `matmul`      | ✅   | ⬜     | 🔧    | ✅   |
-//! | `rank1 update`| ✅   | ⬜     | 🔧    | 🔧   |
-//! | `argmax_abs`  | 🔧   | ⬜     | 🔧    | ⬜   |
-//! | `argmax`      | ⬜   | ⬜     | ✅    | ⬜   |
+//! | [`MatVec`](crate::matvec::MatVec)        | ✅   | ⬜     | 🔧    | 🔧   |
+//! | [`VecOps`](crate::matvec::VecOps)        | ✅   | ⬜     | 🔧    | 🔧   |
+//! | [`MatMul`](crate::matmul::MatMul)        | ✅   | ⬜     | 🔧    | 🔧   |
+//! | [`Argmax`](crate::matvec::Argmax)        | 🔧   | ⬜     | ✅    | ⬜   |
 //! | **▶︎ Linear algebra** |||| |
-//! | `eigen`       | ⬜   | ✅     | ⬜    | ✅   |
-//! | `SVD`         | ⬜   | ✅     | ⬜    | ✅   |
-//! | `LU`          | ⬜   | ✅     | ⬜    | ✅   |
-//! | `solve/inv`   | ⬜   | ✅     | ⬜    | ✅   |
-//! | `QR`          | ⬜   | ✅     | ⬜    | ✅   |
-//! | `Cholesky`    | ⬜   | ✅     | ⬜    | 🔧   |
-//! | `Schur`       | ⬜   | ✅     | ⬜    | 🔧   |
+//! | [`Eigen`](crate::eig::Eig)             | ⬜   | ✅     | ⬜    | ✅   |
+//! | [`SVD`](crate::svd::SVD)                 | ⬜   | ✅     | ⬜    | ✅   |
+//! | [`LU`](crate::lu::LU)                    | ⬜   | ✅     | ⬜    | ✅   |
+//! | [`Solve`](crate::solve::Solve)           | ⬜   | ✅     | ⬜    | ✅   |
+//! | [`QR`](crate::qr::QR)                    | ⬜   | ✅     | ⬜    | ✅   |
+//! | [`Cholesky`](crate::lu::LU)              | ⬜   | ✅     | ⬜    | 🔧   |
+//! | [`Schur`](crate::eig::Eig)               | ⬜   | ✅     | ⬜    | 🔧   |
 //! | **▶︎ Advanced** |||| |
-//! | `givens rot`  | 🔧   | ⬜     | 🔧    | 🔧   |
-//! | `prrlu`       | ⬜   | ⬜     | ✅    | ⬜   |
-//! | `tensordot`   | ✅   | ⬜     | ✅    |🔧    |
+//! | [`Contract`](crate::matmul::MatMul)      | ✅   | ⬜     | ✅    | ✅   |
+//! | [`PRRLU`](crate::prrlu::PRRLU)           | ⬜   | ⬜     | ✅    | ⬜   |
 //!
 //! ✅ = implemented
-//! 🔧 = not implemented yet
+//! 🔧 = not implemented yet / partially implemented
 //! ⬜ = not applicable / not part of the backend’s scope
 //!
 // </details>
