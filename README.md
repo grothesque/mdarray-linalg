@@ -38,7 +38,7 @@ fn main() {
 }
 ```
 
-See [docs.rs](https://docs.rs/mdarray/latest/mdarray-linalg/) documentation for code examples and usage instructions.
+See [docs.rs](https://docs.rs/mdarray-linalg/latest/mdarray_linalg/) documentation for code examples and usage instructions.
 
 ## License
 Dual-licensed (Apache and MIT) to be compatible with the Rust project.
