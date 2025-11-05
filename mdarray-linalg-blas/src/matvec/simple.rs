@@ -1,5 +1,5 @@
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
@@ -301,4 +301,24 @@ where
     }
 
     result
+}
+
+pub fn amax<T, S, L>(x: &Slice<T, S, L>) -> usize
+where
+    T: BlasScalar + ComplexFloat + 'static,
+    S: Shape,
+    L: Layout,
+{
+    assert!(!x.is_empty(), "Cannot find amax of empty slice");
+
+    let n = into_i32(x.len());
+    let incx = if x.rank() == 1 {
+        into_i32(x.stride(0))
+    } else {
+        1 // Treat multi-dimensional as flat contiguous
+    };
+
+    let max_idx = unsafe { T::cblas_amax(n, x.as_ptr(), incx) } as usize - 1; // BLAS uses 1-based indexing
+
+    max_idx
 }

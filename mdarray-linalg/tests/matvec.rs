@@ -63,7 +63,12 @@ fn dot_complex() {
 
 #[test]
 fn argmax_real() {
-    test_argmax_real(Naive)
+    test_argmax_real(Naive);
+}
+
+#[test]
+fn argmax_abs() {
+    test_argmax_abs(Naive)
 }
 
 #[test]

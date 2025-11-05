@@ -5,7 +5,7 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -290,4 +290,43 @@ where
 
         a[[ai, aj]] * b[[bi, bj]]
     })
+}
+
+/// Converts a flat index to multidimensional coordinates.
+///
+/// # Examples
+///
+/// ```
+/// use mdarray::DTensor;
+/// use mdarray_linalg::unravel_index;
+///
+/// let x = DTensor::<usize, 2>::from_fn([2,3], |i| i[0] + i[1]);
+///
+/// assert_eq!(unravel_index(&x, 0), vec![0, 0]);
+/// assert_eq!(unravel_index(&x, 4), vec![1, 1]);
+/// assert_eq!(unravel_index(&x, 5), vec![1, 2]);
+/// ```
+///
+/// # Panics
+///
+/// Panics if `flat` is out of bounds (>= `x.len()`).
+pub fn unravel_index<T, S: Shape, L: Layout>(x: &Slice<T, S, L>, mut flat: usize) -> Vec<usize> {
+    let rank = x.rank();
+
+    assert!(
+        flat < x.len(),
+        "flat index out of bounds: {} >= {}",
+        flat,
+        x.len()
+    );
+
+    let mut coords = vec![0usize; rank];
+
+    for i in (0..rank).rev() {
+        let dim = x.shape().dim(i);
+        coords[i] = flat % dim;
+        flat /= dim;
+    }
+
+    coords
 }

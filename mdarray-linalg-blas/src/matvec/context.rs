@@ -4,11 +4,12 @@ use num_complex::ComplexFloat;
 
 use mdarray_linalg::matmul::{Triangle, Type};
 use mdarray_linalg::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
+use mdarray_linalg::utils::unravel_index;
 
 use crate::Blas;
 
 use super::scalar::BlasScalar;
-use super::simple::{asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr};
+use super::simple::{amax, asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr};
 
 struct BlasMatVecBuilder<'a, T, La, Lx>
 where
@@ -171,16 +172,47 @@ impl<T: ComplexFloat + BlasScalar + 'static> VecOps<T> for Blas {
     }
 }
 
-impl<T: ComplexFloat + 'static + std::cmp::PartialOrd> Argmax<T> for Blas {
+impl<T: ComplexFloat + 'static + std::cmp::PartialOrd + BlasScalar> Argmax<T> for Blas {
     fn argmax_overwrite<Lx: Layout, S: Shape>(
         &self,
         _x: &Slice<T, S, Lx>,
         _output: &mut Vec<usize>,
     ) -> bool {
-        todo!()
+        unimplemented!("BLAS does not implement an argmax function, only argmax_abs")
     }
 
     fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+        let mut result = Vec::new();
+        if self.argmax_overwrite(x, &mut result) {
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool {
+        output.clear();
+
+        if x.is_empty() {
+            return false;
+        }
+
+        if x.rank() == 0 {
+            return true;
+        }
+
+        let max_flat_idx = amax(x);
+        let indices = unravel_index(x, max_flat_idx);
+        output.extend_from_slice(&indices);
+
+        true
+    }
+
+    fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         let mut result = Vec::new();
         if self.argmax_overwrite(x, &mut result) {
             Some(result)

@@ -6,6 +6,7 @@ use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
 use crate::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
+use crate::utils::unravel_index;
 
 use crate::Naive;
 
@@ -188,8 +189,9 @@ impl<T: ComplexFloat + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy
     }
 }
 
-impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy>
-    Argmax<T> for Naive
+impl<
+    T: ComplexFloat<Real = T> + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy,
+> Argmax<T> for Naive
 {
     fn argmax_overwrite<Lx: Layout, S: Shape>(
         &self,
@@ -229,25 +231,43 @@ impl<T: ComplexFloat + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> 
             None
         }
     }
-}
 
-pub fn unravel_index<T, S: Shape, L: Layout>(x: &Slice<T, S, L>, mut flat: usize) -> Vec<usize> {
-    let rank = x.rank();
+    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool {
+        output.clear();
 
-    assert!(
-        flat < x.len(),
-        "flat index out of bounds: {} >= {}",
-        flat,
-        x.len()
-    );
+        if x.is_empty() {
+            return false;
+        }
 
-    let mut coords = vec![0usize; rank];
+        if x.rank() == 0 {
+            return true;
+        }
 
-    for i in (0..rank).rev() {
-        let dim = x.shape().dim(i);
-        coords[i] = flat % dim;
-        flat /= dim;
+        let mut max_flat_idx = 0;
+        let mut max_val = x.iter().next().unwrap().abs();
+
+        for (flat_idx, val) in x.iter().enumerate().skip(1) {
+            if val.abs() > max_val {
+                max_val = val.abs();
+                max_flat_idx = flat_idx;
+            }
+        }
+
+        let indices = unravel_index(x, max_flat_idx);
+        output.extend_from_slice(&indices);
+        true
     }
 
-    coords
+    fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+        let mut result = Vec::new();
+        if self.argmax_abs_overwrite(x, &mut result) {
+            Some(result)
+        } else {
+            None
+        }
+    }
 }

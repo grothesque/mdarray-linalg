@@ -1,10 +1,18 @@
-// This file is auto-generated. Do not edit manually.
 //! Abstracting the BLAS scalar types
-use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
+use cblas_sys::{CBLAS_DIAG, CBLAS_INDEX, CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
 use num_complex::{Complex, ComplexFloat};
 
 #[allow(clippy::too_many_arguments, unused_variables)]
 pub trait BlasScalar: Sized + ComplexFloat {
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    unsafe fn cblas_amax(n: i32, x: *const Self, incx: i32) -> CBLAS_INDEX
+    where
+        Self: Sized,
+    {
+        unimplemented!("")
+    }
+
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_dot(n: i32, x: *const Self, incx: i32, y: *const Self, incy: i32) -> Self
@@ -358,6 +366,10 @@ pub trait BlasScalar: Sized + ComplexFloat {
 }
 
 impl BlasScalar for f32 {
+    unsafe fn cblas_amax(n: i32, x: *const f32, incx: i32) -> CBLAS_INDEX {
+        unsafe { cblas_sys::cblas_isamax(n, x as *const _, incx) }
+    }
+
     unsafe fn cblas_dot(n: i32, x: *const f32, incx: i32, y: *const f32, incy: i32) -> f32 {
         unsafe { cblas_sys::cblas_sdot(n, x as *const _, incx, y as *const _, incy) }
     }
@@ -620,6 +632,10 @@ impl BlasScalar for f32 {
 }
 
 impl BlasScalar for f64 {
+    unsafe fn cblas_amax(n: i32, x: *const f64, incx: i32) -> CBLAS_INDEX {
+        unsafe { cblas_sys::cblas_idamax(n, x as *const _, incx) }
+    }
+
     unsafe fn cblas_dot(n: i32, x: *const f64, incx: i32, y: *const f64, incy: i32) -> f64 {
         unsafe { cblas_sys::cblas_ddot(n, x as *const _, incx, y as *const _, incy) }
     }
@@ -882,6 +898,10 @@ impl BlasScalar for f64 {
 }
 
 impl BlasScalar for Complex<f32> {
+    unsafe fn cblas_amax(n: i32, x: *const Complex<f32>, incx: i32) -> CBLAS_INDEX {
+        unsafe { cblas_sys::cblas_icamax(n, x as *const _, incx) }
+    }
+
     unsafe fn cblas_dotu_sub(
         n: i32,
         x: *const Complex<f32>,
@@ -1254,6 +1274,10 @@ impl BlasScalar for Complex<f32> {
 }
 
 impl BlasScalar for Complex<f64> {
+    unsafe fn cblas_amax(n: i32, x: *const Complex<f64>, incx: i32) -> CBLAS_INDEX {
+        unsafe { cblas_sys::cblas_izamax(n, x as *const _, incx) }
+    }
+
     unsafe fn cblas_dotu_sub(
         n: i32,
         x: *const Complex<f64>,

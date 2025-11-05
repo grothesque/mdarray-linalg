@@ -21,7 +21,7 @@
 //! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | 🔧 | 🔧 |
 //! | [Operations on vectors](crate::matvec::VecOps)     | ✅ | ⬜ | 🔧 | 🔧 |
 //! | [Matrix multiplication](crate::matmul::MatMul)     | ✅ | ⬜ | ✅ | ✅ |
-//! | [Argmax](crate::matvec::Argmax)                    | 🔧 | ⬜ | ✅ | ⬜ |
+//! | [Argmax](crate::matvec::Argmax)                    | ✅ | ⬜ | ✅ | ⬜ |
 //! | **▶︎ Linear algebra**                              |||||
 //! | [Eigen decomposition](crate::eig::Eig)             | ⬜ | ✅ | ⬜ | ✅ |
 //! | [SVD decomposition](crate::svd::SVD)               | ⬜ | ✅ | ⬜ | ✅ |

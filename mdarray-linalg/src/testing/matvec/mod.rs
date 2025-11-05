@@ -299,3 +299,47 @@ pub fn test_argmax_overwrite_real(bd: impl Argmax<f64>) {
     assert!(success);
     assert_eq!(output, vec![0]); // Should be cleared and contain only result
 }
+
+pub fn test_argmax_abs(bd: impl Argmax<f64>) {
+    use mdarray::DTensor;
+
+    // ----- Empty tensor -----
+    let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
+    let idx = bd.argmax_abs(&x);
+    println!("Empty: {idx:?}");
+    assert_eq!(idx, None);
+
+    // ----- Scalar (rank 0) -----
+    let x = tensor![42.];
+    let idx = bd.argmax_abs(&x).unwrap();
+    println!("Scalar: {idx:?}");
+    assert_eq!(idx, vec![0]); // Empty vec for scalar
+
+    // ----- 1D -----
+    let n = 6;
+    let x = DTensor::<f64, 1>::from_fn([n], |i| {
+        if i[0] % 2 == 0 {
+            (i[0] as i32 + 1) as f64
+        } else {
+            -(i[0] as i32 + 1) as f64
+        }
+    });
+    let idx = bd.argmax_abs(&x.view(..)).unwrap();
+    println!("{idx:?}");
+    assert_eq!(idx, vec![5]);
+
+    // ----- 2D -----
+    let x = DTensor::<f64, 2>::from_fn([2, 3], |i| (i[0] * 3 + i[1]) as f64);
+
+    // [[0., 1., 2.],
+    //  [3., 4., 5.]]
+    let idx = bd.argmax_abs(&x.view(.., ..).into_dyn()).unwrap();
+    println!("{idx:?}");
+    assert_eq!(idx, vec![1, 2]);
+
+    // ----- 3D -----
+    let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
+    let idx = bd.argmax_abs(&x.view(.., .., ..).into_dyn()).unwrap();
+    println!("{idx:?}");
+    assert_eq!(idx, vec![1, 1, 1]);
+}

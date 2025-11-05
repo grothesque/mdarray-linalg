@@ -108,6 +108,15 @@ pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
         output: &mut Vec<usize>,
     ) -> bool;
 
-    /// Index of max |xᵢ| (argmaxᵢ |xᵢ|)
+    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+        &self,
+        x: &Slice<T, S, Lx>,
+        output: &mut Vec<usize>,
+    ) -> bool;
+
+    /// Index of max xᵢ (argmaxᵢ xᵢ)
     fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
+
+    /// Index of max |xᵢ| (argmaxᵢ |xᵢ|)
+    fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
 }
