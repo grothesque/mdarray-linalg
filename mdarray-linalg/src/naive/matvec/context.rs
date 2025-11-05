@@ -59,22 +59,19 @@ where
         todo!()
     }
 
-    fn add_outer<Ly: Layout>(self, _y: &DSlice<T, 1, Ly>, _beta: T) -> DTensor<T, 2> {
+    fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2> {
         let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
         a_copy.assign(self.a);
 
-        // Apply scale factor to preserve builder pattern logic: the alpha parameter
-        // may have been modified before this call, so we must scale the matrix
-        // before applying the rank-1 update. Unlike gemm operations, this requires
-        // a separate pass since BLAS lacks a direct matrix-scalar multiplication.
+        let (m, n) = *a_copy.shape();
 
-        // if self.alpha != 1.into().into() {
-        //     a_copy = a_copy.map(|x| x * self.alpha);
-        // }
+        for i in 0..m {
+            for j in 0..n {
+                a_copy[[i, j]] = self.alpha * a_copy[[i, j]] + beta * self.x[[i]] * y[[j]];
+            }
+        }
 
-        // ger(beta, self.x, y, &mut a_copy);
-        // a_copy
-        todo!()
+        a_copy
     }
 
     fn add_outer_special(self, _beta: T, _ty: Type, _tr: Triangle) -> DTensor<T, 2> {

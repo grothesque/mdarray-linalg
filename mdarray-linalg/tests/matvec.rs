@@ -16,10 +16,10 @@ use mdarray_linalg::testing::matvec::*;
 //     test_add_to(Naive)
 // }
 
-// #[test]
-// fn add_outer_basic() {
-//     test_add_outer_basic(Naive)
-// }
+#[test]
+fn add_outer_basic() {
+    test_add_outer_basic(Naive)
+}
 
 // #[test]
 // fn add_outer_sym() {
