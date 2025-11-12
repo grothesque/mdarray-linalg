@@ -315,10 +315,8 @@ where
     let incx = if x.rank() == 1 {
         into_i32(x.stride(0))
     } else {
-        1 // Treat multi-dimensional as flat contiguous
+        1
     };
 
-    let max_idx = unsafe { T::cblas_amax(n, x.as_ptr(), incx) } as usize - 1; // BLAS uses 1-based indexing
-
-    max_idx
+    (unsafe { T::cblas_amax(n, x.as_ptr(), incx) } as usize)
 }

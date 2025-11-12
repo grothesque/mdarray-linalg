@@ -17,7 +17,7 @@ itertools = "0.14.0"
 lapack-src = { version = "0.11", features = ["openblas"] }
 lapack-sys = "0.15.0"
 mdarray = "0.7.1"
-mdarray-linalg = { version = "0.1.2", path = "mdarray-linalg" }
+mdarray-linalg = { version = "0.2.0", path = "mdarray-linalg" }
 num-complex = "0.4.6"
 num-traits = "0.2.19"
 num_cpus = "1.17.0"

@@ -24,7 +24,7 @@ pub fn test_add_to_scaled(bd: impl MatVec<f64>) {
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let mut x2 = DTensor::<f64, 1>::from_elem(n, 1.);
     let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * 2 + i[1] + 1) as f64);
-    bd.matvec(&a, &x).add_to_scaled(&mut x2, 2.);
+    x2 = bd.matvec(&a, &x).add_to_scaled_vec(&x2, 2.);
     let y = DTensor::<f64, 1>::from_fn([n], |i| 2.0 * 1.0 + (6.0 + i[0] as f64 * 6.0));
 
     assert_eq!(x2, y);
@@ -35,12 +35,12 @@ pub fn test_add_to(bd: impl MatVec<f64>) {
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let mut x2 = DTensor::<f64, 1>::from_elem(n, 1.);
     let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[1] * 2 + i[0] + 1) as f64);
-    bd.matvec(&a, &x).add_to(&mut x2);
+    x2 = bd.matvec(&a, &x).add_to_vec(&x2);
     let y = DTensor::<f64, 1>::from_fn([n], |i| 10. + 3. * i[0] as f64);
     assert_eq!(x2, y);
 }
 
-pub fn test_add_outer_basic(bd: impl MatVec<f64>) {
+pub fn test_add_outer_basic(bd: impl Outer<f64>) {
     let m = 2;
     let n = 3;
 
@@ -48,7 +48,7 @@ pub fn test_add_outer_basic(bd: impl MatVec<f64>) {
     let y = DTensor::<f64, 1>::from_fn([n], |i| 10f64.powi(i[0] as i32));
     let a = DTensor::<f64, 2>::from_fn([m, n], |i| if i[0] == i[1] { 1.0 } else { 0.0 });
     let beta = 2.0;
-    let a_updated = bd.matvec(&a, &x).add_outer(&y, beta);
+    let a_updated = bd.outer(&x, &y).scale(beta).add_to(&a);
 
     let expected = DTensor::<f64, 2>::from_fn([m, n], |i| {
         let (row, col) = (i[0], i[1]);
@@ -59,7 +59,7 @@ pub fn test_add_outer_basic(bd: impl MatVec<f64>) {
     assert_eq!(a_updated, expected);
 }
 
-pub fn test_add_outer_sym(bd: impl MatVec<f64>) {
+pub fn test_add_outer_sym(bd: impl Outer<f64>) {
     let n = 3;
 
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
@@ -70,8 +70,9 @@ pub fn test_add_outer_sym(bd: impl MatVec<f64>) {
     let beta = 0.5;
 
     let a_updated = bd
-        .matvec(&a, &x)
-        .add_outer_special(beta, Type::Sym, Triangle::Upper);
+        .outer(&x, &x)
+        .scale(beta)
+        .add_to_special(&a, Type::Sym, Triangle::Upper);
 
     let expected = DTensor::<f64, 2>::from_fn([n, n], |i| {
         let (row, col) = (i[0], i[1]);
@@ -86,7 +87,7 @@ pub fn test_add_outer_sym(bd: impl MatVec<f64>) {
     assert_eq!(a_updated, expected);
 }
 
-pub fn test_add_outer_her(bd: impl MatVec<Complex<f64>>) {
+pub fn test_add_outer_her(bd: impl Outer<Complex<f64>>) {
     use num_complex::Complex64;
 
     let n = 3;
@@ -107,9 +108,10 @@ pub fn test_add_outer_her(bd: impl MatVec<Complex<f64>>) {
     });
     let beta = 0.3;
 
-    let a_updated =
-        bd.matvec(&a, &x)
-            .add_outer_special(Complex64::new(beta, 0.0), Type::Her, Triangle::Upper);
+    let a_updated = bd
+        .outer(&x, &x)
+        .scale(Complex64::new(beta, 0.0))
+        .add_to_special(&a, Type::Her, Triangle::Upper);
 
     let expected = DTensor::<Complex64, 2>::from_fn([n, n], |i| {
         let (row, col) = (i[0], i[1]);

@@ -28,7 +28,7 @@ where
 {
     fn parallelize(self) -> Self;
 
-    /// `A := α·A`
+    /// `α := α·α'`
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·A·x`
@@ -38,16 +38,10 @@ where
     fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
 
     /// `A := α·A·x + y`
-    fn add_to<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+    fn add_to_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>) -> DTensor<T, 1>;
 
     /// `A := α·A·x + β·y`
-    fn add_to_scaled<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T);
-
-    /// Rank-1 update: `β·x·yᵀ + α·A`
-    fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2>;
-
-    /// Rank-1 update: `β·x·xᵀ (or x·x†) + α·A`
-    fn add_outer_special(self, beta: T, ty: Type, tr: Triangle) -> DTensor<T, 2>;
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 1>;
 
     // Special rank-2 update: beta * (x * y^T + y * x^T) + alpha * A
     // syr2 her2
@@ -119,4 +113,47 @@ pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
 
     /// Index of max |xᵢ| (argmaxᵢ |xᵢ|)
     fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>>;
+}
+
+/// Outer product and rank-1 update
+pub trait Outer<T> {
+    fn outer<'a, Lx, Ly>(
+        &self,
+        x: &'a DSlice<T, 1, Lx>,
+        y: &'a DSlice<T, 1, Ly>,
+    ) -> impl OuterBuilder<'a, T, Lx, Ly>
+    where
+        Lx: Layout,
+        Ly: Layout;
+}
+
+/// Builder interface for configuring outer product and rank-1 update
+pub trait OuterBuilder<'a, T, Lx, Ly>
+where
+    Lx: Layout,
+    Ly: Layout,
+    T: 'a,
+    Lx: 'a,
+    Ly: 'a,
+{
+    /// `α := α·α'`
+    fn scale(self, alpha: T) -> Self;
+
+    /// Returns `α·xy`
+    fn eval(self) -> DTensor<T, 2>;
+
+    /// `xy := α·xy`
+    fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+
+    /// Rank-1 update, returns `α·x·yᵀ + A`
+    fn add_to<La: Layout>(self, a: &DSlice<T, 2, La>) -> DTensor<T, 2>;
+
+    /// Rank-1 update: `A := α·x·yᵀ + A`
+    fn add_to_overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+
+    /// Rank-1 update: returns `α·x·xᵀ (or x·x†) + A` on special matrix
+    fn add_to_special(self, a: &DSlice<T, 2>, ty: Type, tr: Triangle) -> DTensor<T, 2>;
+
+    /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
+    fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
 }

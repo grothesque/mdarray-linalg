@@ -5,12 +5,12 @@ use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
-use crate::matvec::{Argmax, MatVec, MatVecBuilder, VecOps};
+use crate::matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps};
 use crate::utils::unravel_index;
 
 use crate::Naive;
 
-struct BlasMatVecBuilder<'a, T, La, Lx>
+struct NaiveMatVecBuilder<'a, T, La, Lx>
 where
     La: Layout,
     Lx: Layout,
@@ -20,7 +20,7 @@ where
     x: &'a DSlice<T, 1, Lx>,
 }
 
-impl<'a, T, La, Lx> MatVecBuilder<'a, T, La, Lx> for BlasMatVecBuilder<'a, T, La, Lx>
+impl<'a, T, La, Lx> MatVecBuilder<'a, T, La, Lx> for NaiveMatVecBuilder<'a, T, La, Lx>
 where
     La: Layout,
     Lx: Layout,
@@ -32,16 +32,29 @@ where
         self
     }
 
+    /// `α := α·α'`
     fn scale(mut self, alpha: T) -> Self {
         self.alpha = alpha * self.alpha;
         self
     }
 
     fn eval(self) -> DTensor<T, 1> {
-        let mut _y = DTensor::<T, 1>::from_elem(self.x.len(), 0.into().into());
-        // gemv(self.alpha, self.a, self.x, 0.into().into(), &mut y);
-        // y
-        todo!()
+        let (m, n) = *self.a.shape();
+        let x_len = self.x.shape().0;
+
+        assert!(n == x_len, "Matrix columns must match vector length");
+
+        let mut result = DTensor::<T, 1>::from_elem([m], 0.into().into());
+
+        // Calculer A·x
+        for i in 0..m {
+            let mut sum = 0.into().into();
+            for j in 0..n {
+                sum = sum + self.a[[i, j]] * self.x[[j]];
+            }
+            result[[i]] = sum;
+        }
+        result
     }
 
     fn overwrite<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
@@ -49,53 +62,49 @@ where
         todo!()
     }
 
-    fn add_to<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
-        // gemv(self.alpha, self.a, self.x, 1.into().into(), y);
-        todo!()
-    }
+    fn add_to_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>) -> DTensor<T, 1> {
+        let (m, n) = *self.a.shape();
+        let x_len = self.x.shape().0;
+        let y_len = y.shape().0;
 
-    fn add_to_scaled<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>, _beta: T) {
-        // gemv(self.alpha, self.a, self.x, beta, y);
-        todo!()
-    }
+        assert!(n == x_len, "Matrix columns must match x vector length");
+        assert!(m == y_len, "Matrix rows must match y vector length");
 
-    fn add_outer<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 2> {
-        let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
-        a_copy.assign(self.a);
+        let mut result = DTensor::<T, 1>::from_elem([m], 0.into().into());
 
-        let (m, n) = *a_copy.shape();
-
+        // Ajouter A·x
         for i in 0..m {
             for j in 0..n {
-                a_copy[[i, j]] = self.alpha * a_copy[[i, j]] + beta * self.x[[i]] * y[[j]];
+                result[[i]] = y[[i]] + self.a[[i, j]] * self.x[[j]];
             }
         }
 
-        a_copy
+        result
     }
 
-    fn add_outer_special(self, _beta: T, _ty: Type, _tr: Triangle) -> DTensor<T, 2> {
-        let mut a_copy = DTensor::<T, 2>::from_elem(*self.a.shape(), 0.into().into());
-        a_copy.assign(self.a);
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 1> {
+        let (m, n) = *self.a.shape();
+        let x_len = self.x.shape().0;
+        let y_len = y.shape().0;
 
-        // if self.alpha != 1.into().into() {
-        //     a_copy = a_copy.map(|x| x * self.alpha);
-        // }
+        assert!(n == x_len, "Matrix columns must match x vector length");
+        assert!(m == y_len, "Matrix rows must match y vector length");
 
-        // let cblas_uplo = match tr {
-        //     Triangle::Lower => CBLAS_UPLO::CblasLower,
-        //     Triangle::Upper => CBLAS_UPLO::CblasUpper,
-        // };
+        let mut result = DTensor::<T, 1>::from_elem([m], 0.into().into());
 
-        // match ty {
-        //     Type::Her => her(cblas_uplo, beta.re(), self.x, &mut a_copy),
-        //     Type::Sym => syr(cblas_uplo, beta, self.x, &mut a_copy),
-        //     Type::Tri => {
-        //         ger(beta, self.x, self.x, &mut a_copy);
-        //     }
-        // }
-        // a_copy
-        todo!()
+        // Copier β·y dans result
+        for i in 0..m {
+            result[[i]] = beta * y[[i]];
+        }
+
+        // Ajouter A·x
+        for i in 0..m {
+            for j in 0..n {
+                result[[i]] = result[[i]] + self.a[[i, j]] * self.x[[j]];
+            }
+        }
+
+        result
     }
 }
 
@@ -114,7 +123,7 @@ where
         La: Layout,
         Lx: Layout,
     {
-        BlasMatVecBuilder {
+        NaiveMatVecBuilder {
             alpha: 1.into().into(),
             a,
             x,
@@ -265,6 +274,218 @@ impl<
             Some(result)
         } else {
             None
+        }
+    }
+}
+
+impl<T> Outer<T> for Naive
+where
+    T: ComplexFloat,
+    i8: Into<T::Real>,
+    T::Real: Into<T>,
+{
+    fn outer<'a, Lx, Ly>(
+        &self,
+        x: &'a DSlice<T, 1, Lx>,
+        y: &'a DSlice<T, 1, Ly>,
+    ) -> impl OuterBuilder<'a, T, Lx, Ly>
+    where
+        Lx: Layout,
+        Ly: Layout,
+    {
+        NaiveOuterBuilder {
+            alpha: 1.into().into(),
+            x,
+            y,
+        }
+    }
+}
+
+struct NaiveOuterBuilder<'a, T, Lx, Ly>
+where
+    Lx: Layout,
+    Ly: Layout,
+{
+    alpha: T,
+    x: &'a DSlice<T, 1, Lx>,
+    y: &'a DSlice<T, 1, Ly>,
+}
+
+impl<'a, T, Lx, Ly> OuterBuilder<'a, T, Lx, Ly> for NaiveOuterBuilder<'a, T, Lx, Ly>
+where
+    Lx: Layout,
+    Ly: Layout,
+    T: ComplexFloat,
+    i8: Into<T::Real>,
+    T::Real: Into<T>,
+{
+    /// `α := α·α'`
+    fn scale(mut self, alpha: T) -> Self {
+        self.alpha = alpha * self.alpha;
+        self
+    }
+
+    /// Returns `α·xy`
+    fn eval(self) -> DTensor<T, 2> {
+        let m = self.x.shape().0;
+        let n = self.y.shape().0;
+        let mut a = DTensor::<T, 2>::from_elem([m, n], 0.into().into());
+
+        for i in 0..m {
+            for j in 0..n {
+                a[[i, j]] = self.alpha * self.x[[i]] * self.y[[j]];
+            }
+        }
+
+        a
+    }
+
+    /// `a := α·xy`
+    fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+        let m = self.x.shape().0;
+        let n = self.y.shape().0;
+
+        let (ma, na) = *a.shape();
+
+        assert!(ma == n, "Output shape must match input vector length");
+        assert!(na == n, "Output shape must match input vector length");
+
+        for i in 0..m {
+            for j in 0..n {
+                a[[i, j]] = self.alpha * self.x[[i]] * self.y[[j]];
+            }
+        }
+    }
+
+    /// Rank-1 update, returns `α·x·yᵀ + A`
+    fn add_to<La: Layout>(self, a: &DSlice<T, 2, La>) -> DTensor<T, 2> {
+        let mut a_copy = DTensor::<T, 2>::from_elem(*a.shape(), 0.into().into());
+        a_copy.assign(a);
+
+        let (m, n) = *a_copy.shape();
+
+        for i in 0..m {
+            for j in 0..n {
+                a_copy[[i, j]] = a_copy[[i, j]] + self.alpha * self.x[[i]] * self.y[[j]];
+            }
+        }
+
+        a_copy
+    }
+
+    /// Rank-1 update: `A := α·x·yᵀ + A`
+    fn add_to_overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+        let m = self.x.shape().0;
+        let n = self.y.shape().0;
+
+        let (ma, na) = *a.shape();
+
+        assert!(ma == n, "Output shape must match input vector length");
+        assert!(na == n, "Output shape must match input vector length");
+
+        for i in 0..m {
+            for j in 0..n {
+                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.y[[j]];
+            }
+        }
+    }
+
+    /// Rank-1 update: returns `α·x·xᵀ (or x·x†) + A` on special matrix
+    fn add_to_special(self, a: &DSlice<T, 2>, ty: Type, tr: Triangle) -> DTensor<T, 2> {
+        let n = self.x.shape().0;
+        let mut a_copy = DTensor::<T, 2>::from_elem([n, n], 0.into().into());
+        a_copy.assign(a);
+
+        match tr {
+            Triangle::Upper => {
+                for i in 0..n {
+                    for j in i..n {
+                        match ty {
+                            Type::Sym => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                            Type::Her => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
+                            }
+                            Type::Tri => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                        }
+                    }
+                }
+            }
+            Triangle::Lower => {
+                for i in 0..n {
+                    for j in 0..=i {
+                        match ty {
+                            Type::Sym => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                            Type::Her => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
+                            }
+                            Type::Tri => {
+                                a_copy[[i, j]] =
+                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        a_copy
+    }
+
+    /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
+    fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
+        let n = self.x.shape().0;
+        let (ma, na) = *a.shape();
+
+        assert!(ma == na, "Input matrix must be square");
+        assert!(na == n, "Output shape must match input vector length");
+
+        match ty {
+            Type::Sym => {
+                // Symmetric: A := α·x·xᵀ + A
+                for i in 0..n {
+                    for j in 0..n {
+                        a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                    }
+                }
+            }
+            Type::Her => {
+                // Hermitian: A := α·x·x† + A (conjugate transpose)
+                for i in 0..n {
+                    for j in 0..n {
+                        a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
+                    }
+                }
+            }
+            Type::Tri => {
+                // Triangular: only update specified triangle
+                match tr {
+                    Triangle::Upper => {
+                        for i in 0..n {
+                            for j in i..n {
+                                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                        }
+                    }
+                    Triangle::Lower => {
+                        for i in 0..n {
+                            for j in 0..=i {
+                                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
