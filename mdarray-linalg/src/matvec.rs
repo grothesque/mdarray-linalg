@@ -34,13 +34,13 @@ where
     /// Returns `α·A·x`
     fn eval(self) -> DTensor<T, 1>;
 
-    /// `A := α·A·x`
+    /// `y := α·A·x`
     fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
 
-    /// `A := α·A·x + y`
+    /// `Returns α·A·x + y`
     fn add_to_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>) -> DTensor<T, 1>;
 
-    /// `A := α·A·x + β·y`
+    /// `Returns α·A·x + β·y`
     fn add_to_scaled_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 1>;
 
     // Special rank-2 update: beta * (x * y^T + y * x^T) + alpha * A
@@ -142,7 +142,7 @@ where
     /// Returns `α·xy`
     fn eval(self) -> DTensor<T, 2>;
 
-    /// `xy := α·xy`
+    /// `a := α·xy`
     fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>);
 
     /// Rank-1 update, returns `α·x·yᵀ + A`
