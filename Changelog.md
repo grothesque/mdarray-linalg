@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The `matvec` API has been reworked for greater flexibility and consistency.  
   - Rank-1 updates can now be performed via  
     ```rust
-    bd.outer(&x, &y).add_to(&a)
+	  bd.outer(&x, &y).eval();
+	  bd.outer(&x, &y).overwrite(&mut A);
+	  bd.outer(&x, &y).add_to(&A);
+	  bd.outer(&x, &y).scale(alpha).add_to_overwrite(&mut A); // (A := A + alpha x⊗y^T)
     ```  
     to compute a rank-1 update on matrix `a`.  
   - Matrix-vector products are now expressed as  
     ```rust
-    bd.matvec(&a, &x).add_to(&y)
+	bd.matvec(&A, &x).eval();
+	bd.matvec(&A, &x).overwrite(&mut y);
     ```  
     which computes `Ax + y`.
 

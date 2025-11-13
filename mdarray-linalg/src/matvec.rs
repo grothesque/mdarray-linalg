@@ -42,12 +42,6 @@ where
 
     /// `Returns α·A·x + β·y`
     fn add_to_scaled_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 1>;
-
-    // Special rank-2 update: beta * (x * y^T + y * x^T) + alpha * A
-    // syr2 her2
-
-    // Special rank-k update: beta * AA^T + alpha * C
-    // syrk herk
 }
 
 /// Vector operations and basic linear algebra utilities
@@ -156,6 +150,4 @@ where
 
     /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
     fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
-
-    // fn special(self, ty: Type, tr: Triangle) -> Self;
 }

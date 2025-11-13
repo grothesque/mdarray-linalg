@@ -299,8 +299,6 @@ where
             alpha: 1.into().into(),
             x,
             y,
-            ty: None,
-            tr: None,
         }
     }
 }
@@ -313,8 +311,6 @@ where
     alpha: T,
     x: &'a DSlice<T, 1, Lx>,
     y: &'a DSlice<T, 1, Ly>,
-    ty: Option<Type>,
-    tr: Option<Triangle>,
 }
 
 impl<'a, T, Lx, Ly> OuterBuilder<'a, T, Lx, Ly> for NaiveOuterBuilder<'a, T, Lx, Ly>
@@ -331,23 +327,13 @@ where
         self
     }
 
-    // fn special(mut self, ty: Type, tr: Triangle) -> Self {
-    //     self.ty = Some(ty);
-    //     self.tr = Some(tr);
-    //     self
-    // }
-
     /// Returns `α·xy`
     fn eval(self) -> DTensor<T, 2> {
         let m = self.x.shape().0;
         let n = self.y.shape().0;
         let mut a = DTensor::<T, 2>::from_elem([m, n], 0.into().into());
 
-        for i in 0..m {
-            for j in 0..n {
-                a[[i, j]] = self.alpha * self.x[[i]] * self.y[[j]];
-            }
-        }
+        naive_outer(&mut a, self.x, self.y, self.alpha, None, None);
 
         a
     }
@@ -359,14 +345,10 @@ where
 
         let (ma, na) = *a.shape();
 
-        assert!(ma == n, "Output shape must match input vector length");
+        assert!(ma == m, "Output shape must match input vector length");
         assert!(na == n, "Output shape must match input vector length");
 
-        for i in 0..m {
-            for j in 0..n {
-                a[[i, j]] = self.alpha * self.x[[i]] * self.y[[j]];
-            }
-        }
+        naive_outer(a, self.x, self.y, self.alpha, None, None);
     }
 
     /// Rank-1 update, returns `α·x·yᵀ + A`
@@ -374,13 +356,9 @@ where
         let mut a_copy = DTensor::<T, 2>::from_elem(*a.shape(), 0.into().into());
         a_copy.assign(a);
 
-        let (m, n) = *a_copy.shape();
+        println!("{} {} {:?}", self.x.shape().0, self.y.shape().0, *a.shape());
 
-        for i in 0..m {
-            for j in 0..n {
-                a_copy[[i, j]] = a_copy[[i, j]] + self.alpha * self.x[[i]] * self.y[[j]];
-            }
-        }
+        naive_outer(&mut a_copy, self.x, self.y, self.alpha, None, None);
 
         a_copy
     }
@@ -392,14 +370,10 @@ where
 
         let (ma, na) = *a.shape();
 
-        assert!(ma == n, "Output shape must match input vector length");
+        assert!(ma == m, "Output shape must match input vector length");
         assert!(na == n, "Output shape must match input vector length");
 
-        for i in 0..m {
-            for j in 0..n {
-                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.y[[j]];
-            }
-        }
+        naive_outer(a, self.x, self.y, self.alpha, None, None);
     }
 
     /// Rank-1 update: returns `α·x·xᵀ (or x·x†) + A` on special matrix
@@ -408,49 +382,7 @@ where
         let mut a_copy = DTensor::<T, 2>::from_elem([n, n], 0.into().into());
         a_copy.assign(a);
 
-        match tr {
-            Triangle::Upper => {
-                for i in 0..n {
-                    for j in i..n {
-                        match ty {
-                            Type::Sym => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                            Type::Her => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
-                            }
-                            Type::Tri => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                        }
-                    }
-                }
-            }
-            Triangle::Lower => {
-                for i in 0..n {
-                    for j in 0..=i {
-                        match ty {
-                            Type::Sym => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                            Type::Her => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
-                            }
-                            Type::Tri => {
-                                a_copy[[i, j]] =
-                                    a_copy[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+        naive_outer(&mut a_copy, self.x, self.y, self.alpha, Some(ty), Some(tr));
         a_copy
     }
 
@@ -462,42 +394,6 @@ where
         assert!(ma == na, "Input matrix must be square");
         assert!(na == n, "Output shape must match input vector length");
 
-        match ty {
-            Type::Sym => {
-                // Symmetric: A := α·x·xᵀ + A
-                for i in 0..n {
-                    for j in 0..n {
-                        a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                    }
-                }
-            }
-            Type::Her => {
-                // Hermitian: A := α·x·x† + A (conjugate transpose)
-                for i in 0..n {
-                    for j in 0..n {
-                        a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]].conj();
-                    }
-                }
-            }
-            Type::Tri => {
-                // Triangular: only update specified triangle
-                match tr {
-                    Triangle::Upper => {
-                        for i in 0..n {
-                            for j in i..n {
-                                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                        }
-                    }
-                    Triangle::Lower => {
-                        for i in 0..n {
-                            for j in 0..=i {
-                                a[[i, j]] = a[[i, j]] + self.alpha * self.x[[i]] * self.x[[j]];
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        naive_outer(a, self.x, self.y, self.alpha, Some(ty), Some(tr));
     }
 }
