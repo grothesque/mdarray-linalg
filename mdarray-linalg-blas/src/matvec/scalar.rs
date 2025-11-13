@@ -215,24 +215,6 @@ pub trait BlasScalar: Sized + ComplexFloat {
     }
     /// # Safety
     /// Calls must respect BLAS conventions.
-    unsafe fn cblas_geru(
-        layout: CBLAS_LAYOUT,
-        m: i32,
-        n: i32,
-        alpha: Self,
-        x: *const Self,
-        incx: i32,
-        y: *const Self,
-        incy: i32,
-        a: *mut Self,
-        lda: i32,
-    ) where
-        Self: Sized,
-    {
-        unimplemented!("")
-    }
-    /// # Safety
-    /// Calls must respect BLAS conventions.
     unsafe fn cblas_gerc(
         layout: CBLAS_LAYOUT,
         m: i32,
@@ -1036,7 +1018,7 @@ impl BlasScalar for Complex<f32> {
         }
     }
 
-    unsafe fn cblas_geru(
+    unsafe fn cblas_ger(
         layout: CBLAS_LAYOUT,
         m: i32,
         n: i32,
@@ -1412,7 +1394,7 @@ impl BlasScalar for Complex<f64> {
         }
     }
 
-    unsafe fn cblas_geru(
+    unsafe fn cblas_ger(
         layout: CBLAS_LAYOUT,
         m: i32,
         n: i32,

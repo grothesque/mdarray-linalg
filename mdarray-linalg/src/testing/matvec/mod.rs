@@ -59,6 +59,41 @@ pub fn test_add_outer_basic(bd: impl Outer<f64>) {
     assert_eq!(a_updated, expected);
 }
 
+pub fn test_add_outer_cplx(bd: impl Outer<Complex<f64>>) {
+    let m = 2;
+    let n = 3;
+
+    let x =
+        DTensor::<Complex<f64>, 1>::from_fn([m], |i| Complex::new((i[0] + 1) as f64, i[0] as f64));
+    let y = DTensor::<Complex<f64>, 1>::from_fn([n], |i| {
+        Complex::new(10f64.powi(i[0] as i32), i[0] as f64)
+    });
+    let a = DTensor::<Complex<f64>, 2>::from_fn([m, n], |i| {
+        if i[0] == i[1] {
+            Complex::new(1.0, 0.0)
+        } else {
+            Complex::new(0.0, 0.0)
+        }
+    });
+
+    let beta = Complex::new(2.0, 0.0);
+
+    // a_updated = a + β * (x ⊗ y)
+    let a_updated = bd.outer(&x, &y).scale(beta).add_to(&a);
+
+    let expected = DTensor::<Complex<f64>, 2>::from_fn([m, n], |i| {
+        let (row, col) = (i[0], i[1]);
+        let a_val = if row == col {
+            Complex::new(1.0, 0.0)
+        } else {
+            Complex::new(0.0, 0.0)
+        };
+        a_val + beta * x[[row]] * y[[col]]
+    });
+
+    assert_eq!(a_updated, expected);
+}
+
 pub fn test_add_outer_sym(bd: impl Outer<f64>) {
     let n = 3;
 

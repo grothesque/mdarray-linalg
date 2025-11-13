@@ -10,6 +10,8 @@ use crate::utils::unravel_index;
 
 use crate::Naive;
 
+use super::simple::naive_outer;
+
 struct NaiveMatVecBuilder<'a, T, La, Lx>
 where
     La: Layout,
@@ -297,6 +299,8 @@ where
             alpha: 1.into().into(),
             x,
             y,
+            ty: None,
+            tr: None,
         }
     }
 }
@@ -309,6 +313,8 @@ where
     alpha: T,
     x: &'a DSlice<T, 1, Lx>,
     y: &'a DSlice<T, 1, Ly>,
+    ty: Option<Type>,
+    tr: Option<Triangle>,
 }
 
 impl<'a, T, Lx, Ly> OuterBuilder<'a, T, Lx, Ly> for NaiveOuterBuilder<'a, T, Lx, Ly>
@@ -324,6 +330,12 @@ where
         self.alpha = alpha * self.alpha;
         self
     }
+
+    // fn special(mut self, ty: Type, tr: Triangle) -> Self {
+    //     self.ty = Some(ty);
+    //     self.tr = Some(tr);
+    //     self
+    // }
 
     /// Returns `α·xy`
     fn eval(self) -> DTensor<T, 2> {

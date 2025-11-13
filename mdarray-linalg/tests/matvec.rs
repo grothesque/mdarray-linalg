@@ -21,6 +21,11 @@ fn add_outer_basic() {
     test_add_outer_basic(Naive)
 }
 
+#[test]
+fn add_outer_cplx() {
+    test_add_outer_cplx(Naive)
+}
+
 // #[test]
 // fn add_outer_sym() {
 //     test_add_outer_sym(Naive)

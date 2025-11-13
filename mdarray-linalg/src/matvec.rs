@@ -156,4 +156,6 @@ where
 
     /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
     fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
+
+    // fn special(self, ty: Type, tr: Triangle) -> Self;
 }
