@@ -34,3 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 [0.2.0]: https://github.com/grothesque/mdarray-linalg/releases/tag/v0.2.
+
+## [0.1.2] - 2025-11-05
+### Added
+- `argmax_abs` with backends BLAS and Naive.
+
+## [0.1.1] - 2025-10-24
+- Initial Version
