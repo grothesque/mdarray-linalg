@@ -97,7 +97,11 @@ pub fn ger<T, La, Lx, Ly>(
         "a must be contiguous in one dimension"
     );
 
-    let lda = if row_major { into_i32(n) } else { into_i32(m) };
+    let lda = if row_major {
+        into_i32(a.stride(0))
+    } else {
+        into_i32(a.stride(1))
+    };
 
     unsafe {
         T::cblas_ger(
@@ -147,7 +151,11 @@ where
     );
 
     let x_inc = into_i32(x.stride(0));
-    let lda = if row_major { into_i32(n) } else { into_i32(m) };
+    let lda = if row_major {
+        into_i32(a.stride(0))
+    } else {
+        into_i32(a.stride(1))
+    };
 
     unsafe {
         T::cblas_syr(
@@ -188,7 +196,11 @@ pub fn her<T, Lx, La>(
     );
 
     let x_inc = into_i32(x.stride(0));
-    let lda = if row_major { into_i32(n) } else { into_i32(m) };
+    let lda = if row_major {
+        into_i32(a.stride(0))
+    } else {
+        into_i32(a.stride(1))
+    };
 
     unsafe {
         T::cblas_her(

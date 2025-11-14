@@ -122,6 +122,25 @@ pub fn test_add_outer_sym(bd: impl Outer<f64>) {
     assert_eq!(a_updated, expected);
 }
 
+pub fn test_add_outer_subview(bd: impl Outer<f64>) {
+    let mut a = DTensor::<f64, 2>::from_elem([3, 3], 1.);
+    let x = DTensor::<f64, 1>::from_elem([2], 1.);
+    let y = DTensor::<f64, 1>::from_elem([2], 2.);
+    let mut a_sub = a.view_mut(1.., 1..);
+    println!("{:?}", a_sub.strides());
+    println!("{:?}", *a_sub.shape());
+    bd.outer(&x, &y).scale(-1.).add_to_overwrite(&mut a_sub);
+
+    let mut expected = DTensor::<f64, 2>::from_elem([3, 3], 1.);
+    for i in 1..3 {
+        for j in 1..3 {
+            expected[[i, j]] = -1.;
+        }
+    }
+
+    assert_eq!(a, expected);
+}
+
 pub fn test_add_outer_her(bd: impl Outer<Complex<f64>>) {
     use num_complex::Complex64;
 

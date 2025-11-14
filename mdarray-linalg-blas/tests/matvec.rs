@@ -22,6 +22,11 @@ fn add_outer_basic() {
 }
 
 #[test]
+fn add_outer_subview() {
+    test_add_outer_subview(Blas)
+}
+
+#[test]
 fn add_outer_cplx() {
     test_add_outer_cplx(Blas)
 }

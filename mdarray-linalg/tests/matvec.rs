@@ -26,6 +26,11 @@ fn add_outer_cplx() {
     test_add_outer_cplx(Naive)
 }
 
+#[test]
+fn add_outer_subview() {
+    test_add_outer_subview(Naive)
+}
+
 // #[test]
 // fn add_outer_sym() {
 //     test_add_outer_sym(Naive)
