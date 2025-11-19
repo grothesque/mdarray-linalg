@@ -1,7 +1,4 @@
-use cblas_sys::{
-    CBLAS_DIAG, CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_UPLO, cblas_dcopy, cblas_drotg, cblas_dscal,
-    cblas_dswap,
-};
+use cblas_sys::CBLAS_UPLO;
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
@@ -34,7 +31,7 @@ where
     T::Real: Into<T>,
 {
     fn parallelize(self) -> Self {
-        self // BLAS gère souvent le parallélisme internement
+        self
     }
 
     fn scale(mut self, alpha: T) -> Self {
@@ -52,18 +49,12 @@ where
         gemv(self.alpha, self.a, self.x, T::zero(), y);
     }
 
-    fn add_to_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>) -> DTensor<T, 1> {
-        let mut result = DTensor::<T, 1>::from_elem([self.a.shape().0], 0.into().into());
-        result.assign(y);
-        gemv(self.alpha, self.a, self.x, T::one(), &mut result);
-        result
+    fn add_to_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+        gemv(self.alpha, self.a, self.x, T::one(), y);
     }
 
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>, beta: T) -> DTensor<T, 1> {
-        let mut result = DTensor::<T, 1>::from_elem([self.a.shape().0], 0.into().into());
-        result.assign(y);
-        gemv(self.alpha, self.a, self.x, beta, &mut result);
-        result
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T) {
+        gemv(self.alpha, self.a, self.x, beta, y);
     }
 }
 
@@ -121,34 +112,12 @@ impl<T: ComplexFloat + BlasScalar + 'static + Add<Output = T> + Mul<Output = T> 
         asum(x)
     }
 
-    fn copy<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
-        // Wrapper BLAS pour copy (exemple pour f64 ; adapte pour Complex via cblas_zcopy)
-        unsafe {
-            cblas_dcopy(
-                x.len() as i32,
-                x.as_ptr() as *const f64,
-                1,
-                y.as_mut_ptr() as *mut f64,
-                1,
-            );
-        }
-        // TODO: Gérer Complex<T> avec cblas_zcopy si T::Real == f64
-    }
-
-    fn scal<Lx: Layout>(&self, alpha: T, x: &mut DSlice<T, 1, Lx>) {
-        todo!()
-    }
-
-    fn swap<Lx: Layout, Ly: Layout>(&self, x: &mut DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>) {
-        todo!()
-    }
-
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        x: &mut DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
-        c: T::Real,
-        s: T,
+        _x: &mut DSlice<T, 1, Lx>,
+        _y: &mut DSlice<T, 1, Ly>,
+        _c: T::Real,
+        _s: T,
     ) where
         T: ComplexFloat,
     {
@@ -231,7 +200,6 @@ where
     }
 }
 
-// Ajout pour Outer
 struct BlasOuterBuilder<'a, T, Lx, Ly>
 where
     Lx: Layout,
@@ -263,46 +231,22 @@ where
     }
 
     fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
-        // Écrase avec α * x * y^T
         let zero = T::zero();
         a.fill(zero);
         ger(self.alpha, self.x, self.y, a);
     }
 
-    fn add_to<La: Layout>(self, a: &DSlice<T, 2, La>) -> DTensor<T, 2> {
-        let mut result = DTensor::<T, 2>::from_elem(*a.shape(), 0.into().into());
-        result.assign(a);
-        ger(self.alpha, self.x, self.y, &mut result);
-        result
-    }
-
-    fn add_to_write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn add_to<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
         ger(self.alpha, self.x, self.y, a);
     }
 
-    fn add_to_special(self, a: &DSlice<T, 2>, ty: Type, tr: Triangle) -> DTensor<T, 2> {
-        let mut result = DTensor::<T, 2>::from_elem(*a.shape(), 0.into().into());
-
-        result.assign(a);
+    fn add_to_special(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
         let cblas_uplo = match tr {
             Triangle::Lower => CBLAS_UPLO::CblasLower,
             Triangle::Upper => CBLAS_UPLO::CblasUpper,
         };
         match ty {
-            Type::Sym => syr(cblas_uplo, self.alpha, self.x, &mut result), // Assume x == y pour special
-            Type::Her => her(cblas_uplo, self.alpha.re(), self.x, &mut result),
-            Type::Tri => ger(self.alpha, self.x, self.x, &mut result), // Fallback à ger pour tri
-        }
-        result
-    }
-
-    fn add_to_special_write(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
-        let cblas_uplo = match tr {
-            Triangle::Lower => CBLAS_UPLO::CblasLower,
-            Triangle::Upper => CBLAS_UPLO::CblasUpper,
-        };
-        match ty {
-            Type::Sym => syr(cblas_uplo, self.alpha, self.x, a),
+            Type::Sym => syr(cblas_uplo, self.alpha, self.x, a), // Assume x == y
             Type::Her => her(cblas_uplo, self.alpha.re(), self.x, a),
             Type::Tri => ger(self.alpha, self.x, self.x, a),
         }
@@ -324,7 +268,6 @@ where
         Lx: Layout,
         Ly: Layout,
     {
-        // Note: Le trait dit MatVecBuilder, mais c'est OuterBuilder (corrige dans matvec.rs si besoin)
         BlasOuterBuilder {
             alpha: T::one(),
             x,

@@ -18,7 +18,7 @@
 //! | Functionality                                     | BLAS | LAPACK | Naive | Faer |
 //! |---------------------------------------------------|:----:|:------:|:-----:|:----:|
 //! | **▶︎ Basic vector/matrix operations**              |||||
-//! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | 🔧 | 🔧 |
+//! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | ✅ | 🔧 |
 //! | [Operations on vectors](crate::matvec::VecOps)     | ✅ | ⬜ | 🔧 | 🔧 |
 //! | [Matrix multiplication](crate::matmul::MatMul)     | ✅ | ⬜ | ✅ | ✅ |
 //! | [Argmax](crate::matvec::Argmax)                    | ✅ | ⬜ | ✅ | ⬜ |
