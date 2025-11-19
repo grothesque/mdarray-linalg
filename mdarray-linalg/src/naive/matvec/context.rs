@@ -59,7 +59,7 @@ where
         result
     }
 
-    fn overwrite<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
+    fn write<Ly: Layout>(self, _y: &mut DSlice<T, 1, Ly>) {
         // gemv(self.alpha, self.a, self.x, 0.into().into(), y);
         todo!()
     }
@@ -201,7 +201,7 @@ impl<
     T: ComplexFloat<Real = T> + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy,
 > Argmax<T> for Naive
 {
-    fn argmax_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
@@ -233,14 +233,14 @@ impl<
 
     fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         let mut result = Vec::new();
-        if self.argmax_overwrite(x, &mut result) {
+        if self.argmax_write(x, &mut result) {
             Some(result)
         } else {
             None
         }
     }
 
-    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_abs_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
@@ -272,7 +272,7 @@ impl<
 
     fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         let mut result = Vec::new();
-        if self.argmax_abs_overwrite(x, &mut result) {
+        if self.argmax_abs_write(x, &mut result) {
             Some(result)
         } else {
             None
@@ -339,7 +339,7 @@ where
     }
 
     /// `a := α·xy`
-    fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
         let m = self.x.shape().0;
         let n = self.y.shape().0;
 
@@ -364,7 +364,7 @@ where
     }
 
     /// Rank-1 update: `A := α·x·yᵀ + A`
-    fn add_to_overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn add_to_write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
         let m = self.x.shape().0;
         let n = self.y.shape().0;
 
@@ -387,7 +387,7 @@ where
     }
 
     /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
-    fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
+    fn add_to_special_write(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
         let n = self.x.shape().0;
         let (ma, na) = *a.shape();
 

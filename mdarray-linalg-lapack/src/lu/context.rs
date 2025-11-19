@@ -24,7 +24,7 @@ where
     T: ComplexFloat + Default + LapackScalar + Workspace,
     T::Real: Into<T>,
 {
-    fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
+    fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         l: &mut DSlice<T, 2, Ll>,
@@ -58,7 +58,7 @@ where
         (l, u, p_matrix)
     }
 
-    fn inv_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
         let (m, n) = get_dims!(a);
         if m != n {
             return Err(InvError::NotSquare { rows: m, cols: n });
@@ -150,7 +150,7 @@ where
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+    fn choleski_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
         let (m, n) = get_dims!(a);
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 

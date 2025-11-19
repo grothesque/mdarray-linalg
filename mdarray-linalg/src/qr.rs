@@ -4,7 +4,7 @@ use mdarray::{DSlice, DTensor, Layout};
 /// QR decomposition for orthogonal-triangular factorization
 pub trait QR<T> {
     /// Compute QR decomposition overwriting existing matrices
-    fn qr_overwrite<L: Layout, Lq: Layout, Lr: Layout>(
+    fn qr_write<L: Layout, Lq: Layout, Lr: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         q: &mut DSlice<T, 2, Lq>,

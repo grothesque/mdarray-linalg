@@ -116,7 +116,7 @@ where
     fn eval(self) -> DTensor<T, 2>;
 
     /// Overwrites the provided slice with the result.
-    fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
+    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
 
     /// Adds the result to the provided slice.
     fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
@@ -160,7 +160,7 @@ where
     fn eval(self) -> Tensor<T, DynRank>;
 
     /// Overwrites the provided tensor with the result.
-    fn overwrite(self, c: &mut Slice<T>);
+    fn write(self, c: &mut Slice<T>);
 }
 
 pub enum Axes {

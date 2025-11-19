@@ -58,7 +58,7 @@ pub fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_overwrite(bd: &impl Solve<f64>) {
+pub fn test_solve_write(bd: &impl Solve<f64>) {
     let n = 4;
     let nrhs = 2;
     let mut a = random_matrix(n, n);
@@ -67,7 +67,7 @@ pub fn test_solve_overwrite(bd: &impl Solve<f64>) {
     let original_b = b.clone();
     let mut p = DTensor::<f64, 2>::zeros([n, n]);
 
-    let _ = bd.solve_overwrite(&mut a, &mut b, &mut p);
+    let _ = bd.solve_write(&mut a, &mut b, &mut p);
 
     // b now contains the solution x
     test_solve_verification(&original_a, &b, &original_b);

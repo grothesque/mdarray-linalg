@@ -12,8 +12,8 @@ fn solve_multiple_rhs() {
 }
 
 #[test]
-fn solve_overwrite() {
-    test_solve_overwrite(&Faer);
+fn solve_write() {
+    test_solve_write(&Faer);
 }
 
 #[test]

@@ -72,11 +72,11 @@ fn chained_operations() {
     let a = create_test_matrix_f64([2, 3]).eval();
     let b = create_test_matrix_f64([3, 2]).eval();
 
-    // Test scale then overwrite
+    // Test scale then write
     let scale_factor = 2.0;
     let mut c = create_test_matrix_f64([2, 2]).eval();
 
-    Blas.matmul(&a, &b).scale(scale_factor).overwrite(&mut c);
+    Blas.matmul(&a, &b).scale(scale_factor).write(&mut c);
 
     let expected = naive_matmul(&a, &b);
 

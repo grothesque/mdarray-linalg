@@ -64,7 +64,7 @@ pub fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_lu_overwrite(bd: &impl LU<f64>) {
+pub fn test_lu_write(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let original_a = a.clone();
@@ -73,12 +73,12 @@ pub fn test_lu_overwrite(bd: &impl LU<f64>) {
     let mut u = DTensor::<f64, 2>::zeros([n, n]);
     let mut p = DTensor::<f64, 2>::zeros([n, n]);
 
-    bd.lu_overwrite(&mut a, &mut l, &mut u, &mut p);
+    bd.lu_write(&mut a, &mut l, &mut u, &mut p);
 
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
+pub fn test_lu_write_rectangular(bd: &impl LU<f64>) {
     let n = 5;
     let m = 3;
     let mut a = random_matrix(n, m);
@@ -88,7 +88,7 @@ pub fn test_lu_overwrite_rectangular(bd: &impl LU<f64>) {
     let mut u = DTensor::<f64, 2>::zeros([std::cmp::min(n, m), m]);
     let mut p = DTensor::<f64, 2>::zeros([n, n]);
 
-    bd.lu_overwrite(&mut a, &mut l, &mut u, &mut p);
+    bd.lu_write(&mut a, &mut l, &mut u, &mut p);
 
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
@@ -108,11 +108,11 @@ pub fn test_inverse(bd: &impl LU<f64>) {
     }
 }
 
-pub fn test_inverse_overwrite(bd: &impl LU<f64>) {
+pub fn test_inverse_write(bd: &impl LU<f64>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let a_clone = a.clone();
-    let _ = bd.inv_overwrite(&mut a);
+    let _ = bd.inv_write(&mut a);
 
     let product = naive_matmul(&a, &a_clone);
 
@@ -256,14 +256,14 @@ pub fn test_cholesky_decomposition(bd: &impl LU<f64>) {
     test_cholesky_reconstruction(&original_a, &l);
 }
 
-pub fn test_cholesky_overwrite(bd: &impl LU<f64>) {
+pub fn test_cholesky_write(bd: &impl LU<f64>) {
     let n = 4;
     let a = random_positive_definite_matrix(n);
     let original_a = a.clone();
     let mut a_copy = a.clone();
 
     let l = bd.choleski(&mut a_copy.clone()).unwrap();
-    bd.choleski_overwrite(&mut a_copy).unwrap();
+    bd.choleski_write(&mut a_copy).unwrap();
 
     println!("{l:?}");
     println!("{a_copy:?}");

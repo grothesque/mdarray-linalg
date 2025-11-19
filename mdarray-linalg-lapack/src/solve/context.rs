@@ -27,7 +27,7 @@ where
     T: ComplexFloat + Default + LapackScalar,
     T::Real: Into<T>,
 {
-    fn solve_overwrite<La: Layout, Lb: Layout, Lp: Layout>(
+    fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, La>,
         b: &mut DSlice<T, 2, Lb>,

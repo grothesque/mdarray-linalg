@@ -2,8 +2,8 @@ use mdarray_linalg::testing::matvec::*;
 use mdarray_linalg_blas::Blas;
 
 #[test]
-fn eval_and_overwrite() {
-    test_eval_and_overwrite(Blas)
+fn eval_and_write() {
+    test_eval_and_write(Blas)
 }
 
 #[test]
@@ -82,6 +82,6 @@ fn argmax_abs() {
 }
 
 #[test]
-fn argmax_overwrite_real() {
-    test_argmax_overwrite_real(Blas)
+fn argmax_write_real() {
+    test_argmax_write_real(Blas)
 }

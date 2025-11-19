@@ -12,13 +12,13 @@ fn lu_decomposition_rectangular() {
 }
 
 #[test]
-fn lu_overwrite() {
-    test_lu_overwrite(&Lapack::default());
+fn lu_write() {
+    test_lu_write(&Lapack::default());
 }
 
 #[test]
-fn lu_overwrite_rectangular() {
-    test_lu_overwrite_rectangular(&Lapack::default());
+fn lu_write_rectangular() {
+    test_lu_write_rectangular(&Lapack::default());
 }
 
 #[test]
@@ -27,8 +27,8 @@ fn inverse() {
 }
 
 #[test]
-fn inverse_overwrite() {
-    test_inverse_overwrite(&Lapack::default());
+fn inverse_write() {
+    test_inverse_write(&Lapack::default());
 }
 
 #[test]
@@ -53,8 +53,8 @@ fn cholesky_decomposition() {
 }
 
 #[test]
-fn cholesky_overwrite() {
-    test_cholesky_overwrite(&Lapack::default());
+fn cholesky_write() {
+    test_cholesky_write(&Lapack::default());
 }
 
 #[test]

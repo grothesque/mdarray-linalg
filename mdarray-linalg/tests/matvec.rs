@@ -2,8 +2,8 @@ use mdarray_linalg::Naive;
 use mdarray_linalg::testing::matvec::*;
 
 // #[test]
-// fn eval_and_overwrite() {
-//     test_eval_and_overwrite(Naive)
+// fn eval_and_write() {
+//     test_eval_and_write(Naive)
 // }
 
 // #[test]
@@ -82,6 +82,6 @@ fn argmax_abs() {
 }
 
 #[test]
-fn argmax_overwrite_real() {
-    test_argmax_overwrite_real(Naive)
+fn argmax_write_real() {
+    test_argmax_write_real(Naive)
 }

@@ -75,7 +75,7 @@ where
     /// B is overwritten with the solution X
     /// P is filled with the permutation matrix such that P*A = L*U (here P = identity)
     /// Returns Ok(()) on success, Err(SolveError) on failure
-    fn solve_overwrite<La: Layout, Lb: Layout, Lp: Layout>(
+    fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, La>,
         b: &mut DSlice<T, 2, Lb>,

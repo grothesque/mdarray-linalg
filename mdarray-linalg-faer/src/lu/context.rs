@@ -41,7 +41,7 @@ where
     }
 
     /// Computes LU decomposition overwriting existing matrices
-    fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
+    fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         l: &mut DSlice<T, 2, Ll>,
@@ -110,7 +110,7 @@ where
     }
 
     /// Computes inverse overwriting the input matrix
-    fn inv_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
         let (m, n) = *a.shape();
 
         if m != n {
@@ -188,7 +188,7 @@ where
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_overwrite<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
-        todo!("choleski_overwrite will be implemented later")
+    fn choleski_write<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+        todo!("choleski_write will be implemented later")
     }
 }

@@ -75,7 +75,7 @@ pub trait Eig<T: ComplexFloat> {
 
     // // Compute eigenvalues and right eigenvectors, overwriting
     // existing matrices
-    //fn eig_overwrite<L: Layout, Lr: Layout, Li:
+    //fn eig_write<L: Layout, Lr: Layout, Li:
     // Layout, Lv: Layout>( &self, a: &mut DSlice<T, 2, L>,
     // eigenvalues: &mut DSlice<Complex<T>, 2, Dense>,
     // right_eigenvectors: &mut DSlice<Complex<T>, 2, Dense>, ) ->
@@ -91,7 +91,7 @@ pub trait Eig<T: ComplexFloat> {
     fn schur<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T>;
 
     /// Compute Schur decomposition overwriting existing matrices
-    fn schur_overwrite<L: Layout>(
+    fn schur_write<L: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         t: &mut DSlice<T, 2, Dense>,
@@ -102,7 +102,7 @@ pub trait Eig<T: ComplexFloat> {
     fn schur_complex<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SchurResult<T>;
 
     /// Compute Schur complex) decomposition overwriting existing matrices
-    fn schur_complex_overwrite<L: Layout>(
+    fn schur_complex_write<L: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         t: &mut DSlice<T, 2, Dense>,

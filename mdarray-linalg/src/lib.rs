@@ -82,7 +82,7 @@
 //!Some notes:
 //!
 //! - **Memory usage**: Each trait provides a method returning new
-//!   matrices and an overwrite variant using user-allocated buffers.
+//!   matrices and an write variant using user-allocated buffers.
 //!   In that last case, output shapes must match exactly.
 //!
 //! - **Backend configuration**: Some accept parameters; for example, SVD

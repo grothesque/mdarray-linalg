@@ -12,13 +12,13 @@ fn lu_decomposition_rectangular() {
 }
 
 #[test]
-fn lu_overwrite() {
-    test_lu_overwrite(&Faer);
+fn lu_write() {
+    test_lu_write(&Faer);
 }
 
 #[test]
-fn lu_overwrite_rectangular() {
-    test_lu_overwrite_rectangular(&Faer);
+fn lu_write_rectangular() {
+    test_lu_write_rectangular(&Faer);
 }
 
 #[test]
@@ -27,8 +27,8 @@ fn inverse() {
 }
 
 #[test]
-fn inverse_overwrite() {
-    test_inverse_overwrite(&Faer);
+fn inverse_write() {
+    test_inverse_write(&Faer);
 }
 
 // #[test]
@@ -53,8 +53,8 @@ fn determinant_dummy() {
 // }
 
 // #[test]
-// fn cholesky_overwrite() {
-//     test_cholesky_overwrite(&Faer);
+// fn cholesky_write() {
+//     test_cholesky_write(&Faer);
 // }
 
 // #[test]

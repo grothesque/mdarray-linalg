@@ -40,7 +40,7 @@ pub trait SVD<T> {
     /// - `s` contains the singular values (diagonal matrix S)
     /// - `u` contains the left singular vectors (matrix U)
     /// - `vt` contains the transposed right singular vectors (matrix V^T)
-    fn svd_overwrite<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         s: &mut DSlice<T, 2, Ls>,
@@ -50,7 +50,7 @@ pub trait SVD<T> {
 
     /// Compute only singular values, overwriting existing matrix
     /// Computes only the diagonal elements of the S matrix from the SVD decomposition.
-    fn svd_overwrite_s<L: Layout, Ls: Layout>(
+    fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         s: &mut DSlice<T, 2, Ls>,

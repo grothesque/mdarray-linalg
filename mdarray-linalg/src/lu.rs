@@ -28,7 +28,7 @@ pub type InvResult<T> = Result<DTensor<T, 2>, InvError>;
 ///  LU decomposition and matrix inversion
 pub trait LU<T> {
     /// Computes LU decomposition overwriting existing matrices
-    fn lu_overwrite<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
+    fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         l: &mut DSlice<T, 2, Ll>,
@@ -43,7 +43,7 @@ pub trait LU<T> {
     ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>);
 
     /// Computes inverse overwriting the input matrix
-    fn inv_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
+    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
 
     /// Computes inverse with new allocated matrix
     fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
@@ -56,5 +56,5 @@ pub trait LU<T> {
     fn choleski<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_overwrite<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
+    fn choleski_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
 }

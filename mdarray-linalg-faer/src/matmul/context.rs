@@ -90,7 +90,7 @@ where
         into_mdarray::<T>(c_faer)
     }
 
-    fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,
@@ -147,7 +147,7 @@ where
         _contract(Faer, self.a, self.b, self.axes, self.alpha)
     }
 
-    fn overwrite(self, _c: &mut Slice<T>) {
+    fn write(self, _c: &mut Slice<T>) {
         todo!()
     }
 }

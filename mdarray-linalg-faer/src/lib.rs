@@ -39,7 +39,7 @@
 //! let mut q = DTensor::<f64, 2>::zeros([m, m]);
 //! let mut r = DTensor::<f64, 2>::zeros([m, n]);
 //!
-//! bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
+//! bd.qr_write(&mut a.clone(), &mut q, &mut r); //
 //! println!("Q: {:?}", q);
 //! println!("R: {:?}", r);
 //! ```

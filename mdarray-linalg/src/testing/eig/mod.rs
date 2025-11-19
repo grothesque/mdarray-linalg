@@ -215,14 +215,14 @@ pub fn test_eig_values_only(bd: &impl Eig<f64>) {
     assert!(right_eigenvectors.is_none());
 }
 
-// test on overwrite removed as the function has been temporary removed.
+// test on write removed as the function has been temporary removed.
 
 // #[test]
-// fn eig_overwrite() {
-//     test_eig_overwrite(&Lapack::default());
+// fn eig_write() {
+//     test_eig_write(&Lapack::default());
 // }
 
-// fn test_eig_overwrite(bd: &impl Eig<f64>) {
+// fn test_eig_write(bd: &impl Eig<f64>) {
 //     let n = 3;
 //     let mut a = random_matrix(n, n);
 //     let original_a = a.clone();
@@ -230,7 +230,7 @@ pub fn test_eig_values_only(bd: &impl Eig<f64>) {
 //     let mut eigenvalues = DTensor::<Complex<f64>, 2>::zeros([1, n]);
 //     let mut right_eigenvectors_raw = DTensor::<f64, 2>::zeros([n, n]);
 
-//     bd.eig_overwrite::<Dense, Dense, Dense, Dense>(
+//     bd.eig_write::<Dense, Dense, Dense, Dense>(
 //         &mut a,
 //         &mut eigenvalues,
 //         &mut right_eigenvectors_raw,

@@ -62,7 +62,7 @@ where
         // trouble
     }
 
-    fn overwrite<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
         gemm(self.alpha, self.a, self.b, T::zero(), c);
     }
 
@@ -130,7 +130,7 @@ where
         _contract(Blas, self.a, self.b, self.axes, self.alpha)
     }
 
-    fn overwrite(self, _c: &mut Slice<T>) {
+    fn write(self, _c: &mut Slice<T>) {
         todo!()
     }
 }

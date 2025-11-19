@@ -53,7 +53,7 @@ where
     }
 
     // Computes full SVD, overwriting existing matrices
-    fn svd_overwrite<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         s: &mut DSlice<T, 2, Ls>,
@@ -64,7 +64,7 @@ where
     }
 
     // Computes only singular values, overwriting existing matrix
-    fn svd_overwrite_s<L: Layout, Ls: Layout>(
+    fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
         a: &mut DSlice<T, 2, L>,
         s: &mut DSlice<T, 2, Ls>,

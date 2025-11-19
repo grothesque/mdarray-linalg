@@ -37,7 +37,7 @@
 //! let mut r = DTensor::<f64, 2>::zeros([m, n]);
 //!
 //! let bd = Lapack::new();
-//! bd.qr_overwrite(&mut a.clone(), &mut q, &mut r); //
+//! bd.qr_write(&mut a.clone(), &mut q, &mut r); //
 //! println!("Q: {:?}", q);
 //! println!("R: {:?}", r);
 //! ```

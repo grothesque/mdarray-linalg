@@ -48,7 +48,7 @@ where
         y
     }
 
-    fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+    fn write<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
         gemv(self.alpha, self.a, self.x, T::zero(), y);
     }
 
@@ -169,7 +169,7 @@ impl<
 where
     T::Real: PartialOrd,
 {
-    fn argmax_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
@@ -196,14 +196,14 @@ where
 
     fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         let mut result = Vec::new();
-        if self.argmax_overwrite(x, &mut result) {
+        if self.argmax_write(x, &mut result) {
             Some(result)
         } else {
             None
         }
     }
 
-    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_abs_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
@@ -223,7 +223,7 @@ where
 
     fn argmax_abs<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
         let mut result = Vec::new();
-        if self.argmax_abs_overwrite(x, &mut result) {
+        if self.argmax_abs_write(x, &mut result) {
             Some(result)
         } else {
             None
@@ -262,7 +262,7 @@ where
         a
     }
 
-    fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
         // Écrase avec α * x * y^T
         let zero = T::zero();
         a.fill(zero);
@@ -276,7 +276,7 @@ where
         result
     }
 
-    fn add_to_overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn add_to_write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
         ger(self.alpha, self.x, self.y, a);
     }
 
@@ -296,7 +296,7 @@ where
         result
     }
 
-    fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
+    fn add_to_special_write(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
         let cblas_uplo = match tr {
             Triangle::Lower => CBLAS_UPLO::CblasLower,
             Triangle::Upper => CBLAS_UPLO::CblasUpper,

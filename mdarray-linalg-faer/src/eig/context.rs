@@ -385,7 +385,7 @@ where
     }
 
     /// Compute Schur decomposition overwriting existing matrices
-    fn schur_overwrite<L: Layout>(
+    fn schur_write<L: Layout>(
         &self,
         _a: &mut DSlice<T, 2, L>,
         _t: &mut DSlice<T, 2, Dense>,
@@ -400,7 +400,7 @@ where
     }
 
     /// Compute Schur (complex) decomposition overwriting existing matrices
-    fn schur_complex_overwrite<L: Layout>(
+    fn schur_complex_write<L: Layout>(
         &self,
         _a: &mut DSlice<T, 2, L>,
         _t: &mut DSlice<T, 2, Dense>,

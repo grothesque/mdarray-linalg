@@ -6,7 +6,7 @@ use crate::prelude::*;
 
 use crate::matmul::{Triangle, Type};
 
-pub fn test_eval_and_overwrite(bd: impl MatVec<f64>) {
+pub fn test_eval_and_write(bd: impl MatVec<f64>) {
     let n = 3;
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * n + i[1] + 1) as f64);
@@ -15,7 +15,7 @@ pub fn test_eval_and_overwrite(bd: impl MatVec<f64>) {
     assert_eq!(y_result, y);
 
     let mut y_overwritten = DTensor::<f64, 1>::from_elem(n, 0.);
-    bd.matvec(&a, &x).scale(2.).overwrite(&mut y_overwritten);
+    bd.matvec(&a, &x).scale(2.).write(&mut y_overwritten);
     assert_eq!(y_overwritten, y);
 }
 
@@ -129,7 +129,7 @@ pub fn test_add_outer_subview(bd: impl Outer<f64>) {
     let mut a_sub = a.view_mut(1.., 1..);
     println!("{:?}", a_sub.strides());
     println!("{:?}", *a_sub.shape());
-    bd.outer(&x, &y).scale(-1.).add_to_overwrite(&mut a_sub);
+    bd.outer(&x, &y).scale(-1.).add_to_write(&mut a_sub);
 
     let mut expected = DTensor::<f64, 2>::from_elem([3, 3], 1.);
     for i in 1..3 {
@@ -312,25 +312,25 @@ pub fn test_argmax_real(bd: impl Argmax<f64>) {
     assert_eq!(idx, vec![1, 1, 1]);
 }
 
-pub fn test_argmax_overwrite_real(bd: impl Argmax<f64>) {
+pub fn test_argmax_write_real(bd: impl Argmax<f64>) {
     let mut output = Vec::new();
 
     // ----- Empty tensor -----
     let x = DTensor::<f64, 1>::from_fn([0], |_| 0.0);
-    let success = bd.argmax_overwrite(&x, &mut output);
+    let success = bd.argmax_write(&x, &mut output);
     assert!(!success);
     assert_eq!(output, vec![]);
 
     // ----- Scalar (rank 0) -----
     let x = tensor![42.];
-    let success = bd.argmax_overwrite(&x, &mut output);
+    let success = bd.argmax_write(&x, &mut output);
     assert!(success);
     assert_eq!(output, vec![0]);
 
     // ----- 1D -----
     let n = 5;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
-    let success = bd.argmax_overwrite(&x.view(..), &mut output);
+    let success = bd.argmax_write(&x.view(..), &mut output);
     assert!(success);
     assert_eq!(output, vec![4]);
 
@@ -338,20 +338,20 @@ pub fn test_argmax_overwrite_real(bd: impl Argmax<f64>) {
     let x = DTensor::<f64, 2>::from_fn([2, 3], |i| (i[0] * 3 + i[1]) as f64);
     // [[0., 1., 2.],
     //  [3., 4., 5.]]
-    let success = bd.argmax_overwrite(&x.view(.., ..).into_dyn(), &mut output);
+    let success = bd.argmax_write(&x.view(.., ..).into_dyn(), &mut output);
     assert!(success);
     assert_eq!(output, vec![1, 2]);
 
     // ----- 3D -----
     let x = DTensor::<f64, 3>::from_fn([2, 2, 2], |i| (i[0] * 4 + i[1] * 2 + i[2]) as f64);
-    let success = bd.argmax_overwrite(&x.view(.., .., ..).into_dyn(), &mut output);
+    let success = bd.argmax_write(&x.view(.., .., ..).into_dyn(), &mut output);
     assert!(success);
     assert_eq!(output, vec![1, 1, 1]);
 
     // ----- Test reuse of output buffer -----
     output = vec![99, 99, 99];
     let x = DTensor::<f64, 1>::from_fn([3], |i| (3 - i[0]) as f64);
-    let success = bd.argmax_overwrite(&x.view(..), &mut output);
+    let success = bd.argmax_write(&x.view(..), &mut output);
     assert!(success);
     assert_eq!(output, vec![0]); // Should be cleared and contain only result
 }

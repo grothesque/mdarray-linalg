@@ -91,9 +91,9 @@ pub fn tensordot_outer_should_match_manual_kronecker_impl(backend: &impl MatMul<
     assert_eq!(result, expected);
 }
 
-// --- Test overwrite functionality ---
+// --- Test write functionality ---
 
-// fn tensordot_overwrite_impl(backend: &impl MatMul<f64>) {
+// fn tensordot_write_impl(backend: &impl MatMul<f64>) {
 //     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
 //     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
 //     let expected = tensor![[19., 22.], [43., 50.]].into_dyn();
@@ -101,30 +101,30 @@ pub fn tensordot_outer_should_match_manual_kronecker_impl(backend: &impl MatMul<
 //     let mut c = tensor![[0., 0.], [0., 0.]].into_dyn();
 //     backend
 //         .contract(&a, &b, vec![1], vec![0])
-//         .overwrite(&mut c);
+//         .write(&mut c);
 
 //     assert_eq!(c, expected);
 // }
 
 // #[test]
-// fn tensordot_overwrite() {
-//     tensordot_overwrite_impl(&Naive);
-//     tensordot_overwrite_impl(&Blas);
+// fn tensordot_write() {
+//     tensordot_write_impl(&Naive);
+//     tensordot_write_impl(&Blas);
 // }
 
-// fn tensordot_overwrite_all_axes_impl(backend: &impl MatMul<f64>) {
+// fn tensordot_write_all_axes_impl(backend: &impl MatMul<f64>) {
 //     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
 //     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
 //     let expected = tensor![[70.0]].into_dyn();
 
 //     let mut c = tensor![[0.0]].into_dyn();
-//     backend.contract_all(&a, &b).overwrite(&mut c);
+//     backend.contract_all(&a, &b).write(&mut c);
 
 //     assert_eq!(c, expected);
 // }
 
 // #[test]
-// fn tensordot_overwrite_all_axes() {
-//     tensordot_overwrite_all_axes_impl(&Naive);
-//     tensordot_overwrite_all_axes_impl(&Blas);
+// fn tensordot_write_all_axes() {
+//     tensordot_write_all_axes_impl(&Naive);
+//     tensordot_write_all_axes_impl(&Blas);
 // }

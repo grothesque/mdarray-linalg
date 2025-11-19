@@ -35,7 +35,7 @@ where
     fn eval(self) -> DTensor<T, 1>;
 
     /// `y := α·A·x`
-    fn overwrite<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+    fn write<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
 
     /// `Returns α·A·x + y`
     fn add_to_vec<Ly: Layout>(self, y: &DSlice<T, 1, Ly>) -> DTensor<T, 1>;
@@ -90,13 +90,13 @@ pub trait VecOps<T: ComplexFloat> {
 
 /// Argmax for tensors, unlike other traits: it requires `T: PartialOrd` and works on tensor of any rank.
 pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
-    fn argmax_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
     ) -> bool;
 
-    fn argmax_abs_overwrite<Lx: Layout, S: Shape>(
+    fn argmax_abs_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,
         output: &mut Vec<usize>,
@@ -137,17 +137,17 @@ where
     fn eval(self) -> DTensor<T, 2>;
 
     /// `a := α·xy`
-    fn overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+    fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>);
 
     /// Rank-1 update, returns `α·x·yᵀ + A`
     fn add_to<La: Layout>(self, a: &DSlice<T, 2, La>) -> DTensor<T, 2>;
 
     /// Rank-1 update: `A := α·x·yᵀ + A`
-    fn add_to_overwrite<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+    fn add_to_write<La: Layout>(self, a: &mut DSlice<T, 2, La>);
 
     /// Rank-1 update: returns `α·x·xᵀ (or x·x†) + A` on special matrix
     fn add_to_special(self, a: &DSlice<T, 2>, ty: Type, tr: Triangle) -> DTensor<T, 2>;
 
     /// Rank-1 update: `A := α·x·xᵀ (or x·x†) + A` on special matrix
-    fn add_to_special_overwrite(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
+    fn add_to_special_write(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
 }
