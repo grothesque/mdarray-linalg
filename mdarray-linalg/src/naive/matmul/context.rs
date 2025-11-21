@@ -1,13 +1,9 @@
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
-
 use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
 
-use crate::matmul::{Axes, Side, Triangle, Type, _contract};
-use crate::prelude::*;
-
 use crate::Naive;
-
+use crate::matmul::{Axes, Side, MatMul, MatMulBuilder, ContractBuilder, Triangle, Type, _contract};
 use super::simple::naive_matmul;
 
 struct NaiveMatMulBuilder<'a, T, La, Lb>

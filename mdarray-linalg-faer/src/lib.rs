@@ -1,6 +1,6 @@
 //! ```rust
 //! use mdarray::{DTensor, tensor};
-//! use mdarray_linalg::prelude::*; // Imports only traits
+//! use mdarray_linalg::prelude::*; // Imports traits anonymously
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
 //!

@@ -9,7 +9,7 @@
 //! The following example demonstrates the core functionality of BLAS:
 //! ```rust
 //! use mdarray::tensor;
-//! use mdarray_linalg::prelude::*; // Imports only traits
+//! use mdarray_linalg::prelude::*; // Imports traits anonymously
 //!
 //! use mdarray_linalg_blas::Blas;
 //!

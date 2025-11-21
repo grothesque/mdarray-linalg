@@ -1,13 +1,10 @@
+use mdarray::DTensor;
 use num_complex::{Complex, ComplexFloat};
-
 use approx::assert_relative_eq;
 
 use super::common::{naive_matmul, random_matrix};
-use crate::eig::EigDecomp;
-use crate::eig::SchurDecomp;
-use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use crate::{prelude::*, pretty_print};
-use mdarray::DTensor;
+use crate::eig::{Eig, EigDecomp, SchurDecomp};
+use crate::{assert_complex_matrix_eq, assert_matrix_eq, pretty_print};
 
 fn test_eigen_reconstruction<T>(
     a: &DTensor<T, 2>,
