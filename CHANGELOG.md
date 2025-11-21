@@ -1,9 +1,8 @@
 # Changelog of mdarray-linalg
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The mdarray-linalg project adheres to [semantic versioning](https://semver.org/spec/v2.0.0.html).
+This file documents all notable user-visible changes to the crates present in this workspace.
+The format follows [keep-a-changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## unreleased
 
@@ -31,4 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `argmax_abs` with backends BLAS and Naive.
 
 ## [0.1.1](https://github.com/grothesque/mdarray-linalg/releases/tag/v0.1.1) - 2025-10-24
-- Initial Version
+Initial version
