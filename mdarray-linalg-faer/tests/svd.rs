@@ -1,5 +1,4 @@
 use mdarray_linalg::testing::svd::*;
-
 use mdarray_linalg_faer::Faer;
 
 #[test]

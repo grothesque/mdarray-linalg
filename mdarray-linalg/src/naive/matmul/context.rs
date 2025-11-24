@@ -1,10 +1,12 @@
+use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
 
-use crate::Naive;
-use crate::matmul::{Axes, Side, MatMul, MatMulBuilder, ContractBuilder, Triangle, Type, _contract};
 use super::simple::naive_matmul;
+use crate::{
+    Naive,
+    matmul::{_contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type},
+};
 
 struct NaiveMatMulBuilder<'a, T, La, Lb>
 where

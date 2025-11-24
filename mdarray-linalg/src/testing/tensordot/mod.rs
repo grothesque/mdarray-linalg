@@ -1,5 +1,6 @@
 use mdarray::tensor;
-use crate::matmul::{MatMul, ContractBuilder};
+
+use crate::matmul::{ContractBuilder, MatMul};
 
 // --- Basic functionality ---
 

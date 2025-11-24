@@ -1,15 +1,10 @@
-use mdarray::expr::Expression;
-use mdarray::{Tensor, tensor};
-
-use mdarray_linalg::prelude::*;
-
-use mdarray_linalg_blas::Blas;
-use mdarray_linalg_blas::gemm;
-
-use mdarray_linalg::testing::common::*;
-use mdarray_linalg::testing::matmul::*;
-
-use mdarray_linalg::matmul::{Side, Triangle, Type};
+use mdarray::{Tensor, expr::Expression, tensor};
+use mdarray_linalg::{
+    matmul::{Side, Triangle, Type},
+    prelude::*,
+    testing::{common::*, matmul::*},
+};
+use mdarray_linalg_blas::{Blas, gemm};
 
 #[test]
 fn matmul_complex_with_scaling() {

@@ -8,16 +8,14 @@
 //! The function `geqrf` (LAPACK) computes the QR factorization of a general m-by-n matrix A using a blocking algorithm.
 //! The matrix Q is orthogonal, and R is upper triangular.
 
-use super::scalar::NeedsRwork;
-use super::simple::geqrf;
-use mdarray_linalg::get_dims;
-
-use super::scalar::LapackScalar;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::into_i32;
-use mdarray_linalg::qr::QR;
+use mdarray_linalg::{get_dims, into_i32, qr::QR};
 use num_complex::ComplexFloat;
 
+use super::{
+    scalar::{LapackScalar, NeedsRwork},
+    simple::geqrf,
+};
 use crate::Lapack;
 
 impl<T> QR<T> for Lapack

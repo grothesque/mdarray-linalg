@@ -1,6 +1,5 @@
-use num_complex::ComplexFloat;
-
 use mdarray::{DSlice, Layout};
+use num_complex::ComplexFloat;
 
 /// Textbook implementation of matrix multiplication, useful for
 /// debugging and simple tests without relying on a external backend

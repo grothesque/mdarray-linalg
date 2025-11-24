@@ -1,12 +1,11 @@
+use std::ptr::null_mut;
+
+use mdarray::{DSlice, DTensor, Layout};
+use mdarray_linalg::{get_dims, into_i32, svd::SVDError, transpose_in_place};
+use num_complex::ComplexFloat;
+
 use super::scalar::{LapackScalar, NeedsRwork};
 use crate::SVDConfig;
-use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::svd::SVDError;
-use mdarray_linalg::transpose_in_place;
-
-use mdarray_linalg::{get_dims, into_i32};
-use num_complex::ComplexFloat;
-use std::ptr::null_mut;
 
 pub fn gsvd<
     La: Layout,

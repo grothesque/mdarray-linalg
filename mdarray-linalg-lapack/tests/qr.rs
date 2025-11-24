@@ -1,5 +1,5 @@
-use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg::testing::qr::*;
+use mdarray_linalg_lapack::Lapack;
 
 #[test]
 fn qr_random_matrix() {

@@ -1,5 +1,5 @@
-use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg::testing::eig::*;
+use mdarray_linalg_lapack::Lapack;
 
 #[test]
 #[should_panic]

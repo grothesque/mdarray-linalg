@@ -1,12 +1,13 @@
-use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray::{DSlice, Layout};
-use mdarray_linalg::eig::{EigError, SchurError};
-use mdarray_linalg::transpose_in_place;
+use std::{ptr, ptr::null_mut};
 
-use mdarray_linalg::{get_dims, into_i32};
+use mdarray::{DSlice, Layout};
+use mdarray_linalg::{
+    eig::{EigError, SchurError},
+    get_dims, into_i32, transpose_in_place,
+};
 use num_complex::ComplexFloat;
-use std::ptr;
-use std::ptr::null_mut;
+
+use super::scalar::{LapackScalar, NeedsRwork};
 
 pub fn geig<
     La: Layout,

@@ -1,16 +1,16 @@
-use num_traits::Zero;
 use std::ops::{Add, Mul};
 
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
-
-use crate::matmul::{Triangle, Type};
-use crate::matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps};
-use crate::utils::unravel_index;
-
-use crate::Naive;
+use num_traits::Zero;
 
 use super::simple::naive_outer;
+use crate::{
+    Naive,
+    matmul::{Triangle, Type},
+    matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
+    utils::unravel_index,
+};
 
 struct NaiveMatVecBuilder<'a, T, La, Lx>
 where

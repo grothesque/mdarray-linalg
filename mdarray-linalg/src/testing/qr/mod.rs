@@ -1,14 +1,10 @@
-use mdarray::DTensor;
-
-use crate::qr::QR;
-
 use approx::assert_relative_eq;
+use mdarray::DTensor;
 use num_complex::Complex;
 use rand::prelude::*;
 
 use super::common::naive_matmul;
-use crate::{assert_complex_matrix_eq, assert_matrix_eq};
-use crate::pretty_print;
+use crate::{assert_complex_matrix_eq, assert_matrix_eq, pretty_print, qr::QR};
 
 pub fn test_qr_random_matrix(bd: &impl QR<f64>) {
     let (m, n) = (5, 5);

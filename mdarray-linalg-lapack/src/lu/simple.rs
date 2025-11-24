@@ -1,7 +1,8 @@
-use super::scalar::{LapackScalar, Workspace};
 use mdarray::{DSlice, DTensor, Layout};
 use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
+
+use super::scalar::{LapackScalar, Workspace};
 
 pub fn getrf<La: Layout, Ll: Layout, Lu: Layout, T: ComplexFloat + Default + LapackScalar>(
     a: &mut DSlice<T, 2, La>,

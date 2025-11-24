@@ -1,5 +1,5 @@
-use mdarray_linalg_faer::Faer;
 use mdarray_linalg::testing::solve::*;
+use mdarray_linalg_faer::Faer;
 
 #[test]
 fn solve_single_rhs() {

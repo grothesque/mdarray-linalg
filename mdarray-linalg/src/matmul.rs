@@ -19,10 +19,9 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
+use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
-
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
 
 /// Specifies whether the left or right matrix has the special property
 pub enum Side {

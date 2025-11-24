@@ -1,10 +1,8 @@
 // Helper module with common code for integration tests.
 // See https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html
+use mdarray::{DSlice, DTensor, expr, tensor};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
-
-use mdarray::{DSlice, DTensor, expr, tensor};
-
 use rand::Rng;
 
 pub fn example_matrix(

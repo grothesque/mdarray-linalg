@@ -1,5 +1,5 @@
-use mdarray_linalg_lapack::Lapack;
 use mdarray_linalg::testing::solve::*;
+use mdarray_linalg_lapack::Lapack;
 
 #[test]
 fn solve_single_rhs() {

@@ -7,15 +7,17 @@
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use super::simple::gsvd;
-use mdarray_linalg::{get_dims, into_i32};
-
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
-
-use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
+use mdarray_linalg::{
+    get_dims, into_i32,
+    svd::{SVD, SVDDecomp, SVDError},
+};
 use num_complex::ComplexFloat;
 
+use super::{
+    scalar::{LapackScalar, NeedsRwork},
+    simple::gsvd,
+};
 use crate::Lapack;
 
 impl<T> SVD<T> for Lapack

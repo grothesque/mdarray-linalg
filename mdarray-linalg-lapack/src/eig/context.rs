@@ -14,18 +14,18 @@
 //!     - λ are real eigenvalues
 //!     - v are orthonormal eigenvectors
 
-use super::simple::{gees, gees_complex, geig, geigh};
-use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
-
 use mdarray::{DSlice, Dense, Layout, tensor};
-
-use super::scalar::{LapackScalar, NeedsRwork};
-use mdarray_linalg::eig::{
-    Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult,
+use mdarray_linalg::{
+    eig::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult},
+    get_dims, into_i32, transpose_in_place,
 };
 use num_complex::{Complex, ComplexFloat};
 use num_traits::identities::Zero;
 
+use super::{
+    scalar::{LapackScalar, NeedsRwork},
+    simple::{gees, gees_complex, geig, geigh},
+};
 use crate::Lapack;
 
 impl<T> Eig<T> for Lapack

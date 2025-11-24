@@ -1,10 +1,11 @@
+use mdarray::{DTensor, tensor};
 use num_complex::Complex;
 
-use mdarray::{DTensor, tensor};
-
-use crate::prelude::*;
-use crate::matmul::{Triangle, Type};
-use crate::matvec::{Argmax, VecOps, Outer, MatVec};
+use crate::{
+    matmul::{Triangle, Type},
+    matvec::{Argmax, MatVec, Outer, VecOps},
+    prelude::*,
+};
 
 pub fn test_eval_and_write(bd: impl MatVec<f64>) {
     let n = 3;

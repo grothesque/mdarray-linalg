@@ -1,8 +1,5 @@
-use mdarray::Layout;
-
+use mdarray::{DSlice, Layout};
 use num_complex::ComplexFloat;
-
-use mdarray::DSlice;
 
 use crate::matmul::{Triangle, Type};
 

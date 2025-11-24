@@ -1,10 +1,9 @@
+use std::any::TypeId;
+
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
 use mdarray::{DSlice, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, trans_stride};
-use num_complex::ComplexFloat;
-
-use num_complex::Complex;
-use std::any::TypeId;
+use num_complex::{Complex, ComplexFloat};
 
 use super::scalar::BlasScalar;
 

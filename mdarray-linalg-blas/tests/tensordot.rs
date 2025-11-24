@@ -1,5 +1,5 @@
-use mdarray_linalg_blas::Blas;
 use mdarray_linalg::testing::tensordot::*;
+use mdarray_linalg_blas::Blas;
 
 // --- Basic functionality ---
 

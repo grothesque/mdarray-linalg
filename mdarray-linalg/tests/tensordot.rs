@@ -1,5 +1,4 @@
-use mdarray_linalg::Naive;
-use mdarray_linalg::testing::tensordot::*;
+use mdarray_linalg::{Naive, testing::tensordot::*};
 
 // --- Basic functionality ---
 

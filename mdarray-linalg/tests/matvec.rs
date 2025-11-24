@@ -1,5 +1,4 @@
-use mdarray_linalg::Naive;
-use mdarray_linalg::testing::matvec::*;
+use mdarray_linalg::{Naive, testing::matvec::*};
 
 // #[test]
 // fn eval_and_write() {

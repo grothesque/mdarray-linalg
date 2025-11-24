@@ -1,15 +1,13 @@
 use std::num::NonZero;
 
-use faer::{Accum, Mat, Par};
-use faer::linalg::matmul::matmul;
+use faer::{Accum, Mat, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
+use mdarray_linalg::matmul::{
+    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
+};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
-
-use mdarray_linalg::matmul::{
-    Axes, MatMul, MatMulBuilder, Side, ContractBuilder, Triangle, Type, _contract,
-};
 
 use crate::{Faer, into_faer, into_faer_mut, into_mdarray};
 

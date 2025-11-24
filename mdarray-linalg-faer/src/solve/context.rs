@@ -13,13 +13,14 @@
 //     - L is m × m         (lower triangular with ones on diagonal)
 //     - U is m × m         (upper triangular)
 
+use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, Layout, tensor};
-use mdarray_linalg::identity;
-use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
+use mdarray_linalg::{
+    identity,
+    solve::{Solve, SolveError, SolveResult, SolveResultType},
+};
 use num_complex::ComplexFloat;
-
-use faer::linalg::solvers::Solve as FaerSolve;
 
 use crate::{Faer, into_faer, into_faer_mut};
 

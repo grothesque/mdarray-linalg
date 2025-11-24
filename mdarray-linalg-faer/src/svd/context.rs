@@ -7,12 +7,12 @@
 //     - V^T is n × n      (transpose of right singular vectors, orthogonal)
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
-use super::simple::svd_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
+use super::simple::svd_faer;
 use crate::Faer;
 
 impl<T> SVD<T> for Faer

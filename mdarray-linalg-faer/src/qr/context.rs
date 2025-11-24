@@ -6,13 +6,12 @@
 //     - R is m × n         (upper triangular/trapezoidal matrix)
 //     - For thin QR: Q is m × min(m,n) and R is min(m,n) × n
 
-use super::simple::qr_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::identity;
-use mdarray_linalg::qr::QR;
+use mdarray_linalg::{identity, qr::QR};
 use num_complex::ComplexFloat;
 
+use super::simple::qr_faer;
 use crate::Faer;
 
 impl<T> QR<T> for Faer

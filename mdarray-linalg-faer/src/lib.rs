@@ -54,8 +54,9 @@ pub mod svd;
 #[derive(Default)]
 pub struct Faer;
 
-use mdarray::{DSlice, DTensor, Layout, Strided, StridedMapping, View};
 use std::mem::ManuallyDrop;
+
+use mdarray::{DSlice, DTensor, Layout, Strided, StridedMapping, View};
 
 /// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
 /// This function **does not copy** any data.

@@ -184,10 +184,9 @@
 //! assert_eq!(norm, 8.0);
 //! ```
 use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
+use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
-
-use num_complex::ComplexFloat;
 
 /// Matrix-vector multiplication and transformations
 pub trait MatVec<T> {

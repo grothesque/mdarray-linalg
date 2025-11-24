@@ -1,15 +1,19 @@
-use cblas_sys::CBLAS_UPLO;
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
-use num_complex::ComplexFloat;
-use num_traits::Zero;
 use std::ops::{Add, Mul};
 
-use mdarray_linalg::matmul::{Triangle, Type};
-use mdarray_linalg::matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps};
-use mdarray_linalg::utils::unravel_index;
+use cblas_sys::CBLAS_UPLO;
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
+use mdarray_linalg::{
+    matmul::{Triangle, Type},
+    matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
+    utils::unravel_index,
+};
+use num_complex::ComplexFloat;
+use num_traits::Zero;
 
-use super::scalar::BlasScalar;
-use super::simple::{amax, asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr};
+use super::{
+    scalar::BlasScalar,
+    simple::{amax, asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr},
+};
 use crate::Blas;
 
 struct BlasMatVecBuilder<'a, T, La, Lx>

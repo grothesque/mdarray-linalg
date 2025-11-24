@@ -1,7 +1,5 @@
 use mdarray_linalg::testing::svd::*;
-
-use mdarray_linalg_lapack::Lapack;
-use mdarray_linalg_lapack::SVDConfig;
+use mdarray_linalg_lapack::{Lapack, SVDConfig};
 
 #[test]
 fn test_backend_svd_square_matrix() {

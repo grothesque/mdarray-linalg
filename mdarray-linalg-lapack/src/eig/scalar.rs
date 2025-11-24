@@ -1,6 +1,7 @@
+use std::ffi::c_void;
+
 use num_complex::Complex;
 use paste::paste;
-use std::ffi::c_void;
 
 #[allow(clippy::too_many_arguments)]
 pub trait LapackScalar {

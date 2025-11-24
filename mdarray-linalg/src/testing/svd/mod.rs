@@ -1,16 +1,13 @@
 use approx::assert_relative_eq;
-use num_complex::Complex;
-
-use crate::{assert_complex_matrix_eq, assert_matrix_eq};
 use mdarray::DTensor;
-
-use crate::pretty_print;
-use crate::svd::{SVD, SVDDecomp};
+use num_complex::{Complex, ComplexFloat};
+use rand::Rng;
 
 use super::common::naive_matmul;
-
-use num_complex::ComplexFloat;
-use rand::Rng;
+use crate::{
+    assert_complex_matrix_eq, assert_matrix_eq, pretty_print,
+    svd::{SVD, SVDDecomp},
+};
 
 fn test_svd_reconstruction<T>(bd: &impl SVD<T>, a: &DTensor<T, 2>, debug_print: bool)
 where

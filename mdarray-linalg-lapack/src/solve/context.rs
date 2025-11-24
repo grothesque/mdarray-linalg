@@ -10,16 +10,14 @@
 //! It computes the LU factorization of A and then uses it to solve the linear system.
 //! The matrix A is overwritten by its LU factorization, and B is overwritten by the solution X.
 
-use super::simple::gesv;
-use mdarray_linalg::get_dims;
-
-use super::scalar::LapackScalar;
 use mdarray::{DSlice, Dense, Layout, tensor};
-use mdarray_linalg::into_i32;
-use mdarray_linalg::ipiv_to_perm_mat;
-use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
+use mdarray_linalg::{
+    get_dims, into_i32, ipiv_to_perm_mat,
+    solve::{Solve, SolveError, SolveResult, SolveResultType},
+};
 use num_complex::ComplexFloat;
 
+use super::{scalar::LapackScalar, simple::gesv};
 use crate::Lapack;
 
 impl<T> Solve<T> for Lapack

@@ -1,17 +1,17 @@
-use num_traits::{One, Zero};
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
 use mdarray::{DSlice, DTensor, Dense, DynRank, Layout, Slice, Tensor, tensor};
-use num_complex::ComplexFloat;
-
 use mdarray_linalg::matmul::{
-    Axes, MatMul, MatMulBuilder, Side, ContractBuilder, Triangle, Type, _contract,
+    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
+use num_complex::ComplexFloat;
+use num_traits::{One, Zero};
 
-use super::scalar::BlasScalar;
-use super::simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm};
-
+use super::{
+    scalar::BlasScalar,
+    simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm},
+};
 use crate::Blas;
 
 struct BlasMatMulBuilder<'a, T, La, Lb>

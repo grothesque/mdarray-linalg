@@ -7,13 +7,12 @@
 //     - U is m × n         (upper triangular/trapezoidal matrix)
 
 use dyn_stack::{MemBuffer, MemStack};
-
-use super::simple::lu_faer;
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, Layout, tensor};
 use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
+use super::simple::lu_faer;
 use crate::{Faer, into_faer_mut, into_mdarray};
 
 impl<T> LU<T> for Faer
