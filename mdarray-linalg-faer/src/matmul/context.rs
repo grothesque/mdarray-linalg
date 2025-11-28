@@ -9,7 +9,7 @@ use mdarray_linalg::matmul::{
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
-use crate::{Faer, into_faer, into_faer_mut, into_mdarray};
+use crate::{Faer, into_faer, into_faer_mut};
 
 struct FaerMatMulBuilder<'a, T, La, Lb>
 where
@@ -71,7 +71,8 @@ where
         let a_faer = into_faer(self.a);
         let b_faer = into_faer(self.b);
 
-        let mut c_faer = Mat::<T>::zeros(ma, nb);
+        let mut c = DTensor::<T, 2>::from_elem([ma, nb], T::zero());
+        let mut c_faer = into_faer_mut(&mut c);
 
         matmul(
             &mut c_faer,
@@ -82,7 +83,7 @@ where
             self.par,
         );
 
-        into_mdarray::<T>(c_faer)
+        c
     }
 
     fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {

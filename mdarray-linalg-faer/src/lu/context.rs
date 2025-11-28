@@ -13,7 +13,7 @@ use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use super::simple::lu_faer;
-use crate::{Faer, into_faer_mut, into_mdarray};
+use crate::{Faer, into_faer_mut};
 
 impl<T> LU<T> for Faer
 where
@@ -93,10 +93,11 @@ where
             )
         };
 
-        let mut inv_mat = faer::Mat::<T>::zeros(m, n);
+        let mut inv_mat = DTensor::<T, 2>::from_elem([m, n], T::zero());
+        let mut inv_mat_faer = into_faer_mut(&mut inv_mat);
 
         faer::linalg::lu::partial_pivoting::inverse::inverse(
-            inv_mat.as_mut(),
+            inv_mat_faer.as_mut(),
             l_mat,
             u_mat,
             perm.as_ref(),
@@ -105,7 +106,7 @@ where
                 faer::linalg::lu::partial_pivoting::inverse::inverse_scratch::<usize, T>(m, par),
             )),
         );
-        Ok(into_mdarray(inv_mat))
+        Ok(inv_mat)
     }
 
     /// Computes inverse overwriting the input matrix
