@@ -1,6 +1,6 @@
 use std::num::NonZero;
 
-use faer::{Accum, Mat, Par, linalg::matmul::matmul};
+use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
