@@ -10,6 +10,7 @@ resolver = "3"
 [workspace.dependencies]
 approx = "0.5.1"
 cblas-sys = "0.2.0"
+criterion = "0.8.0"
 dyn-stack = "0.13.0"
 faer = "0.23.2"
 faer-traits = "0.23.2"

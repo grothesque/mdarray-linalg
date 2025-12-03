@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
+use mdarray::{Const, DSlice, DTensor, Dim, DynRank, Layout, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -8,14 +8,17 @@ use crate::{
     matmul::{_contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type},
 };
 
-struct NaiveMatMulBuilder<'a, T, La, Lb>
+struct NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     alpha: T,
-    a: &'a DSlice<T, 2, La>,
-    b: &'a DSlice<T, 2, Lb>,
+    a: &'a Slice<T, (D0, D1), La>,
+    b: &'a Slice<T, (D1, D2), Lb>,
 }
 
 struct NaiveContractBuilder<'a, T, La, Lb>
@@ -29,13 +32,15 @@ where
     axes: Axes,
 }
 
-impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for NaiveMatMulBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    for NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
     T: ComplexFloat + Zero + One,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     /// Enable parallelization.
     fn parallelize(self) -> Self {
@@ -53,7 +58,13 @@ where
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
         let mut c = tensor![[T::zero(); n]; m];
-        naive_matmul(self.alpha, self.a, self.b, T::zero(), &mut c);
+        naive_matmul(
+            self.alpha,
+            self.a,
+            self.b,
+            T::zero(),
+            &mut c.reshape(Dim::new(n), Dim::new(m)),
+        );
         c
     }
 
@@ -119,17 +130,18 @@ where
 impl<T> MatMul<T> for Naive
 where
     T: ComplexFloat,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
 {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         La: Layout,
         Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim,
     {
         NaiveMatMulBuilder {
             alpha: T::one(),

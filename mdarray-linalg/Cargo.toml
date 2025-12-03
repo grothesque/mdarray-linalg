@@ -22,3 +22,5 @@ thiserror.workspace = true
 [dev-dependencies]
 lapack-src.workspace = true
 openblas-src.workspace = true
+criterion.workspace = true
+

@@ -19,7 +19,7 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
+use mdarray::{DSlice, DTensor, Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -44,15 +44,18 @@ pub enum Triangle {
 
 /// Matrix-matrix multiplication and related operations
 pub trait MatMul<T: One> {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         T: One,
         La: Layout,
-        Lb: Layout;
+        Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim;
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
     fn contract_all<'a, La, Lb>(
@@ -97,13 +100,16 @@ pub trait MatMul<T: One> {
 }
 
 /// Builder interface for configuring matrix-matrix operations
-pub trait MatMulBuilder<'a, T, La, Lb>
+pub trait MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
     T: 'a,
     La: 'a,
     Lb: 'a,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     /// Enable parallelization.
     fn parallelize(self) -> Self;
