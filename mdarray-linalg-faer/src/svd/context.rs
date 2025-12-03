@@ -8,24 +8,28 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, DTensor, Dense, Dim, Layout, Shape, Slice, tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
 use super::simple::svd_faer;
 use crate::Faer;
 
-impl<T> SVD<T> for Faer
+impl<T, D0, D1> SVD<T, D0, D1> for Faer
 where
     T: ComplexFloat
         + ComplexField
         + Default
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>
         + 'static,
+    D0: Dim,
+    D1: Dim,
 {
     /// Compute full SVD with new allocated matrices
-    fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<SVDDecomp<T>, SVDError> {
-        let (m, n) = *a.shape();
+    fn svd<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         let min_mn = m.min(n);
         let mut s_mda = tensor![[T::default(); min_mn]; min_mn];
         let mut u_mda = tensor![[T::default(); m]; m];
@@ -58,8 +62,10 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError> {
-        let (m, n) = *a.shape();
+    fn svd_s<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         let min_mn = m.min(n);
         let mut s_mda = tensor![[T::default(); min_mn]; min_mn];
 
@@ -67,7 +73,7 @@ where
         // Same rationale as in `svd`: `T::default()` is used instead of `MaybeUninit`,
         // because LLVM already optimizes default initializations effectively.
 
-        match svd_faer::<T, L, Dense, Dense, Dense>(a, &mut s_mda, None, None) {
+        match svd_faer::<T, D0, D1, L, Dense, Dense, Dense>(a, &mut s_mda, None, None) {
             Err(_) => Err(SVDError::BackendDidNotConverge {
                 superdiagonals: (0),
             }),
@@ -78,20 +84,20 @@ where
     /// Compute full SVD, overwriting existing matrices
     fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
         u: &mut DSlice<T, 2, Lu>,
         vt: &mut DSlice<T, 2, Lvt>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
+        svd_faer::<T, D0, D1, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
     }
 
     /// Compute only singular values, overwriting existing matrix
     fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, L, Ls, Dense, Dense>(a, s, None, None)
+        svd_faer::<T, D0, D1, L, Ls, Dense, Dense>(a, s, None, None)
     }
 }

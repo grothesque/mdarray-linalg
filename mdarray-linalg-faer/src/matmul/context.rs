@@ -2,23 +2,26 @@ use std::num::NonZero;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
 use num_complex::ComplexFloat;
-use num_traits::{One, Zero};
+use num_traits::{MulAdd, One, Zero};
 
 use crate::{Faer, into_faer, into_faer_mut};
 
-struct FaerMatMulBuilder<'a, T, La, Lb>
+struct FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     alpha: T,
-    a: &'a DSlice<T, 2, La>,
-    b: &'a DSlice<T, 2, Lb>,
+    a: &'a Slice<T, (D0, D1), La>,
+    b: &'a Slice<T, (D1, D2), Lb>,
     par: Par,
 }
 
@@ -33,11 +36,14 @@ where
     axes: Axes,
 }
 
-impl<'a, T, La, Lb> FaerMatMulBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, D0, D1, D2> FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + ComplexField + One + 'static,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
+    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
 {
     #[allow(dead_code)]
     pub fn parallelize(mut self) -> Self {
@@ -47,10 +53,14 @@ where
     }
 }
 
-impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for FaerMatMulBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    for FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
     T: ComplexFloat + ComplexField + One + 'static,
 {
     fn parallelize(mut self) -> Self {
@@ -64,14 +74,14 @@ where
         self
     }
 
-    fn eval(self) -> DTensor<T, 2> {
+    fn eval(self) -> Tensor<T, (D0, D2)> {
         let (ma, _) = *self.a.shape();
         let (_, nb) = *self.b.shape();
 
         let a_faer = into_faer(self.a);
         let b_faer = into_faer(self.b);
 
-        let mut c = DTensor::<T, 2>::from_elem([ma, nb], T::zero());
+        let mut c = Tensor::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
         let mut c_faer = into_faer_mut(&mut c);
 
         matmul(
@@ -86,7 +96,7 @@ where
         c
     }
 
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,
@@ -98,7 +108,7 @@ where
         );
     }
 
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,
@@ -110,7 +120,7 @@ where
         );
     }
 
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, _beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, _beta: T) {
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,
@@ -123,7 +133,7 @@ where
         todo!(); // multiplication by beta not implemented in faer ?
     }
 
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> DTensor<T, 2> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
         self.eval()
     }
 }
@@ -132,7 +142,7 @@ impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for FaerContractBuilder<'a, T
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + ComplexField + 'static,
+    T: ComplexFloat + Zero + One + ComplexField + 'static + MulAdd<Output = T>,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -150,16 +160,19 @@ where
 
 impl<T> MatMul<T> for Faer
 where
-    T: ComplexFloat + ComplexField + One + 'static,
+    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
 {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         La: Layout,
         Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim,
     {
         FaerMatMulBuilder {
             alpha: T::one(),

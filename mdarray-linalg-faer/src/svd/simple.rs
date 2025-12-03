@@ -1,6 +1,6 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::SVDError;
 use num_complex::ComplexFloat;
 
@@ -8,17 +8,21 @@ use crate::{into_faer, into_faer_diag_mut, into_faer_mut, into_faer_mut_transpos
 
 pub fn svd_faer<
     T: ComplexFloat + ComplexField + Default + 'static,
+    D0: Dim,
+    D1: Dim,
     La: Layout,
     Ls: Layout,
     Lu: Layout,
     Lvt: Layout,
 >(
-    a: &DSlice<T, 2, La>,
+    a: &Slice<T, (D0, D1), La>,
     s_mda: &mut DSlice<T, 2, Ls>,
     u_mda: Option<&mut DSlice<T, 2, Lu>>,
     vt_mda: Option<&mut DSlice<T, 2, Lvt>>,
 ) -> Result<(), SVDError> {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
+
     let a_faer = into_faer(a);
     let par = faer::get_global_parallelism();
     // let par = faer::Par::Seq; // Faster for small matrices

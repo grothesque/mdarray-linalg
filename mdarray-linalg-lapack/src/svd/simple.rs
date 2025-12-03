@@ -1,6 +1,6 @@
 use std::ptr::null_mut;
 
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{get_dims, into_i32, svd::SVDError, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -8,13 +8,15 @@ use super::scalar::{LapackScalar, NeedsRwork};
 use crate::SVDConfig;
 
 pub fn gsvd<
+    T: ComplexFloat + Default + LapackScalar + NeedsRwork,
+    D0: Dim,
+    D1: Dim,
     La: Layout,
     Ls: Layout,
     Lu: Layout,
     Lvt: Layout,
-    T: ComplexFloat + Default + LapackScalar + NeedsRwork,
 >(
-    a: &mut DSlice<T, 2, La>,
+    a: &mut Slice<T, (D0, D1), La>,
     s: &mut DSlice<T, 2, Ls>,
     mut u: Option<&mut DSlice<T, 2, Lu>>,
     mut vt: Option<&mut DSlice<T, 2, Lvt>>,
@@ -23,7 +25,8 @@ pub fn gsvd<
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
     let min_mn = m.min(n);
 
     // Determine which algorithm to use
@@ -129,8 +132,8 @@ where
     }
 }
 
-fn call_gesdd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, La: Layout>(
-    a: &mut DSlice<T, 2, La>,
+fn call_gesdd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, D0: Dim, D1: Dim, La: Layout>(
+    a: &mut Slice<T, (D0, D1), La>,
     m: i32,
     n: i32,
     s_ptr: *mut T,
@@ -207,8 +210,8 @@ where
     info
 }
 
-fn call_gesvd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, La: Layout>(
-    a: &mut DSlice<T, 2, La>,
+fn call_gesvd<T: ComplexFloat + Default + LapackScalar + NeedsRwork, D0: Dim, D1: Dim, La: Layout>(
+    a: &mut Slice<T, (D0, D1), La>,
     m: i32,
     n: i32,
     s_ptr: *mut T,

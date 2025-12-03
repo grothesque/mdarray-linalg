@@ -7,9 +7,9 @@
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, DTensor, Dense, Dim, Layout, Shape, Slice, tensor};
 use mdarray_linalg::{
-    get_dims, into_i32,
+    into_i32,
     svd::{SVD, SVDDecomp, SVDError},
 };
 use num_complex::ComplexFloat;
@@ -20,14 +20,17 @@ use super::{
 };
 use crate::Lapack;
 
-impl<T> SVD<T> for Lapack
+impl<T, D0, D1> SVD<T, D0, D1> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
     T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
 {
     // Computes full SVD with new allocated matrices
-    fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<SVDDecomp<T>, SVDError> {
-        let (m, n) = get_dims!(a);
+    fn svd<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
         let min_mn = m.min(n);
 
         let mut s = tensor![[T::default(); min_mn as usize]; min_mn as usize];
@@ -41,14 +44,16 @@ where
     }
 
     // Computes only singular values with new allocated matrix
-    fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError> {
-        let (m, n) = get_dims!(a);
+    fn svd_s<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
         let min_mn = m.min(n);
 
         // Only allocate space for singular values
         let mut s = tensor![[T::default(); min_mn as usize]; min_mn as usize];
 
-        match gsvd::<L, Dense, Dense, Dense, T>(a, &mut s, None, None, self.svd_config) {
+        match gsvd::<T, D0, D1, L, Dense, Dense, Dense>(a, &mut s, None, None, self.svd_config) {
             Ok(_) => Ok(s),
             Err(err) => Err(err),
         }
@@ -57,7 +62,7 @@ where
     // Computes full SVD, overwriting existing matrices
     fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
         u: &mut DSlice<T, 2, Lu>,
         vt: &mut DSlice<T, 2, Lvt>,
@@ -68,9 +73,9 @@ where
     // Computes only singular values, overwriting existing matrix
     fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
     ) -> Result<(), SVDError> {
-        gsvd::<L, Ls, Dense, Dense, T>(a, s, None, None, self.svd_config)
+        gsvd::<T, D0, D1, L, Ls, Dense, Dense>(a, s, None, None, self.svd_config)
     }
 }
