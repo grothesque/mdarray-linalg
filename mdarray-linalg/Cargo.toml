@@ -20,5 +20,10 @@ rand.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+criterion.workspace = true
 lapack-src.workspace = true
 openblas-src.workspace = true
+
+[[bench]]
+name = "small_matmul"
+harness = false
