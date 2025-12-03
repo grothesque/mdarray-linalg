@@ -3,25 +3,28 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{DSlice, DTensor, Dim, Layout, Slice, Tensor};
 use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
 
-pub fn gemm<T, La, Lb, Lc>(
+pub fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    c: &mut DSlice<T, 2, Lc>,
+    c: &mut Slice<T, (D0, D2), Lc>,
 ) where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, k) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, k) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     let row_major = c.stride(1) == 1;
     assert!(
@@ -63,20 +66,23 @@ pub fn gemm<T, La, Lb, Lc>(
     }
 }
 
-pub fn gemm_uninit<T, La, Lb, Lc>(
+pub fn gemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: DTensor<MaybeUninit<T>, 2>,
-) -> DTensor<T, 2>
+    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
+) -> Tensor<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, k) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, k) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     debug_assert!(c.stride(1) == 1);
 
@@ -110,12 +116,12 @@ where
     }
 }
 
-pub fn symm<T, La, Lb, Lc>(
+pub fn symm<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    c: &mut DSlice<T, 2, Lc>,
+    c: &mut Slice<T, (D0, D2), Lc>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
 ) where
@@ -123,8 +129,11 @@ pub fn symm<T, La, Lb, Lc>(
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, _) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, _) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     let row_major = c.stride(1) == 1;
     assert!(
@@ -163,22 +172,25 @@ pub fn symm<T, La, Lb, Lc>(
     }
 }
 
-pub fn symm_uninit<T, La, Lb, Lc>(
+pub fn symm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: DTensor<MaybeUninit<T>, 2>,
+    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> DTensor<T, 2>
+) -> Tensor<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, _) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, _) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     debug_assert!(c.stride(1) == 1);
 
@@ -211,12 +223,12 @@ where
     }
 }
 
-pub fn hemm<T, La, Lb, Lc>(
+pub fn hemm<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    c: &mut DSlice<T, 2, Lc>,
+    c: &mut Slice<T, (D1, D2), Lc>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
 ) where
@@ -224,8 +236,11 @@ pub fn hemm<T, La, Lb, Lc>(
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, _) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, _) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     let row_major = c.stride(1) == 1;
     assert!(
@@ -264,22 +279,25 @@ pub fn hemm<T, La, Lb, Lc>(
     }
 }
 
-pub fn hemm_uninit<T, La, Lb, Lc>(
+pub fn hemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: DTensor<MaybeUninit<T>, 2>,
+    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> DTensor<T, 2>
+) -> Tensor<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n, _) = dims3(a.shape(), b.shape(), c.shape());
+    let (m, n, _) = dims3(*a.shape(), *b.shape(), *c.shape());
 
     debug_assert!(c.stride(1) == 1);
 
@@ -312,18 +330,21 @@ where
     }
 }
 
-pub fn trmm<T, La, Lb>(
+pub fn trmm<T, La, Lb, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &mut DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &mut Slice<T, (D1, D2), Lb>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
 ) where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n) = dims2(a.shape(), b.shape());
+    let (m, n) = dims2(*a.shape(), *b.shape());
 
     let row_major = b.stride(1) == 1;
     assert!(
@@ -362,19 +383,22 @@ pub fn trmm<T, La, Lb>(
     }
 }
 
-pub fn trmm_uninit<T, La, Lb>(
+pub fn trmm_uninit<T, La, Lb, D0, D1, D2>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    mut b: DTensor<MaybeUninit<T>, 2>,
+    a: &Slice<T, (D0, D1), La>,
+    mut b: Tensor<MaybeUninit<T>, (D1, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> DTensor<T, 2>
+) -> Tensor<T, (D1, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
-    let (m, n) = dims2(a.shape(), b.shape());
+    let (m, n) = dims2(*a.shape(), *b.shape());
 
     debug_assert!(b.stride(1) == 1);
 

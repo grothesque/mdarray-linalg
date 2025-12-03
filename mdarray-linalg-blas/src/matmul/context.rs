@@ -1,7 +1,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Dense, DynRank, Layout, Slice, Tensor, tensor};
+use mdarray::{DSlice, DTensor, Dense, Dim, DynRank, Layout, Slice, Tensor, tensor};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
@@ -14,14 +14,17 @@ use super::{
 };
 use crate::Blas;
 
-struct BlasMatMulBuilder<'a, T, La, Lb>
+struct BlasMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     alpha: T,
-    a: &'a DSlice<T, 2, La>,
-    b: &'a DSlice<T, 2, Lb>,
+    a: &'a Slice<T, (D0, D1), La>,
+    b: &'a Slice<T, (D1, D2), Lb>,
 }
 
 struct BlasContractBuilder<'a, T, La, Lb>
@@ -35,13 +38,15 @@ where
     axes: Axes,
 }
 
-impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for BlasMatMulBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    for BlasMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
     T: BlasScalar + ComplexFloat + Zero + One,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     fn parallelize(self) -> Self {
         self
@@ -52,32 +57,32 @@ where
         self
     }
 
-    fn eval(self) -> DTensor<T, 2> {
+    fn eval(self) -> Tensor<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
-        gemm_uninit::<T, La, Lb, Dense>(self.alpha, self.a, self.b, T::zero(), c)
+        let c = Tensor::from_elem((m, n), MaybeUninit::<T>::uninit());
+        gemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(self.alpha, self.a, self.b, T::zero(), c)
         // formerly 0.into().into() instead of T::zero() but
         // propagating the associated bounds was causing a lot of
         // trouble
     }
 
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         gemm(self.alpha, self.a, self.b, T::zero(), c);
     }
 
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         gemm(self.alpha, self.a, self.b, T::one(), c);
     }
 
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
         gemm(self.alpha, self.a, self.b, beta, c);
     }
 
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2> {
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Tensor<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let c = tensor![[MaybeUninit::<T>::uninit(); n]; m];
+        let c = Tensor::from_elem((m, n), MaybeUninit::<T>::uninit());
         let cblas_side = match lr {
             Side::Left => CBLAS_SIDE::CblasLeft,
             Side::Right => CBLAS_SIDE::CblasRight,
@@ -87,7 +92,7 @@ where
             Triangle::Upper => CBLAS_UPLO::CblasUpper,
         };
         match type_of_matrix {
-            Type::Her => hemm_uninit::<T, La, Lb, Dense>(
+            Type::Her => hemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(
                 self.alpha,
                 self.a,
                 self.b,
@@ -96,7 +101,7 @@ where
                 cblas_side,
                 cblas_triangle,
             ),
-            Type::Sym => symm_uninit::<T, La, Lb, Dense>(
+            Type::Sym => symm_uninit::<T, La, Lb, Dense, D0, D1, D2>(
                 self.alpha,
                 self.a,
                 self.b,
@@ -106,10 +111,13 @@ where
                 cblas_triangle,
             ),
             Type::Tri => {
-                let mut b_copy = DTensor::<T, 2>::from_elem(*self.b.shape(), T::zero());
+                let mut b_copy = Tensor::<T, (D1, D2)>::from_elem(*self.b.shape(), T::zero());
                 b_copy.assign(self.b);
                 trmm(self.alpha, self.a, &mut b_copy, cblas_side, cblas_triangle);
-                b_copy
+
+                let mut c_copy = Tensor::<T, (D0, D2)>::from_elem(*c.shape(), T::zero());
+                c_copy.assign(b_copy);
+                c_copy
             }
         }
     }
@@ -138,17 +146,18 @@ where
 impl<T> MatMul<T> for Blas
 where
     T: BlasScalar + ComplexFloat,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
 {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         La: Layout,
         Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim,
     {
         BlasMatMulBuilder {
             alpha: T::one(),

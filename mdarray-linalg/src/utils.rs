@@ -5,7 +5,7 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice, tensor};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -53,14 +53,10 @@ macro_rules! get_dims {
 /// Make sure that matrix shapes are compatible with `C = A * B`, and
 /// return the dimensions `(m, n, k)` safely cast to `i32`, where `C` is `(m
 /// x n)`, and `k` is the common dimension of `A` and `B`
-pub fn dims3(
-    a_shape: &(usize, usize),
-    b_shape: &(usize, usize),
-    c_shape: &(usize, usize),
-) -> (i32, i32, i32) {
-    let (m, k) = *a_shape;
-    let (k2, n) = *b_shape;
-    let (m2, n2) = *c_shape;
+pub fn dims3(a_shape: impl Shape, b_shape: impl Shape, c_shape: impl Shape) -> (i32, i32, i32) {
+    let (m, k) = (a_shape.dim(0), a_shape.dim(1));
+    let (k2, n) = (b_shape.dim(0), b_shape.dim(1));
+    let (m2, n2) = (c_shape.dim(0), c_shape.dim(1));
 
     assert!(m == m2, "a and c must agree in number of rows");
     assert!(n == n2, "b and c must agree in number of columns");
@@ -74,9 +70,9 @@ pub fn dims3(
 
 /// Make sure that matrix shapes are compatible with `A * B`, and return
 /// the dimensions `(m, n)` safely cast to `i32`
-pub fn dims2(a_shape: &(usize, usize), b_shape: &(usize, usize)) -> (i32, i32) {
-    let (m, k) = *a_shape;
-    let (k2, n) = *b_shape;
+pub fn dims2(a_shape: impl Shape, b_shape: impl Shape) -> (i32, i32) {
+    let (m, k) = (a_shape.dim(0), a_shape.dim(1));
+    let (k2, n) = (b_shape.dim(0), b_shape.dim(1));
 
     assert!(
         k == k2,

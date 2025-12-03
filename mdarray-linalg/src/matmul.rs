@@ -118,17 +118,17 @@ where
     fn scale(self, factor: T) -> Self;
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> DTensor<T, 2>;
+    fn eval(self) -> Tensor<T, (D0, D2)>;
 
     /// Overwrites the provided slice with the result.
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>);
 
     /// Adds the result to the provided slice.
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>);
 
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T);
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T);
 
     /// Computes a matrix product where the first operand is a special
     /// matrix (symmetric, Hermitian, or triangular) and the other is
@@ -148,7 +148,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2>;
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Tensor<T, (D0, D2)>;
 }
 
 /// Builder interface for configuring tensor contraction operations

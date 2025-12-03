@@ -54,12 +54,13 @@ pub mod svd;
 #[derive(Default)]
 pub struct Faer;
 
-
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, Dim, Layout, Slice};
 
 /// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer<T, L: Layout>(mat: &DSlice<T, 2, L>) -> faer::mat::MatRef<'static, T> {
+pub fn into_faer<T, L: Layout, D0: Dim, D1: Dim>(
+    mat: &Slice<T, (D0, D1), L>,
+) -> faer::mat::MatRef<'static, T> {
     let (nrows, ncols) = *mat.shape();
     let strides = (mat.stride(0), mat.stride(1));
 
@@ -67,12 +68,22 @@ pub fn into_faer<T, L: Layout>(mat: &DSlice<T, 2, L>) -> faer::mat::MatRef<'stat
     // We are constructing a MatRef from raw parts. This requires that:
     // - `mat.as_ptr()` points to a valid matrix of size `nrows x ncols`
     // - The given strides correctly describe the memory layout
-    unsafe { faer::MatRef::from_raw_parts(mat.as_ptr(), nrows, ncols, strides.0, strides.1) }
+    unsafe {
+        faer::MatRef::from_raw_parts(
+            mat.as_ptr(),
+            nrows.size(),
+            ncols.size(),
+            strides.0,
+            strides.1,
+        )
+    }
 }
 
 /// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatMut<'static, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_mut<T, L: Layout>(mat: &mut DSlice<T, 2, L>) -> faer::mat::MatMut<'static, T> {
+pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
+    mat: &mut Slice<T, (D0, D1), L>,
+) -> faer::mat::MatMut<'static, T> {
     let (nrows, ncols) = *mat.shape();
     let strides = (mat.stride(0), mat.stride(1));
 
@@ -83,8 +94,8 @@ pub fn into_faer_mut<T, L: Layout>(mat: &mut DSlice<T, 2, L>) -> faer::mat::MatM
     unsafe {
         faer::MatMut::from_raw_parts_mut(
             mat.as_mut_ptr() as *mut _,
-            nrows,
-            ncols,
+            nrows.size(),
+            ncols.size(),
             strides.0,
             strides.1,
         )

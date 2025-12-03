@@ -54,33 +54,27 @@ where
     }
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> DTensor<T, 2> {
+    fn eval(self) -> Tensor<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let mut c = tensor![[T::zero(); n]; m];
-        naive_matmul(
-            self.alpha,
-            self.a,
-            self.b,
-            T::zero(),
-            &mut c.reshape(Dim::new(n), Dim::new(m)),
-        );
+        let mut c = Tensor::from_elem((m, n), T::zero());
+        naive_matmul(self.alpha, self.a, self.b, T::zero(), &mut c);
         c
     }
 
     /// Overwrites the provided slice with the result.
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         naive_matmul(self.alpha, self.a, self.b, T::zero(), c);
     }
 
     /// Adds the result to the provided slice.
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         naive_matmul(self.alpha, self.a, self.b, T::one(), c);
     }
 
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
         naive_matmul(self.alpha, self.a, self.b, beta, c);
     }
 
@@ -102,7 +96,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> DTensor<T, 2> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
         todo!()
     }
 }
