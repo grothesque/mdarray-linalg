@@ -1,11 +1,11 @@
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box as bb;
-use criterion::{criterion_group, criterion_main, Criterion};
 
-use mdarray::{array, Const, Slice, DTensor, Dim};
+use mdarray::{Const, DTensor, Dim, Slice, array};
 
 use mdarray_linalg::{Naive, prelude::*};
 
-type Slice4x4 = Slice<f64, (Const::<4>, Const::<4>)>;
+type Slice4x4 = Slice<f64, (Const<4>, Const<4>)>;
 
 // Compiles to compact and efficient machine code.
 #[inline(never)]
@@ -64,10 +64,7 @@ pub fn matmul4x4_view(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
 // The same (even bigger) problem exists for our MatMul trait.
 #[inline(never)]
 pub fn matmul4x4_backend(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
-    let a = a.reshape([4, 4]);
-    let b = b.reshape([4, 4]);
-    let mut c = c.reshape_mut([4, 4]);
-    Naive.matmul(&a, &b).write(&mut c);
+    Naive.matmul(a, b).write(c);
 }
 
 // Criterion setup

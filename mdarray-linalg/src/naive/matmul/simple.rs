@@ -1,14 +1,22 @@
-use mdarray::{DSlice, Layout};
+use mdarray::{Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 
 /// Textbook implementation of matrix multiplication, useful for
 /// debugging and simple tests without relying on a external backend
-pub fn naive_matmul<T: ComplexFloat, La: Layout, Lb: Layout, Lc: Layout>(
+pub fn naive_matmul<
+    T: ComplexFloat,
+    La: Layout,
+    Lb: Layout,
+    Lc: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
+>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    b: &DSlice<T, 2, Lb>,
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    c: &mut DSlice<T, 2, Lc>,
+    c: &mut Slice<T, (D0, D2), Lc>,
 ) {
     for mut ci in c.rows_mut() {
         for cij in ci.expr_mut() {

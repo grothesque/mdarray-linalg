@@ -19,7 +19,7 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -44,15 +44,18 @@ pub enum Triangle {
 
 /// Matrix-matrix multiplication and related operations
 pub trait MatMul<T: One> {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         T: One,
         La: Layout,
-        Lb: Layout;
+        Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim;
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
     fn contract_all<'a, La, Lb>(
@@ -97,13 +100,16 @@ pub trait MatMul<T: One> {
 }
 
 /// Builder interface for configuring matrix-matrix operations
-pub trait MatMulBuilder<'a, T, La, Lb>
+pub trait MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
     T: 'a,
     La: 'a,
     Lb: 'a,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     /// Enable parallelization.
     fn parallelize(self) -> Self;
@@ -112,17 +118,17 @@ where
     fn scale(self, factor: T) -> Self;
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> DTensor<T, 2>;
+    fn eval(self) -> Tensor<T, (D0, D2)>;
 
     /// Overwrites the provided slice with the result.
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>);
 
     /// Adds the result to the provided slice.
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>);
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>);
 
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T);
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T);
 
     /// Computes a matrix product where the first operand is a special
     /// matrix (symmetric, Hermitian, or triangular) and the other is
@@ -142,7 +148,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> DTensor<T, 2>;
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Tensor<T, (D0, D2)>;
 }
 
 /// Builder interface for configuring tensor contraction operations

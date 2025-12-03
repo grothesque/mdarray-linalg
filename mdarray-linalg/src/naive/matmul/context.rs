@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, DynRank, Layout, Slice, Tensor, tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -8,14 +8,17 @@ use crate::{
     matmul::{_contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type},
 };
 
-struct NaiveMatMulBuilder<'a, T, La, Lb>
+struct NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     alpha: T,
-    a: &'a DSlice<T, 2, La>,
-    b: &'a DSlice<T, 2, Lb>,
+    a: &'a Slice<T, (D0, D1), La>,
+    b: &'a Slice<T, (D1, D2), Lb>,
 }
 
 struct NaiveContractBuilder<'a, T, La, Lb>
@@ -29,13 +32,15 @@ where
     axes: Axes,
 }
 
-impl<'a, T, La, Lb> MatMulBuilder<'a, T, La, Lb> for NaiveMatMulBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    for NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
     T: ComplexFloat + Zero + One,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
 {
     /// Enable parallelization.
     fn parallelize(self) -> Self {
@@ -49,27 +54,27 @@ where
     }
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> DTensor<T, 2> {
+    fn eval(self) -> Tensor<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let mut c = tensor![[T::zero(); n]; m];
+        let mut c = Tensor::from_elem((m, n), T::zero());
         naive_matmul(self.alpha, self.a, self.b, T::zero(), &mut c);
         c
     }
 
     /// Overwrites the provided slice with the result.
-    fn write<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         naive_matmul(self.alpha, self.a, self.b, T::zero(), c);
     }
 
     /// Adds the result to the provided slice.
-    fn add_to<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>) {
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
         naive_matmul(self.alpha, self.a, self.b, T::one(), c);
     }
 
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
-    fn add_to_scaled<Lc: Layout>(self, c: &mut DSlice<T, 2, Lc>, beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
         naive_matmul(self.alpha, self.a, self.b, beta, c);
     }
 
@@ -91,7 +96,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> DTensor<T, 2> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
         todo!()
     }
 }
@@ -119,17 +124,18 @@ where
 impl<T> MatMul<T> for Naive
 where
     T: ComplexFloat,
-    // i8: Into<T::Real>,
-    // T::Real: Into<T>,
 {
-    fn matmul<'a, La, Lb>(
+    fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        b: &'a DSlice<T, 2, Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
     where
         La: Layout,
         Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim,
     {
         NaiveMatMulBuilder {
             alpha: T::one(),
