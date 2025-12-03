@@ -3,7 +3,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Tensor};
 use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
 use num_complex::ComplexFloat;
 

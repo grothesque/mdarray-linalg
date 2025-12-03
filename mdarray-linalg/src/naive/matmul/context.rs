@@ -1,4 +1,4 @@
-use mdarray::{Const, DSlice, DTensor, Dim, DynRank, Layout, Slice, Tensor, tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 

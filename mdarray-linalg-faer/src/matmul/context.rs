@@ -2,7 +2,7 @@ use std::num::NonZero;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Dim, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };

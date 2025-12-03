@@ -1,7 +1,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{DSlice, DTensor, Dense, Dim, DynRank, Layout, Slice, Tensor, tensor};
+use mdarray::{Dense, Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };

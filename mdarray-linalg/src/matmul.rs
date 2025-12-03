@@ -19,7 +19,7 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
-use mdarray::{DSlice, DTensor, Dim, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 

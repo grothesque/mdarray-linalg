@@ -5,7 +5,7 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
+use mdarray::{DSlice, DTensor, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
