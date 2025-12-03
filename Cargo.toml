@@ -17,7 +17,9 @@ faer-traits = "0.23.2"
 itertools = "0.14.0"
 lapack-src = { version = "0.11", features = ["openblas"] }
 lapack-sys = "0.15.0"
-mdarray = "0.7.1"
+# Use development version of mdarray because of performance issues
+# https://github.com/fre-hu/mdarray/issues/17.
+mdarray = { git = "https://github.com/fre-hu/mdarray.git", rev = "70c43898d202682bf35e0db0c08475ec820ee7fa" }
 mdarray-linalg = { version = "0.2.0", path = "mdarray-linalg" }
 num-complex = "0.4.6"
 num-traits = "0.2.19"
