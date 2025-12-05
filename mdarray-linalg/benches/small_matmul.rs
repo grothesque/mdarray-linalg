@@ -64,7 +64,7 @@ pub fn matmul4x4_view(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
 // The same (even bigger) problem exists for our MatMul trait.
 #[inline(never)]
 pub fn matmul4x4_backend(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
-    Naive.matmul(a, b).write(c);
+    Naive.matmul(a, b).add_to(c);
 }
 
 // Criterion setup
