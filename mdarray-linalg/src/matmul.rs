@@ -21,7 +21,7 @@
 //!```
 use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
-use num_traits::{One, Zero};
+use num_traits::{MulAdd, One, Zero};
 
 /// Specifies whether the left or right matrix has the special property
 pub enum Side {
@@ -43,7 +43,7 @@ pub enum Triangle {
 }
 
 /// Matrix-matrix multiplication and related operations
-pub trait MatMul<T: One> {
+pub trait MatMul<T: One + MulAdd<Output = T>> {
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
@@ -175,7 +175,7 @@ pub enum Axes {
 }
 
 /// Helper for implementing contraction through matrix multiplication
-pub fn _contract<T: Zero + ComplexFloat, La: Layout, Lb: Layout>(
+pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: Layout>(
     bd: impl MatMul<T>,
     a: &Slice<T, DynRank, La>,
     b: &Slice<T, DynRank, Lb>,

@@ -1,10 +1,12 @@
+use num_traits::MulAdd;
+
 use mdarray::{Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 
 /// Textbook implementation of matrix multiplication, useful for
 /// debugging and simple tests without relying on a external backend
 pub fn naive_matmul<
-    T: ComplexFloat,
+    T: ComplexFloat + MulAdd<Output = T>,
     La: Layout,
     Lb: Layout,
     Lc: Layout,
@@ -40,7 +42,8 @@ pub fn naive_matmul<
     for i in 0..d0 {
         for j in 0..d2 {
             for k in 0..d1 {
-                c[[i, j]] = c[[i, j]] + alpha * a[[i, k]] * b[[k, j]];
+                // c[[i, j]] = c[[i, j]] + alpha * a[[i, k]] * b[[k, j]];
+                c[[i, j]] = (alpha * a[[i, k]]).mul_add(b[[k, j]], c[[i, j]]);
             }
         }
     }
