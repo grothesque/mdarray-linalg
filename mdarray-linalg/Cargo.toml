@@ -27,3 +27,4 @@ openblas-src.workspace = true
 [[bench]]
 name = "small_matmul"
 harness = false
+
