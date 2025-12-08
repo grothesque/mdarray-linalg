@@ -10,10 +10,12 @@ use mdarray_linalg_lapack::Lapack;
 
 use nalgebra::{DMatrix, Matrix4, SVD};
 
+const N: i32 = 300;
+
 // type Slice4x4Const = Slice<f64, (Const<4>, Const<4>)>;
 // type Slice10x10Const = Slice<f64, (Const<10>, Const<10>)>;
 type Slice4x4Dyn = Slice<f64, (Dyn, Dyn)>;
-type Slice10x10Dyn = Slice<f64, (Dyn, Dyn)>;
+type SliceNDyn = Slice<f64, (Dyn, Dyn)>;
 
 // ============================================================================
 // 4x4 benchmarks nalgebra with static size
@@ -52,83 +54,27 @@ pub fn svd_4x4_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> 
 }
 
 // ============================================================================
-// 4x4 benchmarks with pre-allocated matrices
+// NxN benchmarks
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_lapack_preallocated(
-    a: &Slice4x4Dyn,
-    s: &mut DTensor<f64, 2>,
-    u: &mut DTensor<f64, 2>,
-    vt: &mut DTensor<f64, 2>,
-) {
-    let mut a_copy = a.to_owned();
-    let bd = Lapack::new();
-    bd.svd_write(&mut a_copy, s, u, vt).expect("SVD failed");
-}
-
-#[inline(never)]
-pub fn svd_4x4_dyn_backend_faer_preallocated(
-    a: &Slice4x4Dyn,
-    s: &mut DTensor<f64, 2>,
-    u: &mut DTensor<f64, 2>,
-    vt: &mut DTensor<f64, 2>,
-) {
-    let mut a_copy = a.to_owned();
-    let bd = Faer;
-    bd.svd_write(&mut a_copy, s, u, vt).expect("SVD failed");
-}
-
-// ============================================================================
-// 10x10 benchmarks with allocation
-// ============================================================================
-
-#[inline(never)]
-pub fn svd_10x10_dyn_backend_lapack(a: &Slice10x10Dyn) -> SVDDecomp<f64> {
+pub fn svd_n_dyn_backend_lapack(a: &SliceNDyn) -> SVDDecomp<f64> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_10x10_dyn_backend_faer(a: &Slice10x10Dyn) -> SVDDecomp<f64> {
+pub fn svd_n_dyn_backend_faer(a: &SliceNDyn) -> SVDDecomp<f64> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_10x10_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> {
-    let a = DMatrix::from_row_slice(10, 10, data);
+pub fn svd_n_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> {
+    let a = DMatrix::from_row_slice(N as usize, N as usize, data);
     a.svd(true, true)
-}
-
-// ============================================================================
-// 10x10 benchmarks with pre-allocated matrices
-// ============================================================================
-
-#[inline(never)]
-pub fn svd_10x10_dyn_backend_lapack_preallocated(
-    a: &Slice10x10Dyn,
-    s: &mut DTensor<f64, 2>,
-    u: &mut DTensor<f64, 2>,
-    vt: &mut DTensor<f64, 2>,
-) {
-    let mut a_copy = a.to_owned();
-    let bd = Lapack::new();
-    bd.svd_write(&mut a_copy, s, u, vt).expect("SVD failed");
-}
-
-#[inline(never)]
-pub fn svd_10x10_dyn_backend_faer_preallocated(
-    a: &Slice10x10Dyn,
-    s: &mut DTensor<f64, 2>,
-    u: &mut DTensor<f64, 2>,
-    vt: &mut DTensor<f64, 2>,
-) {
-    let mut a_copy = a.to_owned();
-    let bd = Faer;
-    bd.svd_write(&mut a_copy, s, u, vt).expect("SVD failed");
 }
 
 // ============================================================================
@@ -199,35 +145,6 @@ fn criterion_benchmark(crit: &mut Criterion) {
         bencher.iter(|| svd_4x4_nalgebra(bb(&a_4x4_data)))
     });
 
-    // Pre-allocated
-    crit.bench_function("svd_4x4_dyn_lapack_preallocated", |bencher| {
-        let mut s = DTensor::<f64, 2>::zeros([4, 4]);
-        let mut u = DTensor::<f64, 2>::zeros([4, 4]);
-        let mut vt = DTensor::<f64, 2>::zeros([4, 4]);
-        bencher.iter(|| {
-            svd_4x4_dyn_backend_lapack_preallocated(
-                bb(&a_4x4_dyn),
-                bb(&mut s),
-                bb(&mut u),
-                bb(&mut vt),
-            )
-        })
-    });
-
-    crit.bench_function("svd_4x4_dyn_faer_preallocated", |bencher| {
-        let mut s = DTensor::<f64, 2>::zeros([4, 4]);
-        let mut u = DTensor::<f64, 2>::zeros([4, 4]);
-        let mut vt = DTensor::<f64, 2>::zeros([4, 4]);
-        bencher.iter(|| {
-            svd_4x4_dyn_backend_faer_preallocated(
-                bb(&a_4x4_dyn),
-                bb(&mut s),
-                bb(&mut u),
-                bb(&mut vt),
-            )
-        })
-    });
-
     // ========================================================================
     // 4x4 Const dimension benchmarks
     // ========================================================================
@@ -244,71 +161,42 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // });
 
     // ========================================================================
-    // 10x10 benchmarks
+    // NxN benchmarks
     // ========================================================================
 
-    let a_10x10_dyn: DTensor<_, 1> = (0..100)
+    let a_n_dyn: DTensor<_, 1> = (0..N * N)
         .map(|x| (x as f64) * 0.5)
         .collect::<Vec<_>>()
         .into();
-    let a_10x10_dyn = a_10x10_dyn.reshape((10, 10));
-    let a_10x10_data: Vec<f64> = (0..100).map(|x| (x as f64) * 0.5).collect();
+    let a_n_dyn = a_n_dyn.reshape((N as usize, N as usize));
+    let a_n_data: Vec<f64> = (0..N * N).map(|x| (x as f64) * 0.5).collect();
 
     // With allocation
-    crit.bench_function("svd_10x10_dyn_lapack", |bencher| {
-        bencher.iter(|| svd_10x10_dyn_backend_lapack(bb(&a_10x10_dyn)))
+    crit.bench_function("svd_n_dyn_lapack", |bencher| {
+        bencher.iter(|| svd_n_dyn_backend_lapack(bb(&a_n_dyn)))
     });
 
-    crit.bench_function("svd_10x10_dyn_faer", |bencher| {
-        bencher.iter(|| svd_10x10_dyn_backend_faer(bb(&a_10x10_dyn)))
+    crit.bench_function("svd_n_dyn_faer", |bencher| {
+        bencher.iter(|| svd_n_dyn_backend_faer(bb(&a_n_dyn)))
     });
 
-    crit.bench_function("svd_10x10_nalgebra", |bencher| {
-        bencher.iter(|| svd_10x10_nalgebra(bb(&a_10x10_data)))
-    });
-
-    // Pre-allocated
-    crit.bench_function("svd_10x10_dyn_lapack_preallocated", |bencher| {
-        let mut s = DTensor::<f64, 2>::zeros([10, 10]);
-        let mut u = DTensor::<f64, 2>::zeros([10, 10]);
-        let mut vt = DTensor::<f64, 2>::zeros([10, 10]);
-        bencher.iter(|| {
-            svd_10x10_dyn_backend_lapack_preallocated(
-                bb(&a_10x10_dyn),
-                bb(&mut s),
-                bb(&mut u),
-                bb(&mut vt),
-            )
-        })
-    });
-
-    crit.bench_function("svd_10x10_dyn_faer_preallocated", |bencher| {
-        let mut s = DTensor::<f64, 2>::zeros([10, 10]);
-        let mut u = DTensor::<f64, 2>::zeros([10, 10]);
-        let mut vt = DTensor::<f64, 2>::zeros([10, 10]);
-        bencher.iter(|| {
-            svd_10x10_dyn_backend_faer_preallocated(
-                bb(&a_10x10_dyn),
-                bb(&mut s),
-                bb(&mut u),
-                bb(&mut vt),
-            )
-        })
+    crit.bench_function("svd_n_nalgebra", |bencher| {
+        bencher.iter(|| svd_n_nalgebra(bb(&a_n_data)))
     });
 
     // ========================================================================
-    // 10x10 Const dimension benchmarks
+    // n Const dimension benchmarks
     // ========================================================================
 
-    // let a_10x10_const: DTensor<_, 1> = (0..100).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
-    // let a_10x10_const = a_10x10_const.reshape((Const::<10>, Const::<10>));
+    // let a_n_const: DTensor<_, 1> = (0..100).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    // let a_n_const = a_n_const.reshape((Const::<10>, Const::<10>));
 
-    // crit.bench_function("svd_10x10_const_lapack", |bencher| {
-    //     bencher.iter(|| svd_10x10_const_backend_lapack(bb(&a_10x10_const)))
+    // crit.bench_function("svd_n_const_lapack", |bencher| {
+    //     bencher.iter(|| svd_n_const_backend_lapack(bb(&a_n_const)))
     // });
 
-    // crit.bench_function("svd_10x10_const_faer", |bencher| {
-    //     bencher.iter(|| svd_10x10_const_backend_faer(bb(&a_10x10_const)))
+    // crit.bench_function("svd_n_const_faer", |bencher| {
+    //     bencher.iter(|| svd_n_const_backend_faer(bb(&a_n_const)))
     // });
 }
 
