@@ -43,9 +43,7 @@ pub enum Triangle {
 }
 
 /// Matrix-matrix multiplication and related operations
-pub trait MatMul<T: One> {
 pub trait MatMul<T: One + MulAdd<Output = T>> {
->>>>>>> dslice_to_slice
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
