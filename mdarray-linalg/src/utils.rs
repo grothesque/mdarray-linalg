@@ -5,7 +5,7 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice, tensor};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -102,12 +102,17 @@ macro_rules! trans_stride {
 /// - For square matrices: swaps elements across the main diagonal.
 /// - For rectangular matrices: reshuffles data in a temporary buffer so that the
 ///   same `(rows, cols)` slice now represents the transposed layout.
-pub fn transpose_in_place<T, L>(c: &mut DSlice<T, 2, L>)
+pub fn transpose_in_place<T, D0, D1, L>(c: &mut Slice<T, (D0, D1), L>)
 where
     T: ComplexFloat + Default,
+    D0: Dim,
+    D1: Dim,
     L: Layout,
 {
     let (m, n) = *c.shape();
+
+    let m = m.size();
+    let n = n.size();
 
     if n == m {
         for i in 0..m {
