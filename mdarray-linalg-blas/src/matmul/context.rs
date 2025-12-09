@@ -3,10 +3,10 @@ use std::mem::MaybeUninit;
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
 use mdarray::{Dense, Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
-    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
+    Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type, _contract,
 };
 use num_complex::ComplexFloat;
-use num_traits::{One, Zero};
+use num_traits::{MulAdd, One, Zero};
 
 use super::{
     scalar::BlasScalar,
@@ -127,7 +127,7 @@ impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for BlasContractBuilder<'a, T
 where
     La: Layout,
     Lb: Layout,
-    T: BlasScalar + ComplexFloat + Zero + One,
+    T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T>,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -145,7 +145,7 @@ where
 
 impl<T> MatMul<T> for Blas
 where
-    T: BlasScalar + ComplexFloat,
+    T: BlasScalar + ComplexFloat + MulAdd<Output = T>,
 {
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,

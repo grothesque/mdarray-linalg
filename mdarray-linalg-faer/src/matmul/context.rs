@@ -1,15 +1,15 @@
 use std::num::NonZero;
 
-use faer::{Accum, Par, linalg::matmul::matmul};
+use faer::{linalg::matmul::matmul, Accum, Par};
 use faer_traits::ComplexField;
 use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
-    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
+    Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type, _contract,
 };
 use num_complex::ComplexFloat;
-use num_traits::{One, Zero};
+use num_traits::{MulAdd, One, Zero};
 
-use crate::{Faer, into_faer, into_faer_mut};
+use crate::{into_faer, into_faer_mut, Faer};
 
 struct FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
@@ -43,7 +43,7 @@ where
     D0: Dim,
     D1: Dim,
     D2: Dim,
-    T: ComplexFloat + ComplexField + One + 'static,
+    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
 {
     #[allow(dead_code)]
     pub fn parallelize(mut self) -> Self {
@@ -142,7 +142,7 @@ impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for FaerContractBuilder<'a, T
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + ComplexField + 'static,
+    T: ComplexFloat + Zero + One + ComplexField + 'static + MulAdd<Output = T>,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -160,7 +160,7 @@ where
 
 impl<T> MatMul<T> for Faer
 where
-    T: ComplexFloat + ComplexField + One + 'static,
+    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
 {
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,

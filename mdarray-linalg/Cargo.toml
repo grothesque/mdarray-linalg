@@ -23,8 +23,15 @@ thiserror.workspace = true
 criterion.workspace = true
 lapack-src.workspace = true
 openblas-src.workspace = true
+mdarray-linalg-lapack = {path = "../mdarray-linalg-lapack"}
+mdarray-linalg-blas = {path = "../mdarray-linalg-blas"}
+mdarray-linalg-faer = {path = "../mdarray-linalg-faer"}
+nalgebra = "0.34.1"
 
 [[bench]]
 name = "small_matmul"
 harness = false
 
+[[bench]]
+name = "small_svd"
+harness = false

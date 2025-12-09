@@ -1,5 +1,5 @@
 //! Singular Value Decomposition (SVD)
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{DSlice, DTensor, Dim, Layout, Slice};
 use thiserror::Error;
 
 /// Error types related to singular value decomposition
@@ -28,12 +28,12 @@ pub struct SVDDecomp<T> {
 pub type SVDResult<T> = Result<SVDDecomp<T>, SVDError>;
 
 /// Singular value decomposition for matrix factorization and analysis
-pub trait SVD<T> {
+pub trait SVD<T, D0: Dim, D1: Dim> {
     /// Compute full SVD with new allocated matrices
-    fn svd<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> SVDResult<T>;
+    fn svd<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> SVDResult<T>;
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<DTensor<T, 2>, SVDError>;
+    fn svd_s<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError>;
 
     /// Compute full SVD, overwriting existing matrices
     /// The matrix A is decomposed as A = U * S * V^T where:
@@ -42,7 +42,7 @@ pub trait SVD<T> {
     /// - `vt` contains the transposed right singular vectors (matrix V^T)
     fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
         u: &mut DSlice<T, 2, Lu>,
         vt: &mut DSlice<T, 2, Lvt>,
@@ -52,7 +52,7 @@ pub trait SVD<T> {
     /// Computes only the diagonal elements of the S matrix from the SVD decomposition.
     fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
     ) -> Result<(), SVDError>;
 }

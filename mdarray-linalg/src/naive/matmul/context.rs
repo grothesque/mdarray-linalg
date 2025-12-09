@@ -1,6 +1,6 @@
 use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
-use num_traits::{One, Zero};
+use num_traits::{MulAdd, One, Zero};
 
 use super::simple::naive_matmul;
 use crate::{
@@ -37,7 +37,7 @@ impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One,
+    T: ComplexFloat + Zero + One + MulAdd<Output = T>,
     D0: Dim,
     D1: Dim,
     D2: Dim,
@@ -105,7 +105,7 @@ impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for NaiveContractBuilder<'a, 
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One,
+    T: ComplexFloat + Zero + One + MulAdd<Output = T>,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -123,7 +123,7 @@ where
 
 impl<T> MatMul<T> for Naive
 where
-    T: ComplexFloat,
+    T: ComplexFloat + MulAdd<Output = T>,
 {
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,
