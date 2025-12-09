@@ -12,7 +12,7 @@ use nalgebra::{DMatrix, Matrix4, SVD};
 
 const N: i32 = 300;
 
-// type Slice4x4Const = Slice<f64, (Const<4>, Const<4>)>;
+type Slice4x4Const = Slice<f64, (Const<4>, Const<4>)>;
 // type Slice10x10Const = Slice<f64, (Const<10>, Const<10>)>;
 type Slice4x4Dyn = Slice<f64, (Dyn, Dyn)>;
 type SliceNDyn = Slice<f64, (Dyn, Dyn)>;
@@ -81,19 +81,19 @@ pub fn svd_n_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> {
 // Const dimension benchmarks
 // ============================================================================
 
-// #[inline(never)]
-// pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64> {
-//     let mut a_copy = a.to_owned();
-//     let bd = Lapack::new();
-//     bd.svd(&mut a_copy).expect("SVD failed")
-// }
+#[inline(never)]
+pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64> {
+    let mut a_copy = a.to_owned();
+    let bd = Lapack::new();
+    bd.svd(&mut a_copy).expect("SVD failed")
+}
 
-// #[inline(never)]
-// pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64> {
-//     let mut a_copy = a.to_owned();
-//     let bd = Faer;
-//     bd.svd(&mut a_copy).expect("SVD failed")
-// }
+#[inline(never)]
+pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64> {
+    let mut a_copy = a.to_owned();
+    let bd = Faer;
+    bd.svd(&mut a_copy).expect("SVD failed")
+}
 
 // #[inline(never)]
 // pub fn svd_10x10_const_backend_lapack(a: &Slice10x10Const) -> SVDDecomp<f64> {
@@ -149,16 +149,16 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // 4x4 Const dimension benchmarks
     // ========================================================================
 
-    // let a_4x4_const: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
-    // let a_4x4_const = a_4x4_const.reshape((Const::<4>, Const::<4>));
+    let a_4x4_const: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    let a_4x4_const = a_4x4_const.reshape((Const::<4>, Const::<4>));
 
-    // crit.bench_function("svd_4x4_const_lapack", |bencher| {
-    //     bencher.iter(|| svd_4x4_const_backend_lapack(bb(&a_4x4_const)))
-    // });
+    crit.bench_function("svd_4x4_const_lapack", |bencher| {
+        bencher.iter(|| svd_4x4_const_backend_lapack(bb(&a_4x4_const)))
+    });
 
-    // crit.bench_function("svd_4x4_const_faer", |bencher| {
-    //     bencher.iter(|| svd_4x4_const_backend_faer(bb(&a_4x4_const)))
-    // });
+    crit.bench_function("svd_4x4_const_faer", |bencher| {
+        bencher.iter(|| svd_4x4_const_backend_faer(bb(&a_4x4_const)))
+    });
 
     // ========================================================================
     // NxN benchmarks

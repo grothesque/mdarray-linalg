@@ -62,7 +62,7 @@ where
     // Computes full SVD, overwriting existing matrices
     fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
         u: &mut DSlice<T, 2, Lu>,
         vt: &mut DSlice<T, 2, Lvt>,
@@ -73,7 +73,7 @@ where
     // Computes only singular values, overwriting existing matrix
     fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
     ) -> Result<(), SVDError> {
         gsvd::<T, D0, D1, L, Ls, Dense, Dense>(a, s, None, None, self.svd_config)

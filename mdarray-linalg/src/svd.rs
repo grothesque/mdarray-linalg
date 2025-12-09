@@ -42,7 +42,7 @@ pub trait SVD<T, D0: Dim, D1: Dim> {
     /// - `vt` contains the transposed right singular vectors (matrix V^T)
     fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
         u: &mut DSlice<T, 2, Lu>,
         vt: &mut DSlice<T, 2, Lvt>,
@@ -52,7 +52,7 @@ pub trait SVD<T, D0: Dim, D1: Dim> {
     /// Computes only the diagonal elements of the S matrix from the SVD decomposition.
     fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
     ) -> Result<(), SVDError>;
 }
