@@ -7,9 +7,9 @@
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use mdarray::{DSlice, DTensor, Dense, Dim, Dyn, Layout, Shape, Slice, tensor};
+use mdarray::{DSlice, DTensor, Dense, Dim, Layout, Shape, Slice, tensor};
 use mdarray_linalg::{
-    get_dims, into_i32,
+    into_i32,
     svd::{SVD, SVDDecomp, SVDError},
 };
 use num_complex::ComplexFloat;

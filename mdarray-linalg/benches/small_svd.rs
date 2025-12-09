@@ -95,20 +95,6 @@ pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64> {
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
-// #[inline(never)]
-// pub fn svd_10x10_const_backend_lapack(a: &Slice10x10Const) -> SVDDecomp<f64> {
-//     let mut a_copy = a.to_owned();
-//     let bd = Lapack::new();
-//     bd.svd(&mut a_copy).expect("SVD failed")
-// }
-
-// #[inline(never)]
-// pub fn svd_10x10_const_backend_faer(a: &Slice10x10Const) -> SVDDecomp<f64> {
-//     let mut a_copy = a.to_owned();
-//     let bd = Faer;
-//     bd.svd(&mut a_copy).expect("SVD failed")
-// }
-
 fn criterion_benchmark(crit: &mut Criterion) {
     // ========================================================================
     // 4x4 benchmarks
@@ -183,21 +169,6 @@ fn criterion_benchmark(crit: &mut Criterion) {
     crit.bench_function("svd_n_nalgebra", |bencher| {
         bencher.iter(|| svd_n_nalgebra(bb(&a_n_data)))
     });
-
-    // ========================================================================
-    // n Const dimension benchmarks
-    // ========================================================================
-
-    // let a_n_const: DTensor<_, 1> = (0..100).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
-    // let a_n_const = a_n_const.reshape((Const::<10>, Const::<10>));
-
-    // crit.bench_function("svd_n_const_lapack", |bencher| {
-    //     bencher.iter(|| svd_n_const_backend_lapack(bb(&a_n_const)))
-    // });
-
-    // crit.bench_function("svd_n_const_faer", |bencher| {
-    //     bencher.iter(|| svd_n_const_backend_faer(bb(&a_n_const)))
-    // });
 }
 
 criterion_group!(benches, criterion_benchmark);
