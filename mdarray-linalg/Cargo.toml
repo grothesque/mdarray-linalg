@@ -35,3 +35,7 @@ harness = false
 [[bench]]
 name = "small_svd"
 harness = false
+
+[[bench]]
+name = "small_qr"
+harness = false

@@ -11,7 +11,7 @@ use mdarray_linalg_faer::Faer;
 type Slice4x4 = Slice<f64, (Const<4>, Const<4>)>;
 const N: i32 = 100;
 
-type Slice4x4 = Slice<f64, (Const<4>, Const<4>)>;
+// type Slice4x4 = Slice<f64, (Const<4>, Const<4>)>;
 type SliceN = Slice<f64, (Const<{ N as usize }>, Const<{ N as usize }>)>;
 
 // Compiles to compact and efficient machine code.
