@@ -1,3 +1,5 @@
+use num_traits::MulAdd;
+
 use mdarray::{Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 use num_traits::MulAdd;
