@@ -1,0 +1,23 @@
+[package]
+name = "mdarray-linalg-nalgebra"
+version = "0.2.0"
+edition = "2024"
+repository = "https://github.com/grothesque/mdarray-linalg"
+license = "MIT AND Apache-2.0"
+keywords = ["mdarray", "linear-algebra", "math", "matrix", "nalgebra"]
+description = "Faer backend for mdarray-linalg"
+categories = ["mathematics", "science"]
+authors = ["Pierre Wulles", "Christoph Groth"]
+
+[dependencies]
+cblas-sys.workspace = true
+dyn-stack.workspace = true
+mdarray-linalg.workspace = true
+mdarray.workspace = true
+num-complex.workspace = true
+num-traits.workspace = true
+num_cpus.workspace = true
+paste.workspace = true
+thiserror.workspace = true
+matamorph.workspace = true
+nalgebra.workspace = true

@@ -1,7 +1,6 @@
 use mdarray::{Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 use num_traits::MulAdd;
-use num_traits::MulAdd;
 
 /// Textbook implementation of matrix multiplication, useful for
 /// debugging and simple tests without relying on a external backend
