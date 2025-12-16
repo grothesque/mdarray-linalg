@@ -1,11 +1,11 @@
-use mdarray::{DSlice, Dim, Layout};
+use mdarray::{DSlice, Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
 /// Textbook implementation of QR decomposition using Gram-Schmidt process
 /// Useful for debugging and simple tests without relying on external backend
-pub fn naive_qr<T, L, Lq, Lr>(
-    a: &mut DSlice<T, 2, L>,
+pub fn naive_qr<T, D0: Dim, D1: Dim, L, Lq, Lr>(
+    a: &mut Slice<T, (D0, D1), L>,
     q: &mut DSlice<T, 2, Lq>,
     r: &mut DSlice<T, 2, Lr>,
 ) where

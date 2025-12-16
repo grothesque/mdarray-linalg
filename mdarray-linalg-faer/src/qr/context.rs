@@ -7,14 +7,14 @@
 //     - For thin QR: Q is m × min(m,n) and R is min(m,n) × n
 
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Layout, tensor};
-use mdarray_linalg::{identity, qr::QR};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
+use mdarray_linalg::{identity, into_i32, qr::QR};
 use num_complex::ComplexFloat;
 
 use super::simple::qr_faer;
 use crate::Faer;
 
-impl<T> QR<T> for Faer
+impl<T, D0: Dim, D1: Dim> QR<T, D0, D1> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -23,10 +23,12 @@ where
         + 'static,
 {
     /// Compute full QR decomposition with new allocated matrices
-    fn qr<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> (DTensor<T, 2>, DTensor<T, 2>) {
-        let (m, n) = *a.shape();
-        let mut q_mda = identity(m);
-        let mut r_mda = tensor![[T::default(); n]; m];
+    fn qr<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> (DTensor<T, 2>, DTensor<T, 2>) {
+        let ash = *a.shape();
+        let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
+        let mut q_mda = identity(m as usize);
+        let mut r_mda = tensor![[T::default(); n as usize]; m as usize];
 
         qr_faer(a, Some(&mut q_mda), &mut r_mda);
         (q_mda, r_mda)
@@ -35,10 +37,10 @@ where
     /// Compute full QR decomposition, overwriting existing matrices
     fn qr_write<L: Layout, Lq: Layout, Lr: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         q: &mut DSlice<T, 2, Lq>,
         r: &mut DSlice<T, 2, Lr>,
     ) {
-        qr_faer::<T, L, Lq, Lr>(a, Some(q), r)
+        qr_faer::<T, D0, D1, L, Lq, Lr>(a, Some(q), r)
     }
 }

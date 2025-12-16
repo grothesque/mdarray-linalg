@@ -6,7 +6,7 @@ use rand::prelude::*;
 use super::common::naive_matmul;
 use crate::{assert_complex_matrix_eq, assert_matrix_eq, pretty_print, qr::QR};
 
-pub fn test_qr_random_matrix(bd: &impl QR<f64>) {
+pub fn test_qr_random_matrix(bd: &impl QR<f64, usize, usize>) {
     let (m, n) = (5, 5);
     let mut rng = rand::rng();
 
@@ -14,14 +14,14 @@ pub fn test_qr_random_matrix(bd: &impl QR<f64>) {
     test_qr_reconstruction(bd, &a);
 }
 
-pub fn test_qr_structured_matrix(bd: &impl QR<f64>) {
+pub fn test_qr_structured_matrix(bd: &impl QR<f64, usize, usize>) {
     let (m, n) = (3, 3);
 
     let a = DTensor::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1] + 1) as f64);
     test_qr_reconstruction(bd, &a);
 }
 
-pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
+pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>, usize, usize>) {
     let (m, n) = (3, 3);
 
     let mut a = DTensor::<Complex<f64>, 2>::from_fn([m, n], |i| {
@@ -45,7 +45,7 @@ pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>>) {
     pretty_print(&reconstructed);
 }
 
-pub fn test_qr_reconstruction<T>(bd: &impl QR<T>, a: &DTensor<T, 2>)
+pub fn test_qr_reconstruction<T>(bd: &impl QR<T, usize, usize>, a: &DTensor<T, 2>)
 where
     T: num_traits::float::FloatConst
         + Default

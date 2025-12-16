@@ -1,4 +1,4 @@
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -8,15 +8,25 @@ pub fn geqrf<
     La: Layout,
     Lq: Layout,
     Lr: Layout,
+    D0: Dim,
+    D1: Dim,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
 >(
-    a: &mut DSlice<T, 2, La>,
+    a: &mut Slice<T, (D0, D1), La>,
     q: &mut DSlice<T, 2, Lq>,
     r: &mut DSlice<T, 2, Lr>,
 ) where
     T::Real: Into<T>,
 {
-    let ((m, n), (mq, nq), (mr, nr)) = get_dims!(a, q, r);
+    let ash = *a.shape();
+    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
+    let qsh = *q.shape();
+    let (mq, nq) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
+    let rsh = *q.shape();
+    let (mr, nr) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
     let min_mn = m.min(n);
 
     assert_eq!(mq, nq, "Q must be square (m × m)");
