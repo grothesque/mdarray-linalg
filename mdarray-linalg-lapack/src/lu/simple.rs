@@ -1,18 +1,33 @@
-use mdarray::{DSlice, DTensor, Layout};
-use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice};
+use mdarray_linalg::{into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, Workspace};
 
-pub fn getrf<La: Layout, Ll: Layout, Lu: Layout, T: ComplexFloat + Default + LapackScalar>(
-    a: &mut DSlice<T, 2, La>,
+pub fn getrf<
+    T: ComplexFloat + Default + LapackScalar,
+    D0: Dim,
+    D1: Dim,
+    La: Layout,
+    Ll: Layout,
+    Lu: Layout,
+>(
+    a: &mut Slice<T, (D0, D1), La>,
     l: &mut DSlice<T, 2, Ll>,
     u: &mut DSlice<T, 2, Lu>,
 ) -> Vec<i32>
 where
     T::Real: Into<T>,
 {
-    let ((m, n), (ml, nl), (mu, nu)) = get_dims!(a, l, u);
+    let ash = *a.shape();
+    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
+    let lsh = *l.shape();
+    let (ml, nl) = (into_i32(lsh.dim(0)), into_i32(lsh.dim(1)));
+
+    let ush = *u.shape();
+    let (mu, nu) = (into_i32(ush.dim(0)), into_i32(ush.dim(1)));
+
     let min_mn = m.min(n);
 
     assert_eq!(ml, m, "L must have m rows");
@@ -66,14 +81,16 @@ where
     ipiv
 }
 
-pub fn getri<La: Layout, T: ComplexFloat + Default + LapackScalar + Workspace>(
-    a: &mut DSlice<T, 2, La>,
+pub fn getri<T: ComplexFloat + Default + LapackScalar + Workspace, D0: Dim, D1: Dim, L: Layout>(
+    a: &mut Slice<T, (D0, D1), L>,
     ipiv: &mut [i32],
 ) -> i32
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+
     assert_eq!(m, n, "Input matrix must be square");
     assert_eq!(ipiv.len(), n as usize, "ipiv length must equal n");
 
@@ -131,14 +148,15 @@ where
     info
 }
 
-pub fn potrf<La: Layout, T: ComplexFloat + Default + LapackScalar>(
-    a: &mut DSlice<T, 2, La>,
+pub fn potrf<T: ComplexFloat + Default + LapackScalar, D0: Dim, D1: Dim, La: Layout>(
+    a: &mut Slice<T, (D0, D1), La>,
     uplo: char,
 ) -> i32
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
 
     assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 

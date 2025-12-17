@@ -8,7 +8,7 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use mdarray::{DSlice, DTensor, Dense, Layout, tensor};
+use mdarray::{DSlice, DTensor, Dense, Dim, IntoShape, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::{
     get_dims, into_i32, ipiv_to_perm_mat,
     lu::{InvError, InvResult, LU},
@@ -22,19 +22,21 @@ use super::{
 };
 use crate::Lapack;
 
-impl<T> LU<T> for Lapack
+impl<T, D0: Dim, D1: Dim> LU<T, D0, D1> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + Workspace,
     T::Real: Into<T>,
 {
     fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         l: &mut DSlice<T, 2, Ll>,
         u: &mut DSlice<T, 2, Lu>,
         p: &mut DSlice<T, 2, Lp>,
     ) {
-        let (m, _) = get_dims!(a);
+        let ash = *a.shape();
+        let m = ash.dim(0) as usize;
+
         let ipiv = getrf(a, l, u);
 
         let p_matrix = ipiv_to_perm_mat::<T>(&ipiv, m as usize);
@@ -48,44 +50,59 @@ where
 
     fn lu<L: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
     ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>) {
-        let (m, n) = get_dims!(a);
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         let min_mn = m.min(n);
         let mut l = tensor![[T::default(); min_mn as usize]; m as usize];
         let mut u = tensor![[T::default(); n as usize]; min_mn as usize];
-        let ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+        let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
         let p_matrix = ipiv_to_perm_mat::<T>(&ipiv, m as usize);
 
         (l, u, p_matrix)
     }
 
-    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
-        let (m, n) = get_dims!(a);
+    fn inv_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         if m != n {
-            return Err(InvError::NotSquare { rows: m, cols: n });
+            return Err(InvError::NotSquare {
+                rows: into_i32(m),
+                cols: into_i32(n),
+            });
         }
 
         let min_mn = m.min(n);
         let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
         let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
-        let mut ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+        let mut ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
-        match getri::<_, T>(a, &mut ipiv) {
+        match getri::<T, D0, D1, _>(a, &mut ipiv) {
             0 => Ok(()),
             i if i > 0 => Err(InvError::Singular { pivot: i }),
             i => Err(InvError::BackendError(i)),
         }
     }
 
-    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T> {
-        let (m, n) = get_dims!(a);
+    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         if m != n {
-            return Err(InvError::NotSquare { rows: m, cols: n });
+            return Err(InvError::NotSquare {
+                rows: into_i32(m),
+                cols: into_i32(n),
+            });
         }
 
-        let mut a_inv = DTensor::<T, 2>::zeros([n as usize, n as usize]);
+        let mut a_inv = Tensor::<T, (D0, D1)>::zeros(ash);
+
+        let mut a_inv_mut = a_inv.view_mut(.., ..);
+
         for i in 0..n as usize {
             for j in 0..m as usize {
                 a_inv[[i, j]] = a[[i, j]];
@@ -95,23 +112,24 @@ where
         let min_mn = m.min(n);
         let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
         let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
-        let mut ipiv = getrf::<_, Dense, Dense, T>(&mut a_inv, &mut l, &mut u);
+        let mut ipiv = getrf::<T, D0, D1, _, _, _>(&mut a_inv, &mut l, &mut u);
 
-        match getri::<_, T>(&mut a_inv, &mut ipiv) {
-            0 => Ok(a_inv),
+        match getri::<T, D0, D1, L>(a, &mut ipiv) {
+            0 => Ok(a.to_tensor()),
             i if i > 0 => Err(InvError::Singular { pivot: i }),
             i => Err(InvError::BackendError(i)),
         }
     }
 
-    fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T {
-        let (m, n) = get_dims!(a);
+    fn det<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> T {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "determinant is only defined for square matrices");
 
         let mut l = tensor![[T::default(); n as usize]; n as usize];
         let mut u = tensor![[T::default(); n as usize]; n as usize];
 
-        let ipiv = getrf::<_, Dense, Dense, T>(a, &mut l, &mut u);
+        let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
         let mut det = T::one();
         for i in 0..n as usize {
@@ -128,13 +146,14 @@ where
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T> {
-        let (m, n) = get_dims!(a);
+    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 
-        let mut l = DTensor::<T, 2>::zeros([m as usize, n as usize]);
+        let mut l = Tensor::<T, (D0, D1)>::zeros(ash);
 
-        match potrf::<_, T>(a, 'L') {
+        match potrf::<T, D0, D1, _>(a, 'L') {
             0 => {
                 for i in 0..(m as usize) {
                     for j in 0..(n as usize) {
@@ -153,11 +172,12 @@ where
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
-        let (m, n) = get_dims!(a);
+    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 
-        match potrf::<_, T>(a, 'L') {
+        match potrf::<T, D0, D1, _>(a, 'L') {
             0 => {
                 transpose_in_place(a);
                 Ok(())

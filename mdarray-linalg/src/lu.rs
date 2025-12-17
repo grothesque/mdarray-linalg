@@ -1,5 +1,5 @@
 //! LU, Cholesky, matrix inversion, and determinant computation utilities
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{DSlice, DTensor, Dim, Layout, Slice, Tensor};
 use thiserror::Error;
 
 /// Error types related to matrix inversion
@@ -23,14 +23,14 @@ pub enum InvError {
 }
 
 /// Result type for matrix inversion
-pub type InvResult<T> = Result<DTensor<T, 2>, InvError>;
+pub type InvResult<T, D0: Dim, D1: Dim> = Result<Tensor<T, (D0, D1)>, InvError>;
 
 ///  LU decomposition and matrix inversion
-pub trait LU<T> {
+pub trait LU<T, D0: Dim, D1: Dim> {
     /// Computes LU decomposition overwriting existing matrices
     fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         l: &mut DSlice<T, 2, Ll>,
         u: &mut DSlice<T, 2, Lu>,
         p: &mut DSlice<T, 2, Lp>,
@@ -39,22 +39,22 @@ pub trait LU<T> {
     /// Computes LU decomposition with new allocated matrices: L, U, P (permutation matrix)
     fn lu<L: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
     ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>);
 
     /// Computes inverse overwriting the input matrix
-    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
+    fn inv_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
 
     /// Computes inverse with new allocated matrix
-    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
+    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1>;
 
     /// Computes the determinant of a square matrix. Panics if the
     /// matrix is non-square.
-    fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T;
+    fn det<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> T;
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T>;
+    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1>;
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError>;
+    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
 }

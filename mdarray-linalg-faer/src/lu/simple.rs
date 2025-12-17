@@ -1,23 +1,27 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Layout};
+use mdarray::{DSlice, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use crate::into_faer_mut;
 
 pub fn lu_faer<
     T: ComplexFloat + ComplexField + Default + 'static,
+    D0: Dim,
+    D1: Dim,
     La: Layout,
     Ll: Layout,
     Lu: Layout,
     Lp: Layout,
 >(
-    a: &mut DSlice<T, 2, La>,
+    a: &mut Slice<T, (D0, D1), La>,
     l_mda: &mut DSlice<T, 2, Ll>,
     u_mda: &mut DSlice<T, 2, Lu>,
     p_mda: &mut DSlice<T, 2, Lp>,
 ) {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
+
     let min_mn = m.min(n);
     let par = faer::get_global_parallelism();
 

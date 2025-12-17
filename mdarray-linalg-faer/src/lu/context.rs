@@ -8,14 +8,14 @@
 
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Layout, tensor};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
 use super::simple::lu_faer;
 use crate::{Faer, into_faer_mut};
 
-impl<T> LU<T> for Faer
+impl<T, D0: Dim, D1: Dim> LU<T, D0, D1> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -26,9 +26,11 @@ where
     /// Computes LU decomposition with new allocated matrices: L, U, P (permutation matrix)
     fn lu<L: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
     ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>) {
-        let (m, n) = *a.shape();
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         let min_mn = m.min(n);
         let mut l_mda = tensor![[T::default(); min_mn]; m ];
         let mut u_mda = tensor![[T::default(); n ]; min_mn];
@@ -42,17 +44,18 @@ where
     /// Computes LU decomposition overwriting existing matrices
     fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, L>,
+        a: &mut Slice<T, (D0, D1), L>,
         l: &mut DSlice<T, 2, Ll>,
         u: &mut DSlice<T, 2, Lu>,
         p: &mut DSlice<T, 2, Lp>,
     ) {
-        lu_faer::<T, L, Ll, Lu, Lp>(a, l, u, p);
+        lu_faer::<T, D0, D1, L, Ll, Lu, Lp>(a, l, u, p);
     }
 
     /// Computes inverse with new allocated matrix
-    fn inv<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> InvResult<T> {
-        let (m, n) = *a.shape();
+    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
 
         if m != n {
             return Err(InvError::NotSquare {
@@ -93,7 +96,7 @@ where
             )
         };
 
-        let mut inv_mat = DTensor::<T, 2>::from_elem([m, n], T::zero());
+        let mut inv_mat = Tensor::<T, (D0, D1)>::from_elem(ash, T::zero());
         let mut inv_mat_faer = into_faer_mut(&mut inv_mat);
 
         faer::linalg::lu::partial_pivoting::inverse::inverse(
@@ -110,8 +113,9 @@ where
     }
 
     /// Computes inverse overwriting the input matrix
-    fn inv_write<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
-        let (m, n) = *a.shape();
+    fn inv_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
 
         if m != n {
             return Err(InvError::NotSquare {
@@ -175,20 +179,22 @@ where
     }
 
     /// Computes the determinant of a square matrix. Panics if the matrix is non-square.
-    fn det<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> T {
-        let (m, n) = *a.shape();
+    fn det<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> T {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
         assert_eq!(m, n, "determinant is only defined for square matrices");
         let a_faer = into_faer_mut(a);
         a_faer.determinant()
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> InvResult<T> {
+    fn choleski<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
         todo!("choleski will be implemented later")
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> Result<(), InvError> {
+    fn choleski_write<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
         todo!("choleski_write will be implemented later")
     }
 }

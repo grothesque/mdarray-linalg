@@ -34,7 +34,7 @@ pub fn test_lu_reconstruction<T>(
     }
 }
 
-pub fn test_lu_decomposition(bd: &impl LU<f64>) {
+pub fn test_lu_decomposition(bd: &impl LU<f64, usize, usize>) {
     let mut a = tensor![
         [0.16931568150114162, 0.5524301997803323],
         [0.10477204466703971, 0.33895423448188766]
@@ -52,7 +52,7 @@ pub fn test_lu_decomposition(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
+pub fn test_lu_decomposition_rectangular(bd: &impl LU<f64, usize, usize>) {
     let n = 5;
     let m = 3;
     let mut a = random_matrix(n, m);
@@ -63,7 +63,7 @@ pub fn test_lu_decomposition_rectangular(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_lu_write(bd: &impl LU<f64>) {
+pub fn test_lu_write(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let original_a = a.clone();
@@ -77,7 +77,7 @@ pub fn test_lu_write(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_lu_write_rectangular(bd: &impl LU<f64>) {
+pub fn test_lu_write_rectangular(bd: &impl LU<f64, usize, usize>) {
     let n = 5;
     let m = 3;
     let mut a = random_matrix(n, m);
@@ -92,7 +92,7 @@ pub fn test_lu_write_rectangular(bd: &impl LU<f64>) {
     test_lu_reconstruction(&original_a, &l, &u, &p);
 }
 
-pub fn test_inverse(bd: &impl LU<f64>) {
+pub fn test_inverse(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let a = random_matrix(n, n);
     let a_inv = bd.inv(&mut a.clone()).unwrap();
@@ -107,7 +107,7 @@ pub fn test_inverse(bd: &impl LU<f64>) {
     }
 }
 
-pub fn test_inverse_write(bd: &impl LU<f64>) {
+pub fn test_inverse_write(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let mut a = random_matrix(n, n);
     let a_clone = a.clone();
@@ -123,13 +123,13 @@ pub fn test_inverse_write(bd: &impl LU<f64>) {
     }
 }
 
-pub fn test_inverse_singular_should_panic(bd: &impl LU<f64>) {
+pub fn test_inverse_singular_should_panic(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let mut a = DTensor::<f64, 2>::from_elem([n, n], 1.);
     let _ = bd.inv(&mut a);
 }
 
-pub fn test_determinant(bd: &impl LU<f64>) {
+pub fn test_determinant(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let a = random_matrix(n, n);
 
@@ -138,7 +138,7 @@ pub fn test_determinant(bd: &impl LU<f64>) {
     assert_relative_eq!(det_permutations(&a), d, epsilon = 1e-6);
 }
 
-pub fn test_determinant_dummy(bd: &impl LU<f64>) {
+pub fn test_determinant_dummy(bd: &impl LU<f64, usize, usize>) {
     let a = identity(3);
     let d = bd.det(&mut a.clone());
     println!("{d}");
@@ -243,7 +243,7 @@ where
     }
 }
 
-pub fn test_cholesky_decomposition(bd: &impl LU<f64>) {
+pub fn test_cholesky_decomposition(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let mut a = random_positive_definite_matrix(n);
     let original_a = a.clone();
@@ -255,7 +255,7 @@ pub fn test_cholesky_decomposition(bd: &impl LU<f64>) {
     test_cholesky_reconstruction(&original_a, &l);
 }
 
-pub fn test_cholesky_write(bd: &impl LU<f64>) {
+pub fn test_cholesky_write(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let a = random_positive_definite_matrix(n);
     let original_a = a.clone();
@@ -270,7 +270,7 @@ pub fn test_cholesky_write(bd: &impl LU<f64>) {
     test_cholesky_reconstruction(&original_a, &a_copy);
 }
 
-pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
+pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     // Create a matrix that is not positive definite (has negative eigenvalues)
     let mut a = DTensor::<f64, 2>::zeros([n, n]);
@@ -291,7 +291,7 @@ pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64>) {
     assert!(result.is_err());
 }
 
-pub fn test_cholesky_identity_matrix(bd: &impl LU<f64>) {
+pub fn test_cholesky_identity_matrix(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     let mut a = DTensor::<f64, 2>::zeros([n, n]);
 
