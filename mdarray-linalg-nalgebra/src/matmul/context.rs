@@ -85,7 +85,7 @@ pub fn into_nalgebra_ref<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim, L: Layou
     let col_stride = mat.stride(0) as usize;
 
     let required_size = if m > 0 && n > 0 {
-        (m - 1) * row_stride + (n - 1) * col_stride + 1
+        (m - 1) * col_stride + (n - 1) * row_stride + 1
     } else {
         0
     };
@@ -110,7 +110,11 @@ pub fn into_nalgebra_mut<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim, L: Layou
     let row_stride = mat.stride(1) as usize;
     let col_stride = mat.stride(0) as usize;
 
-    let required_size = row_stride * col_stride * m * n;
+    let required_size = if m > 0 && n > 0 {
+        (m - 1) * col_stride + (n - 1) * row_stride + 1
+    } else {
+        0
+    };
 
     let s = unsafe { core::slice::from_raw_parts_mut(mat.as_mut_ptr(), required_size) };
 
@@ -151,16 +155,17 @@ where
         // let a_nalgebra = self.a.view(.., ..).to_nalgebra();
         // let b_nalgebra = self.b.view(.., ..).to_nalgebra();
 
-        let mut a_tensor = self.a.to_tensor();
-        let mut b_tensor = self.b.to_tensor();
+        // let mut a_tensor = self.a.to_tensor();
+        // let mut b_tensor = self.b.to_tensor();
 
-        let a_nalgebra = into_nalgebra(&mut a_tensor);
-        let b_nalgebra = into_nalgebra(&mut b_tensor);
+        let a_nalgebra = into_nalgebra_ref(self.a);
+        let b_nalgebra = into_nalgebra_ref(self.b);
 
         let mut c = Tensor::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
         let mut c_nalgebra = into_nalgebra_mut(&mut c);
 
-        // c_nalgebra.transpose_mut();
+        dbg!(a_nalgebra);
+        dbg!(b_nalgebra);
 
         c_nalgebra.gemm(self.alpha, &a_nalgebra, &b_nalgebra, T::zero());
 
