@@ -15,7 +15,7 @@ use num_complex::ComplexFloat;
 use super::simple::svd_faer;
 use crate::Faer;
 
-impl<T, D0, D1> SVD<T, D0, D1> for Faer
+impl<T, D0, D1, L> SVD<T, D0, D1, L> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -24,9 +24,10 @@ where
         + 'static,
     D0: Dim,
     D1: Dim,
+    L: Layout,
 {
     /// Compute full SVD with new allocated matrices
-    fn svd<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+    fn svd(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -62,7 +63,7 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -82,7 +83,7 @@ where
     }
 
     /// Compute full SVD, overwriting existing matrices
-    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
@@ -93,7 +94,7 @@ where
     }
 
     /// Compute only singular values, overwriting existing matrix
-    fn svd_write_s<L: Layout, Ls: Layout>(
+    fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,

@@ -21,3 +21,4 @@ paste.workspace = true
 thiserror.workspace = true
 matamorph.workspace = true
 nalgebra.workspace = true
+simba = "0.9.1"
