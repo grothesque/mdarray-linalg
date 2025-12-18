@@ -1,89 +1,89 @@
-use mdarray::{Tensor, expr::Expression, tensor};
-use mdarray_linalg::{
-    matmul::{Side, Triangle, Type},
-    prelude::*,
-    testing::{common::*, matmul::*},
-};
-use mdarray_linalg_nalgebra::Nalgebra;
+// use mdarray::{Tensor, expr::Expression, tensor};
+// use mdarray_linalg::{
+//     matmul::{Side, Triangle, Type},
+//     prelude::*,
+//     testing::{common::*, matmul::*},
+// };
+// use mdarray_linalg_nalgebra::Nalgebra;
 
-#[test]
-fn matmul_complex_with_scaling() {
-    test_matmul_complex_with_scaling_impl(&Nalgebra);
-}
+// #[test]
+// fn matmul_complex_with_scaling() {
+//     test_matmul_complex_with_scaling_impl(&Nalgebra);
+// }
 
-#[test]
-#[should_panic]
-fn dimension_mismatch_panic() {
-    let a = create_test_matrix_f64([2, 3]).eval();
-    let b = create_test_matrix_f64([4, 2]).eval(); // Wrong inner dimension
+// #[test]
+// #[should_panic]
+// fn dimension_mismatch_panic() {
+//     let a = create_test_matrix_f64([2, 3]).eval();
+//     let b = create_test_matrix_f64([4, 2]).eval(); // Wrong inner dimension
 
-    let _result = Nalgebra.matmul(&a, &b).eval();
-}
+//     let _result = Nalgebra.matmul(&a, &b).eval();
+// }
 
-#[test]
-fn empty_matrix_multiplication() {
-    let a = Tensor::from_elem([0, 3], 0.0f64);
-    let b = Tensor::from_elem([3, 0], 0.0f64);
+// #[test]
+// fn empty_matrix_multiplication() {
+//     let a = Tensor::from_elem([0, 3], 0.0f64);
+//     let b = Tensor::from_elem([3, 0], 0.0f64);
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+//     let result = Nalgebra.matmul(&a, &b).eval();
 
-    assert_eq!(result, naive_matmul(&a, &b));
-}
+//     assert_eq!(result, naive_matmul(&a, &b));
+// }
 
-#[test]
-fn single_element_matrices() {
-    let a = tensor![[3.]];
-    let b = tensor![[4.]];
+// #[test]
+// fn single_element_matrices() {
+//     let a = tensor![[3.]];
+//     let b = tensor![[4.]];
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+//     let result = Nalgebra.matmul(&a, &b).eval();
 
-    assert_eq!(result, naive_matmul(&a, &b));
-}
+//     assert_eq!(result, naive_matmul(&a, &b));
+// }
 
-#[test]
-fn rectangular_matrices() {
-    let a = create_test_matrix_f64([3, 5]).eval();
-    let b = create_test_matrix_f64([5, 4]).eval();
+// #[test]
+// fn rectangular_matrices() {
+//     let a = create_test_matrix_f64([3, 5]).eval();
+//     let b = create_test_matrix_f64([5, 4]).eval();
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+//     let result = Nalgebra.matmul(&a, &b).eval();
 
-    assert_eq!(result, naive_matmul(&a, &b));
-}
+//     assert_eq!(result, naive_matmul(&a, &b));
+// }
 
-#[test]
-fn zero_matrices() {
-    let a = Tensor::from_elem([2, 3], 0.0f64);
-    let b = Tensor::from_elem([3, 2], 5.0f64);
+// #[test]
+// fn zero_matrices() {
+//     let a = Tensor::from_elem([2, 3], 0.0f64);
+//     let b = Tensor::from_elem([3, 2], 5.0f64);
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+//     let result = Nalgebra.matmul(&a, &b).eval();
 
-    assert_eq!(*result.shape(), (2, 2));
+//     assert_eq!(*result.shape(), (2, 2));
 
-    assert!(result.iter().all(|&x| x == 0.0));
-}
+//     assert!(result.iter().all(|&x| x == 0.0));
+// }
 
-#[test]
-fn chained_operations() {
-    let a = create_test_matrix_f64([2, 3]).eval();
-    let b = create_test_matrix_f64([3, 2]).eval();
+// #[test]
+// fn chained_operations() {
+//     let a = create_test_matrix_f64([2, 3]).eval();
+//     let b = create_test_matrix_f64([3, 2]).eval();
 
-    // Test scale then write
-    let scale_factor = 2.0;
-    let mut c = create_test_matrix_f64([2, 2]).eval();
+//     // Test scale then write
+//     let scale_factor = 2.0;
+//     let mut c = create_test_matrix_f64([2, 2]).eval();
 
-    Nalgebra.matmul(&a, &b).scale(scale_factor).write(&mut c);
+//     Nalgebra.matmul(&a, &b).scale(scale_factor).write(&mut c);
 
-    let expected = naive_matmul(&a, &b);
+//     let expected = naive_matmul(&a, &b);
 
-    for (cij, eij) in std::iter::zip(c, expected) {
-        assert_eq!(cij, 2. * eij);
-    }
-}
+//     for (cij, eij) in std::iter::zip(c, expected) {
+//         assert_eq!(cij, 2. * eij);
+//     }
+// }
 
-#[test]
-fn backend_defaults() {
-    let _bd = Nalgebra::default();
-}
+// #[test]
+// fn backend_defaults() {
+//     let _bd = Nalgebra::default();
+// }
 
 // #[test]
 // fn special_symmetric_left_lower() {

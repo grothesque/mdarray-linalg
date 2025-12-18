@@ -8,13 +8,10 @@
 //! let a = tensor![[1., 2.], [3., 4.]];
 //! let b = tensor![[5., 6.], [7., 8.]];
 //!
-//! // ----- Matrix multiplication -----
-//! let c = Nalgebra.matmul(&a, &b).eval();
-//! println!("A * B = {:?}", c);
 //!
 //! ```
 
-pub mod matmul;
+pub mod svd;
 
 #[derive(Default)]
 pub struct Nalgebra;
