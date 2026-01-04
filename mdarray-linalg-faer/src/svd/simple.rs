@@ -50,7 +50,20 @@ pub fn svd_faer<
                 faer::prelude::default(),
             );
             match ret {
-                Ok(()) => Ok(()),
+                Ok(()) => {
+                    // faer returns V, and we stored it transposed to get V^T.
+                    // For complex matrices, the standard SVD convention is A = U * S * V^H,
+                    // where V^H = conj(V)^T. We need to conjugate to convert V^T to V^H.
+                    // For real types, conj() is a no-op.
+                    let ysh = *y.shape();
+                    let (rows, cols) = (ysh.dim(0), ysh.dim(1));
+                    for i in 0..rows {
+                        for j in 0..cols {
+                            y[[i, j]] = y[[i, j]].conj();
+                        }
+                    }
+                    Ok(())
+                }
                 Err(_) => Err(SVDError::BackendDidNotConverge {
                     superdiagonals: (0),
                 }),
