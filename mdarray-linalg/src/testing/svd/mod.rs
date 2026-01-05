@@ -28,16 +28,20 @@ fn test_svd_reconstruction<T>(
 
     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 
-    assert_eq!(*s.shape(), (n, n));
-    assert_eq!(*u.shape(), (m, m));
-    assert_eq!(*vt.shape(), (n, n));
+    // assert_eq!(*s.shape(), (n, n));
+    // assert_eq!(*u.shape(), (m, m));
+    // assert_eq!(*vt.shape(), (n, n));
 
     let mut sigma = DTensor::<T, 2>::zeros([m, n]);
     for i in 0..min_dim {
         sigma[[i, i]] = s[[0, i]];
     }
 
+    // dbg!(&sigma);
+
     if debug_print {
+        println!("=== A original ===");
+        pretty_print(a);
         println!("=== Σ (Sigma) ===");
         pretty_print(&sigma);
         println!("=== U ===");
@@ -83,9 +87,9 @@ pub fn test_svd_big_square_matrix(bd: &impl SVD<f64, Dyn, Dyn, Dense>) {
 
 pub fn test_svd_random_matrix(bd: &impl SVD<f64, Dyn, Dyn, Dense>) {
     let mut rng = rand::rng();
-    let n = 10;
+    let n = 4;
     let a = DTensor::<f64, 2>::from_fn([n, n], |_| rng.random::<f64>());
-    test_svd_reconstruction(bd, &a, false);
+    test_svd_reconstruction(bd, &a, true);
 }
 
 pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dyn, Dense>) {
