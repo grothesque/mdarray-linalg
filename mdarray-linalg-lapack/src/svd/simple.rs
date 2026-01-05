@@ -42,8 +42,8 @@ where
     let job = match (&u, &vt) {
         (Some(x), Some(y)) => {
             let ((mu, nu), (ms, ns), (mvt, nvt)) = get_dims!(x, s, y);
-            assert_eq!(mu, nu, "U must be square (m × m)");
-            assert_eq!(mvt, nvt, "VT must be square (n × n)");
+            // assert_eq!(mu, nu, "U must be square (m × m)");
+            // assert_eq!(mvt, nvt, "VT must be square (n × n)");
             assert_eq!(ns, ms, "s must be square (min(m,n),min(m,n))");
             assert_eq!(
                 ms, min_mn,
@@ -173,7 +173,7 @@ where
             u_ptr.unwrap() as *mut _,
             m,
             vt_ptr.unwrap() as *mut _,
-            n,
+            m.min(n), // n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -198,7 +198,7 @@ where
             u_ptr.unwrap() as *mut _,
             m,
             vt_ptr.unwrap() as *mut _,
-            n,
+            m.min(n), // n,
             work.as_mut_ptr() as *mut _,
             lwork as i32,
             rwork.as_mut_ptr() as *mut _,
@@ -251,7 +251,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            n,
+            m.min(n), // n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -275,7 +275,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            n,
+            m.min(n), // n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,

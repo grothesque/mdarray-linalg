@@ -20,15 +20,16 @@ use super::{
 };
 use crate::Lapack;
 
-impl<T, D0, D1> SVD<T, D0, D1> for Lapack
+impl<T, D0, D1, L> SVD<T, D0, D1, L> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
     T::Real: Into<T>,
     D0: Dim,
     D1: Dim,
+    L: Layout,
 {
     // Computes full SVD with new allocated matrices
-    fn svd<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+    fn svd(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
         let min_mn = m.min(n);
@@ -44,7 +45,7 @@ where
     }
 
     // Computes only singular values with new allocated matrix
-    fn svd_s<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
 
@@ -60,7 +61,7 @@ where
     }
 
     // Computes full SVD, overwriting existing matrices
-    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
@@ -71,7 +72,7 @@ where
     }
 
     // Computes only singular values, overwriting existing matrix
-    fn svd_write_s<L: Layout, Ls: Layout>(
+    fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
         s: &mut DSlice<T, 2, Ls>,
