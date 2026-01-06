@@ -13,8 +13,8 @@ pub fn getrf<
     Lu: Layout,
 >(
     a: &mut Slice<T, (D0, D1), La>,
-    l: &mut DSlice<T, 2, Ll>,
-    u: &mut DSlice<T, 2, Lu>,
+    l: &mut Slice<T, (D0, D0), Ll>,
+    u: &mut Slice<T, (D0, D1), Lu>,
 ) -> Vec<i32>
 where
     T::Real: Into<T>,

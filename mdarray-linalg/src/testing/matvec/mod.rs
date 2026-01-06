@@ -7,7 +7,7 @@ use crate::{
     prelude::*,
 };
 
-pub fn test_eval_and_write(bd: impl MatVec<f64>) {
+pub fn test_eval_and_write(bd: impl MatVec<f64, usize, usize>) {
     let n = 3;
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * n + i[1] + 1) as f64);
@@ -20,7 +20,7 @@ pub fn test_eval_and_write(bd: impl MatVec<f64>) {
     assert_eq!(y_overwritten, y);
 }
 
-pub fn test_add_to_scaled(bd: impl MatVec<f64>) {
+pub fn test_add_to_scaled(bd: impl MatVec<f64, usize, usize>) {
     let n = 3;
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let mut x2 = DTensor::<f64, 1>::from_elem(n, 1.);
@@ -31,7 +31,7 @@ pub fn test_add_to_scaled(bd: impl MatVec<f64>) {
     assert_eq!(x2, y);
 }
 
-pub fn test_add_to(bd: impl MatVec<f64>) {
+pub fn test_add_to(bd: impl MatVec<f64, usize, usize>) {
     let n = 3;
     let x = DTensor::<f64, 1>::from_elem(n, 1.);
     let mut x2 = DTensor::<f64, 1>::from_elem(n, 1.);
@@ -41,7 +41,7 @@ pub fn test_add_to(bd: impl MatVec<f64>) {
     assert_eq!(x2, y);
 }
 
-pub fn test_add_outer_basic(bd: impl Outer<f64>) {
+pub fn test_add_outer_basic(bd: impl Outer<f64, usize, usize>) {
     let m = 2;
     let n = 3;
 
@@ -60,7 +60,7 @@ pub fn test_add_outer_basic(bd: impl Outer<f64>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_cplx(bd: impl Outer<Complex<f64>>) {
+pub fn test_add_outer_cplx(bd: impl Outer<Complex<f64>, usize, usize>) {
     let m = 2;
     let n = 3;
 
@@ -95,7 +95,7 @@ pub fn test_add_outer_cplx(bd: impl Outer<Complex<f64>>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_sym(bd: impl Outer<f64>) {
+pub fn test_add_outer_sym(bd: impl Outer<f64, usize, usize>) {
     let n = 3;
 
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
@@ -122,7 +122,7 @@ pub fn test_add_outer_sym(bd: impl Outer<f64>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_subview(bd: impl Outer<f64>) {
+pub fn test_add_outer_subview(bd: impl Outer<f64, usize, usize>) {
     let mut a = DTensor::<f64, 2>::from_elem([3, 3], 1.);
     let x = DTensor::<f64, 1>::from_elem([2], 1.);
     let y = DTensor::<f64, 1>::from_elem([2], 2.);
@@ -141,7 +141,7 @@ pub fn test_add_outer_subview(bd: impl Outer<f64>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_her(bd: impl Outer<Complex<f64>>) {
+pub fn test_add_outer_her(bd: impl Outer<Complex<f64>, usize, usize>) {
     use num_complex::Complex64;
 
     let n = 3;
@@ -186,7 +186,7 @@ pub fn test_add_outer_her(bd: impl Outer<Complex<f64>>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64>) {
+pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize>) {
     let n = 3;
     let alpha = 2.0;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
@@ -198,7 +198,7 @@ pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64>) {
     assert_eq!(y, expected);
 }
 
-pub fn test_dot_real(bd: impl VecOps<f64>) {
+pub fn test_dot_real(bd: impl VecOps<f64, usize>) {
     let n = 3;
     let x = DTensor::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
     let y = DTensor::<f64, 1>::from_fn([n], |i| (2 * (i[0] + 1)) as f64); // [2., 4., 6.]
@@ -207,7 +207,7 @@ pub fn test_dot_real(bd: impl VecOps<f64>) {
     assert_eq!(bd.dot(&x, &y), 28.0);
 }
 
-pub fn test_dot_complex(bd: impl VecOps<Complex<f64>>) {
+pub fn test_dot_complex(bd: impl VecOps<Complex<f64>, usize>) {
     use num_complex::Complex64;
     let n = 3;
     let x = DTensor::<Complex64, 1>::from_fn([n], |i| Complex64::new((i[0] + 1) as f64, 0.)); // [1., 2., 3.]
@@ -218,7 +218,7 @@ pub fn test_dot_complex(bd: impl VecOps<Complex<f64>>) {
     assert_eq!(bd.dot(&x, &y), expected);
 }
 
-pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>>) {
+pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>, usize>) {
     use num_complex::Complex64;
 
     let n = 2;
@@ -238,7 +238,7 @@ pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>>) {
     assert_eq!(result, expected);
 }
 
-pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>>) {
+pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>, usize>) {
     use num_complex::Complex64;
 
     let n = 3;
@@ -257,7 +257,7 @@ pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>>) {
     assert!((result - expected).abs() < 1e-12);
 }
 
-pub fn test_norm2_complex(bd: impl VecOps<Complex<f64>>) {
+pub fn test_norm2_complex(bd: impl VecOps<Complex<f64>, usize>) {
     use num_complex::Complex64;
 
     let n = 3;

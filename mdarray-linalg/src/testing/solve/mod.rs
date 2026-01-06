@@ -35,7 +35,7 @@ where
     }
 }
 
-pub fn test_solve_single_rhs(bd: &impl Solve<f64>) {
+pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize, usize>) {
     let n = 4;
     let a = random_matrix(n, n);
     let original_a = a.clone();
@@ -46,7 +46,7 @@ pub fn test_solve_single_rhs(bd: &impl Solve<f64>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
+pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize, usize>) {
     let n = 5;
     let nrhs = 3;
     let mut a = random_matrix(n, n);
@@ -58,7 +58,7 @@ pub fn test_solve_multiple_rhs(bd: &impl Solve<f64>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_write(bd: &impl Solve<f64>) {
+pub fn test_solve_write(bd: &impl Solve<f64, usize, usize>) {
     let n = 4;
     let nrhs = 2;
     let mut a = random_matrix(n, n);
@@ -73,7 +73,7 @@ pub fn test_solve_write(bd: &impl Solve<f64>) {
     test_solve_verification(&original_a, &b, &original_b);
 }
 
-pub fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
+pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize, usize>) {
     let n = 3;
     let nrhs = 2;
 
@@ -97,7 +97,7 @@ pub fn test_solve_identity_matrix(bd: &impl Solve<f64>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>>) {
+pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize, usize>) {
     use num_complex::Complex;
 
     let n = 4;

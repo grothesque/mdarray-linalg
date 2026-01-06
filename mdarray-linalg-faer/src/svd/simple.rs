@@ -8,17 +8,16 @@ use crate::{into_faer, into_faer_diag_mut, into_faer_mut, into_faer_mut_transpos
 
 pub fn svd_faer<
     T: ComplexFloat + ComplexField + Default + 'static,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
     La: Layout,
     Ls: Layout,
     Lu: Layout,
     Lvt: Layout,
 >(
-    a: &Slice<T, (D0, D1), La>,
-    s_mda: &mut DSlice<T, 2, Ls>,
-    u_mda: Option<&mut DSlice<T, 2, Lu>>,
-    vt_mda: Option<&mut DSlice<T, 2, Lvt>>,
+    a: &Slice<T, (D, D), La>,
+    s_mda: &mut Slice<T, (D, D), Ls>,
+    u_mda: Option<&mut Slice<T, (D, D), Lu>>,
+    vt_mda: Option<&mut Slice<T, (D, D), Lvt>>,
 ) -> Result<(), SVDError> {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

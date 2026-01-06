@@ -1,25 +1,26 @@
 use std::any::TypeId;
 
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{DSlice, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, trans_stride};
 use num_complex::{Complex, ComplexFloat};
 
 use super::scalar::BlasScalar;
 
-pub fn gemv<T, La, Lx, Ly>(
+pub fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     alpha: T,
-    a: &DSlice<T, 2, La>,
-    x: &DSlice<T, 1, Lx>,
+    a: &Slice<T, (D0, D1), La>,
+    x: &Slice<T, (D1,), Lx>,
     beta: T,
-    y: &mut DSlice<T, 1, Ly>,
+    y: &mut Slice<T, (D1,), Ly>,
 ) where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lx: Layout,
     Ly: Layout,
 {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
 
     if a.stride(1) == 1 {
         assert_eq!(x.len(), n, "x length must match number of columns in a");
@@ -71,18 +72,19 @@ pub fn gemv<T, La, Lx, Ly>(
     }
 }
 
-pub fn ger<T, La, Lx, Ly>(
+pub fn ger<T, La, Lx, Ly, D0: Dim, D1: Dim>(
     beta: T,
-    x: &DSlice<T, 1, Lx>,
-    y: &DSlice<T, 1, Ly>,
-    a: &mut DSlice<T, 2, La>,
+    x: &Slice<T, (D0,), Lx>,
+    y: &Slice<T, (D1,), Ly>,
+    a: &mut Slice<T, (D0, D1), La>,
 ) where
     T: BlasScalar + ComplexFloat,
     La: Layout,
     Lx: Layout,
     Ly: Layout,
 {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
 
     assert_eq!(x.len(), m, "x length must match number of rows in a");
     assert_eq!(y.len(), n, "y length must match number of columns in a");
@@ -122,7 +124,7 @@ pub fn ger<T, La, Lx, Ly>(
     }
 }
 
-pub fn scal<T, Lx>(alpha: T, x: &mut DSlice<T, 1, Lx>)
+pub fn scal<T, Lx, D1: Dim>(alpha: T, x: &mut Slice<T, (D1,), Lx>)
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -133,13 +135,19 @@ where
     unsafe { T::cblas_scal(n, alpha, x.as_mut_ptr(), incx) }
 }
 
-pub fn syr<T, Lx, La>(uplo: CBLAS_UPLO, alpha: T, x: &DSlice<T, 1, Lx>, a: &mut DSlice<T, 2, La>)
-where
+pub fn syr<T, Lx, La, D0: Dim, D1: Dim>(
+    uplo: CBLAS_UPLO,
+    alpha: T,
+    x: &Slice<T, (D0,), Lx>,
+    a: &mut Slice<T, (D0, D1), La>,
+) where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
     La: Layout,
 {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
+
     assert_eq!(m, n, "Matrix a must be square for symmetric update");
     assert_eq!(x.len(), n, "x length must match matrix dimension");
 
@@ -174,17 +182,19 @@ where
     }
 }
 
-pub fn her<T, Lx, La>(
+pub fn her<T, Lx, La, D0: Dim, D1: Dim>(
     uplo: CBLAS_UPLO,
     alpha: T::Real,
-    x: &DSlice<T, 1, Lx>,
-    a: &mut DSlice<T, 2, La>,
+    x: &Slice<T, (D0,), Lx>,
+    a: &mut Slice<T, (D0, D1), La>,
 ) where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
     La: Layout,
 {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
+
     assert_eq!(m, n, "Matrix a must be square for hermitian update");
     assert_eq!(x.len(), n, "x length must match matrix dimension");
 
@@ -219,7 +229,7 @@ pub fn her<T, Lx, La>(
     }
 }
 
-pub fn asum<T, Lx>(x: &DSlice<T, 1, Lx>) -> T::Real
+pub fn asum<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -230,7 +240,7 @@ where
     unsafe { T::cblas_asum(n, x.as_ptr(), incx) }
 }
 
-pub fn axpy<T, Lx, Ly>(alpha: T, x: &DSlice<T, 1, Lx>, y: &mut DSlice<T, 1, Ly>)
+pub fn axpy<T, D1: Dim, Lx, Ly>(alpha: T, x: &Slice<T, (D1,), Lx>, y: &mut Slice<T, (D1,), Ly>)
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -245,7 +255,7 @@ where
     unsafe { T::cblas_axpy(n, alpha, x.as_ptr(), incx, y.as_mut_ptr(), incy) }
 }
 
-pub fn nrm2<T, Lx>(x: &DSlice<T, 1, Lx>) -> T::Real
+pub fn nrm2<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -256,7 +266,7 @@ where
     unsafe { T::cblas_nrm2(n, x.as_ptr(), incx) }
 }
 
-pub fn dotu<T, Lx, Ly>(x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T
+pub fn dotu<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
 where
     T: BlasScalar + ComplexFloat + 'static,
     Lx: Layout,
@@ -285,7 +295,7 @@ where
     result
 }
 
-pub fn dotc<T, Lx, Ly>(x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T
+pub fn dotc<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
 where
     T: BlasScalar + ComplexFloat + 'static,
     Lx: Layout,

@@ -13,8 +13,8 @@ pub fn geqrf<
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
 >(
     a: &mut Slice<T, (D0, D1), La>,
-    q: &mut DSlice<T, 2, Lq>,
-    r: &mut DSlice<T, 2, Lr>,
+    q: &mut Slice<T, (D0, D1), Lq>,
+    r: &mut Slice<T, (D0, D1), Lr>,
 ) where
     T::Real: Into<T>,
 {

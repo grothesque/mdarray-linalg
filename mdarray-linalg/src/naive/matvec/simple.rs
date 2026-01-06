@@ -1,20 +1,25 @@
-use mdarray::{DSlice, Layout};
+use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
 
 /// Performs naively A + α·x·yᵀ (or α·x·xᵀ or x·x†)
-pub fn naive_outer<T: ComplexFloat, La: Layout, Lx: Layout, Ly: Layout>(
-    a: &mut DSlice<T, 2, La>,
-    x: &DSlice<T, 1, Lx>,
-    y: &DSlice<T, 1, Ly>,
+pub fn naive_outer<T: ComplexFloat, La: Layout, Lx: Layout, Ly: Layout, D0, D1>(
+    a: &mut Slice<T, (D0, D1), La>,
+    x: &Slice<T, (D0,), Lx>,
+    y: &Slice<T, (D1,), Ly>,
     alpha: T,
     ty: Option<Type>,
     tr: Option<Triangle>,
-) {
-    let m = x.shape().0;
-    let n = y.shape().0;
-    let (ma, na) = *a.shape();
+) where
+    D0: Dim,
+    D1: Dim,
+{
+    let m = x.shape().dim(0);
+    let n = y.shape().dim(0);
+
+    let ash = *a.shape();
+    let (ma, na) = (ash.dim(0), ash.dim(1));
 
     assert!(na == n, "Output shape must match input vector length");
     assert!(ma == m, "Output shape must match input vector length");

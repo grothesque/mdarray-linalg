@@ -8,7 +8,7 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use mdarray::{DSlice, DTensor, Dense, Dim, IntoShape, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{
     get_dims, into_i32, ipiv_to_perm_mat,
     lu::{InvError, InvResult, LU},
@@ -30,19 +30,19 @@ where
     fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        l: &mut DSlice<T, 2, Ll>,
-        u: &mut DSlice<T, 2, Lu>,
-        p: &mut DSlice<T, 2, Lp>,
+        l: &mut Slice<T, (D0, D0), Ll>,
+        u: &mut Slice<T, (D0, D1), Lu>,
+        p: &mut Slice<T, (D0, D0), Lp>,
     ) {
         let ash = *a.shape();
-        let m = ash.dim(0) as usize;
+        let m = ash.dim(0);
 
         let ipiv = getrf(a, l, u);
 
-        let p_matrix = ipiv_to_perm_mat::<T>(&ipiv, m as usize);
+        let p_matrix = ipiv_to_perm_mat::<T, D0, D1>(&ipiv, m);
 
-        for i in 0..(m as usize) {
-            for j in 0..(m as usize) {
+        for i in 0..m {
+            for j in 0..m {
                 p[[i, j]] = p_matrix[[i, j]];
             }
         }
@@ -51,16 +51,25 @@ where
     fn lu<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-    ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>) {
+    ) -> (
+        Tensor<T, (D0, D0)>,
+        Tensor<T, (D0, D1)>,
+        Tensor<T, (D0, D0)>,
+    ) {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
-        let mut l = tensor![[T::default(); min_mn as usize]; m as usize];
-        let mut u = tensor![[T::default(); n as usize]; min_mn as usize];
+
+        let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
+        let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
+
+        let mut l = Tensor::from_elem(l_shape, T::default());
+        let mut u = Tensor::from_elem(u_shape, T::default());
+
         let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
-        let p_matrix = ipiv_to_perm_mat::<T>(&ipiv, m as usize);
+        let p_matrix = ipiv_to_perm_mat::<T, D0, D0>(&ipiv, m);
 
         (l, u, p_matrix)
     }
@@ -77,8 +86,12 @@ where
         }
 
         let min_mn = m.min(n);
-        let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
-        let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
+
+        let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
+        let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
+
+        let mut l = Tensor::from_elem(l_shape, T::default());
+        let mut u = Tensor::from_elem(u_shape, T::default());
         let mut ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
         match getri::<T, D0, D1, _>(a, &mut ipiv) {
@@ -101,17 +114,21 @@ where
 
         let mut a_inv = Tensor::<T, (D0, D1)>::zeros(ash);
 
-        let mut a_inv_mut = a_inv.view_mut(.., ..);
+        // let mut a_inv_mut = a_inv.view_mut(.., ..);
 
-        for i in 0..n as usize {
-            for j in 0..m as usize {
+        for i in 0..n {
+            for j in 0..m {
                 a_inv[[i, j]] = a[[i, j]];
             }
         }
 
         let min_mn = m.min(n);
-        let mut l = DTensor::<T, 2>::zeros([m as usize, min_mn as usize]);
-        let mut u = DTensor::<T, 2>::zeros([min_mn as usize, n as usize]);
+
+        let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
+        let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
+
+        let mut l = Tensor::from_elem(l_shape, T::default());
+        let mut u = Tensor::from_elem(u_shape, T::default());
         let mut ipiv = getrf::<T, D0, D1, _, _, _>(&mut a_inv, &mut l, &mut u);
 
         match getri::<T, D0, D1, L>(a, &mut ipiv) {
@@ -126,13 +143,15 @@ where
         let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "determinant is only defined for square matrices");
 
-        let mut l = tensor![[T::default(); n as usize]; n as usize];
-        let mut u = tensor![[T::default(); n as usize]; n as usize];
+        let l_shape = <(D0, D0) as Shape>::from_dims(&[n, n]);
+        let u_shape = <(D0, D1) as Shape>::from_dims(&[n, n]);
+        let mut l = Tensor::from_elem(l_shape, T::default());
+        let mut u = Tensor::from_elem(u_shape, T::default());
 
         let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
         let mut det = T::one();
-        for i in 0..n as usize {
+        for i in 0..n {
             det = det * u[[i, i]];
         }
 
@@ -155,8 +174,8 @@ where
 
         match potrf::<T, D0, D1, _>(a, 'L') {
             0 => {
-                for i in 0..(m as usize) {
-                    for j in 0..(n as usize) {
+                for i in 0..m {
+                    for j in 0..n {
                         if i >= j {
                             l[[i, j]] = a[[j, i]];
                         } else {

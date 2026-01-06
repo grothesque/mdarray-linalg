@@ -1,24 +1,25 @@
 use dyn_stack::{MemBuffer, MemStack};
-use nalgebra_traits::ComplexField;
 use mdarray::{DSlice, Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::SVDError;
+use nalgebra_traits::ComplexField;
 use num_complex::ComplexFloat;
 
-use crate::{into_nalgebra, into_nalgebra_diag_mut, into_nalgebra_mut, into_nalgebra_mut_transpose};
+use crate::{
+    into_nalgebra, into_nalgebra_diag_mut, into_nalgebra_mut, into_nalgebra_mut_transpose,
+};
 
 pub fn svd_nalgebra<
     T: ComplexFloat + ComplexField + Default + 'static,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
     La: Layout,
     Ls: Layout,
     Lu: Layout,
     Lvt: Layout,
 >(
-    a: &Slice<T, (D0, D1), La>,
-    s_mda: &mut DSlice<T, 2, Ls>,
-    u_mda: Option<&mut DSlice<T, 2, Lu>>,
-    vt_mda: Option<&mut DSlice<T, 2, Lvt>>,
+    a: &Slice<T, (D, D), La>,
+    s_mda: &mut Slice<T, (D, D), Ls>,
+    u_mda: Option<&mut Slice<T, (D, D), Lu>>,
+    vt_mda: Option<&mut Slice<T, (D, D), Lvt>>,
 ) -> Result<(), SVDError> {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));
@@ -39,14 +40,16 @@ pub fn svd_nalgebra<
                 Some(u_nalgebra),
                 Some(vt_nalgebra),
                 par,
-                MemStack::new(&mut MemBuffer::new(nalgebra::linalg::svd::svd_scratch::<T>(
-                    m,
-                    n,
-                    nalgebra::linalg::svd::ComputeSvdVectors::Full,
-                    nalgebra::linalg::svd::ComputeSvdVectors::Full,
-                    par,
-                    nalgebra::prelude::default(),
-                ))),
+                MemStack::new(&mut MemBuffer::new(
+                    nalgebra::linalg::svd::svd_scratch::<T>(
+                        m,
+                        n,
+                        nalgebra::linalg::svd::ComputeSvdVectors::Full,
+                        nalgebra::linalg::svd::ComputeSvdVectors::Full,
+                        par,
+                        nalgebra::prelude::default(),
+                    ),
+                )),
                 nalgebra::prelude::default(),
             );
             match ret {
@@ -64,14 +67,16 @@ pub fn svd_nalgebra<
                 None,
                 None,
                 par,
-                MemStack::new(&mut MemBuffer::new(nalgebra::linalg::svd::svd_scratch::<T>(
-                    m,
-                    n,
-                    nalgebra::linalg::svd::ComputeSvdVectors::No,
-                    nalgebra::linalg::svd::ComputeSvdVectors::No,
-                    par,
-                    nalgebra::prelude::default(),
-                ))),
+                MemStack::new(&mut MemBuffer::new(
+                    nalgebra::linalg::svd::svd_scratch::<T>(
+                        m,
+                        n,
+                        nalgebra::linalg::svd::ComputeSvdVectors::No,
+                        nalgebra::linalg::svd::ComputeSvdVectors::No,
+                        par,
+                        nalgebra::prelude::default(),
+                    ),
+                )),
                 nalgebra::prelude::default(),
             );
             match ret {

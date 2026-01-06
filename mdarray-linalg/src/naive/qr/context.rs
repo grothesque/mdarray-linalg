@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, Dim, Layout, Slice};
+use mdarray::{Dim, Layout, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -13,17 +13,18 @@ where
     fn qr_write<L: Layout, Lq: Layout, Lr: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        q: &mut DSlice<T, 2, Lq>,
-        r: &mut DSlice<T, 2, Lr>,
+        q: &mut Slice<T, (D0, D1), Lq>,
+        r: &mut Slice<T, (D0, D1), Lr>,
     ) {
         naive_qr(a, q, r);
     }
 
-    fn qr<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> (DTensor<T, 2>, DTensor<T, 2>) {
-        let (m, n) = *a.shape();
-
-        let mut q = DTensor::<T, 2>::from_elem([m.size(), n.size()], T::zero());
-        let mut r = DTensor::<T, 2>::from_elem([n.size(), n.size()], T::zero());
+    fn qr<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> (Tensor<T, (D0, D1)>, Tensor<T, (D0, D1)>) {
+        let mut q = Tensor::<T, (D0, D1)>::from_elem(*a.shape(), T::zero());
+        let mut r = Tensor::<T, (D0, D1)>::from_elem(*a.shape(), T::zero());
 
         naive_qr(a, &mut q, &mut r);
 

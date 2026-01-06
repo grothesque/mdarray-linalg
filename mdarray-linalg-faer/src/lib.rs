@@ -54,9 +54,9 @@ pub mod svd;
 #[derive(Default)]
 pub struct Faer;
 
-use mdarray::{DSlice, Dim, Layout, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 
-/// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
+/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer<T, L: Layout, D0: Dim, D1: Dim>(
     mat: &Slice<T, (D0, D1), L>,
@@ -79,7 +79,7 @@ pub fn into_faer<T, L: Layout, D0: Dim, D1: Dim>(
     }
 }
 
-/// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a `faer::MatMut<'static, T>`.
+/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatMut<'static, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
     mat: &mut Slice<T, (D0, D1), L>,
@@ -128,10 +128,11 @@ pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
 /// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a
 /// `faer::MatMut<'static, T>` and transposes data.  This function
 /// **does not copy** any data.
-pub fn into_faer_mut_transpose<T, L: Layout>(
-    mat: &mut DSlice<T, 2, L>,
+pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
+    mat: &mut Slice<T, (D0, D1), L>,
 ) -> faer::mat::MatMut<'static, T> {
-    let (nrows, ncols) = *mat.shape();
+    let matsh = *mat.shape();
+    let (nrows, ncols) = (matsh.dim(0), matsh.dim(1));
     let strides = (mat.stride(0), mat.stride(1));
 
     // SAFETY:
@@ -159,10 +160,10 @@ pub fn into_faer_mut_transpose<T, L: Layout>(
 ///   with LAPACK-style storage, where singular values are typically stored in the first row.
 /// - This function is unsafe internally and assumes that `mat` contains at least `n` elements
 ///   in memory laid out consistently with the given stride.
-pub fn into_faer_diag_mut<T, L: Layout>(
-    mat: &mut DSlice<T, 2, L>,
+pub fn into_faer_diag_mut<T, D0: Dim, D1: Dim, L: Layout>(
+    mat: &mut Slice<T, (D0, D1), L>,
 ) -> faer::diag::DiagMut<'static, T> {
-    let (n, _) = *mat.shape();
+    let n = mat.shape().dim(0);
 
     // SAFETY:
     // - `mat.as_mut_ptr()` must point to a buffer with at least `n` diagonal elements.

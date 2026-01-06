@@ -1,4 +1,4 @@
-use mdarray::{DSlice, Dim, Layout, Slice};
+use mdarray::{Dim, Layout, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -6,8 +6,8 @@ use num_traits::{MulAdd, One, Zero};
 /// Useful for debugging and simple tests without relying on external backend
 pub fn naive_qr<T, D0: Dim, D1: Dim, L, Lq, Lr>(
     a: &mut Slice<T, (D0, D1), L>,
-    q: &mut DSlice<T, 2, Lq>,
-    r: &mut DSlice<T, 2, Lr>,
+    q: &mut Slice<T, (D0, D1), Lq>,
+    r: &mut Slice<T, (D0, D1), Lr>,
 ) where
     T: ComplexFloat + Zero + One + MulAdd<Output = T>,
     L: Layout,

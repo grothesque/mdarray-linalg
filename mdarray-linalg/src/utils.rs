@@ -5,7 +5,7 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
+use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
@@ -136,8 +136,11 @@ where
 }
 
 /// Convert pivot indices to permutation matrix
-pub fn ipiv_to_perm_mat<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2> {
-    let mut p = tensor![[T::zero(); m]; m];
+pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
+    ipiv: &[i32],
+    m: usize,
+) -> Tensor<T, (D0, D1)> {
+    let mut p = Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[m, m]), T::zero());
 
     for i in 0..m {
         p[[i, i]] = T::one();
@@ -161,13 +164,16 @@ pub fn ipiv_to_perm_mat<T: ComplexFloat>(ipiv: &[i32], m: usize) -> DTensor<T, 2
 /// Given an input matrix of shape `(m × n)`, this function creates and returns
 /// a new matrix of shape `(n × m)`, where each element at position `(i, j)` in the
 /// original is moved to position `(j, i)` in the result.
-pub fn to_col_major<T, L>(c: &DSlice<T, 2, L>) -> DTensor<T, 2>
+pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Tensor<T, (D0, D1)>
 where
     T: ComplexFloat + Default + Clone,
     L: Layout,
 {
-    let (m, n) = *c.shape();
-    let mut result = DTensor::<T, 2>::zeros([n, m]);
+    let csh = *c.shape();
+    let (m, n) = (csh.dim(0), csh.dim(1));
+
+    let shape = <(D0, D1) as Shape>::from_dims(&[n, m]);
+    let mut result = Tensor::<T, (D0, D1)>::zeros(shape);
 
     for i in 0..m {
         for j in 0..n {
@@ -212,11 +218,13 @@ where
 /// use mdarray::tensor;
 /// use mdarray_linalg::identity;
 ///
-/// let i3 = identity::<f64>(3);
+/// let i3 = identity::<f64, usize, usize>(3);
 /// assert_eq!(i3, tensor![[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]);
 /// ```
-pub fn identity<T: Zero + One>(n: usize) -> DTensor<T, 2> {
-    DTensor::<T, 2>::from_fn([n, n], |i| if i[0] == i[1] { T::one() } else { T::zero() })
+pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Tensor<T, (D0, D1)> {
+    Tensor::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
+        if i[0] == i[1] { T::one() } else { T::zero() }
+    })
 }
 
 /// Creates a diagonal matrix of size `n x n` with ones on a specified diagonal.

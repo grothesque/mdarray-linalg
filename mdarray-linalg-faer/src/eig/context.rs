@@ -20,7 +20,7 @@
 //     - T is n × n         (upper triangular for complex, quasi-upper triangular for real)
 
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Dense, Layout, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::eig::{Eig, EigDecomp, EigError, EigResult, SchurError, SchurResult};
 use num_complex::{Complex, ComplexFloat};
 
@@ -34,7 +34,7 @@ macro_rules! complex_from_faer {
     }};
 }
 
-impl<T> Eig<T> for Faer
+impl<T, D0: Dim, D1: Dim> Eig<T, D0, D1> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -44,8 +44,9 @@ where
 {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
     /// The matrix `A` satisfies: `A * v = λ * v` where v are the right eigenvectors
-    fn eig<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
-        let (m, n) = *a.shape();
+    fn eig<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
 
         if m != n {
             return Err(EigError::NotSquareMatrix);
@@ -60,11 +61,12 @@ where
                 let right_vecs = eig.U();
 
                 let x = T::default();
-                let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
-                let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re());n]; n];
+                let ash1 = <(D0,) as Shape>::from_dims(&[n]);
+                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+                let mut right_vecs_mda = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
 
                 for i in 0..n {
-                    eigenvalues_mda[[0, i]] = complex_from_faer!(&eigenvalues[i], T);
+                    eigenvalues_mda[i] = complex_from_faer!(&eigenvalues[i], T);
                 }
 
                 for i in 0..n {
@@ -86,8 +88,9 @@ where
     // /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
     // /// The matrix A satisfies: `A * vr = λ * vr` and `vl^H * A = λ * vl^H`
     // /// where `vr` are right eigenvectors and `vl` are left eigenvectors
-    // fn eig_full<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
-    //     let (m, n) = *a.shape();
+    // fn eig_full<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+    //     let ash = *a.shape();
+    //     let (m, n) = (ash.dim(0), ash.dim(1));
 
     //     if m != n {
     //         return Err(EigError::NotSquareMatrix);
@@ -136,9 +139,10 @@ where
     //     }
     // }
 
-    fn eig_full<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> Result<EigDecomp<T>, EigError> {
+    fn eig_full<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
         todo!();
-        // let (m, n) = *a.shape();
+        // let ash = *a.shape();
+        // let (m, n) = (ash.dim(0), ash.dim(1));
         // if m != n {
         //     return Err(EigError::NotSquareMatrix);
         // }
@@ -298,9 +302,11 @@ where
         //     Err(_) => Err(EigError::BackendDidNotConverge { iterations: 0 }),
         // }
     }
+
     /// Compute only eigenvalues with new allocated vectors
-    fn eig_values<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
-        let (m, n) = *a.shape();
+    fn eig_values<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
 
         if m != n {
             return Err(EigError::NotSquareMatrix);
@@ -313,10 +319,11 @@ where
         match eigenvalues_result {
             Ok(eigenvalues) => {
                 let x = T::default();
-                let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
+                let ash1 = <(D0,) as Shape>::from_dims(&[n]);
+                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
 
                 for i in 0..n {
-                    eigenvalues_mda[[0, i]] = complex_from_faer!(&eigenvalues[i], T);
+                    eigenvalues_mda[i] = complex_from_faer!(&eigenvalues[i], T);
                 }
 
                 Ok(EigDecomp {
@@ -330,15 +337,15 @@ where
     }
 
     /// Compute eigenvalues and eigenvectors of a Hermitian matrix (input should be complex)
-    fn eigh<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
-        let (m, n) = *a.shape();
+    fn eigh<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
 
         if m != n {
             return Err(EigError::NotSquareMatrix);
         }
 
         let a_faer = into_faer(a);
-
         let eig_result = a_faer.self_adjoint_eigen(faer::Side::Lower);
 
         match eig_result {
@@ -347,14 +354,17 @@ where
                 let eigenvectors = eig.U();
 
                 let x = T::default();
-                let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
+                let ash1 = <(D0,) as Shape>::from_dims(&[n]);
+                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+                let mut right_vecs_mda = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
 
-                let mut eigenvalues_faer = into_faer_mut(&mut eigenvalues_mda);
+                dbg!("ici");
+
                 for i in 0..n {
-                    eigenvalues_faer[(0, i)] = Complex::new(eigenvalues[i].re(), x.re());
+                    eigenvalues_mda[i] = Complex::new(eigenvalues[i].re(), x.re());
                 }
 
-                let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re());n]; n];
+                // let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re());n]; n];
 
                 let mut eigenvectors_faer = into_faer_mut(&mut right_vecs_mda);
                 for i in 0..n {
@@ -375,36 +385,36 @@ where
     }
 
     /// Compute eigenvalues and eigenvectors of a symmetric matrix (input should be real)
-    fn eigs<L: Layout>(&self, a: &mut DSlice<T, 2, L>) -> EigResult<T> {
+    fn eigs<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
         self.eigh(a)
     }
 
     /// Compute Schur decomposition with new allocated matrices
-    fn schur<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
+    fn schur<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1> {
         todo!();
     }
 
     /// Compute Schur decomposition overwriting existing matrices
     fn schur_write<L: Layout>(
         &self,
-        _a: &mut DSlice<T, 2, L>,
-        _t: &mut DSlice<T, 2, Dense>,
-        _z: &mut DSlice<T, 2, Dense>,
+        _a: &mut Slice<T, (D0, D1), L>,
+        _t: &mut Slice<T, (D0, D1), Dense>,
+        _z: &mut Slice<T, (D0, D1), Dense>,
     ) -> Result<(), SchurError> {
         todo!();
     }
 
     /// Compute Schur (complex) decomposition with new allocated matrices
-    fn schur_complex<L: Layout>(&self, _a: &mut DSlice<T, 2, L>) -> SchurResult<T> {
+    fn schur_complex<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1> {
         todo!();
     }
 
     /// Compute Schur (complex) decomposition overwriting existing matrices
     fn schur_complex_write<L: Layout>(
         &self,
-        _a: &mut DSlice<T, 2, L>,
-        _t: &mut DSlice<T, 2, Dense>,
-        _z: &mut DSlice<T, 2, Dense>,
+        _a: &mut Slice<T, (D0, D1), L>,
+        _t: &mut Slice<T, (D0, D1), Dense>,
+        _z: &mut Slice<T, (D0, D1), Dense>,
     ) -> Result<(), SchurError> {
         todo!();
     }

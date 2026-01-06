@@ -183,25 +183,25 @@
 //! // |1+2i| + |2+3i| = (|1|+|2|) + (|2|+|3|) = 8
 //! assert_eq!(norm, 8.0);
 //! ```
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor};
 use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
 
 /// Matrix-vector multiplication and transformations
-pub trait MatVec<T> {
+pub trait MatVec<T, D0: Dim, D1: Dim> {
     fn matvec<'a, La, Lx>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        x: &'a DSlice<T, 1, Lx>,
-    ) -> impl MatVecBuilder<'a, T, La, Lx>
+        a: &'a Slice<T, (D0, D1), La>,
+        x: &'a Slice<T, (D1,), Lx>,
+    ) -> impl MatVecBuilder<'a, T, La, Lx, D0, D1>
     where
         La: Layout,
         Lx: Layout;
 }
 
 /// Builder interface for configuring matrix-vector operations
-pub trait MatVecBuilder<'a, T, La, Lx>
+pub trait MatVecBuilder<'a, T, La, Lx, D0: Dim, D1: Dim>
 where
     La: Layout,
     Lx: Layout,
@@ -215,47 +215,47 @@ where
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·A·x`
-    fn eval(self) -> DTensor<T, 1>;
+    fn eval(self) -> Tensor<T, (D1,)>;
 
     /// `y := α·A·x`
-    fn write<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+    fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>);
 
     /// `y := α·A·x + y`
-    fn add_to_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>);
+    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>);
 
     /// `y := α·A·x + β·y`
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T);
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>, beta: T);
 }
 
 /// Vector operations and basic linear algebra utilities
-pub trait VecOps<T: ComplexFloat> {
+pub trait VecOps<T: ComplexFloat, D1: Dim> {
     /// Accumulate a scaled vector: `y := α·x + y`
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
-        x: &DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
+        x: &Slice<T, (D1,), Lx>,
+        y: &mut Slice<T, (D1,), Ly>,
     );
 
     /// Dot product: `∑xᵢyᵢ`
-    fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T;
+    fn dot<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T;
 
     /// Conjugated dot product: `∑(xᵢ * conj(yᵢ))`
-    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T;
+    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T;
 
     /// L2 norm: `√(∑|xᵢ|²)`
-    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real;
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real;
 
     /// L1 norm: `∑|xᵢ|`
-    fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
     where
         T: ComplexFloat;
 
     /// Givens rotation (**TODO**)
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        x: &mut DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
+        x: &mut Slice<T, (D1,), Lx>,
+        y: &mut Slice<T, (D1,), Ly>,
         c: T::Real,
         s: T,
     ) where
@@ -284,19 +284,19 @@ pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
 }
 
 /// Outer product and rank-1 update
-pub trait Outer<T> {
+pub trait Outer<T, Dx: Dim, Dy: Dim> {
     fn outer<'a, Lx, Ly>(
         &self,
-        x: &'a DSlice<T, 1, Lx>,
-        y: &'a DSlice<T, 1, Ly>,
-    ) -> impl OuterBuilder<'a, T, Lx, Ly>
+        x: &'a Slice<T, (Dx,), Lx>,
+        y: &'a Slice<T, (Dy,), Ly>,
+    ) -> impl OuterBuilder<'a, T, Lx, Ly, Dx, Dy>
     where
         Lx: Layout,
         Ly: Layout;
 }
 
 /// Builder interface for configuring outer product and rank-1 update
-pub trait OuterBuilder<'a, T, Lx, Ly>
+pub trait OuterBuilder<'a, T, Lx, Ly, Dx: Dim, Dy: Dim>
 where
     Lx: Layout,
     Ly: Layout,
@@ -308,14 +308,14 @@ where
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·xy`
-    fn eval(self) -> DTensor<T, 2>;
+    fn eval(self) -> Tensor<T, (Dx, Dy)>;
 
     /// `a := α·xy`
-    fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+    fn write<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>);
 
     /// Rank-1 update: `A := α·x·yᵀ + A`
-    fn add_to<La: Layout>(self, a: &mut DSlice<T, 2, La>);
+    fn add_to<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>);
 
     /// Rank-1 update: ` A:= α·x·xᵀ (or x·x†) + A` on special matrix
-    fn add_to_special(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle);
+    fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle);
 }

@@ -16,8 +16,8 @@ pub fn qr_faer<
     Lr: Layout,
 >(
     a: &Slice<T, (D0, D1), La>,
-    q_mda: Option<&mut DSlice<T, 2, Lq>>,
-    r_mda: &mut DSlice<T, 2, Lr>,
+    q_mda: Option<&mut Slice<T, (D0, D1), Lq>>,
+    r_mda: &mut Slice<T, (D0, D1), Lr>,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

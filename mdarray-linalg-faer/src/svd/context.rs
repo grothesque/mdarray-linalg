@@ -8,33 +8,37 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
 use faer_traits::ComplexField;
-use mdarray::{DSlice, DTensor, Dense, Dim, Layout, Shape, Slice, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
 use super::simple::svd_faer;
 use crate::Faer;
 
-impl<T, D0, D1, L> SVD<T, D0, D1, L> for Faer
+impl<T, D, L> SVD<T, D, L> for Faer
 where
     T: ComplexFloat
         + ComplexField
         + Default
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>
         + 'static,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
     L: Layout,
 {
     /// Compute full SVD with new allocated matrices
-    fn svd(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+    fn svd(&self, a: &mut Slice<T, (D, D), L>) -> Result<SVDDecomp<T, D>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
-        let mut s_mda = tensor![[T::default(); min_mn]; min_mn];
-        let mut u_mda = tensor![[T::default(); m]; m];
-        let mut vt_mda = tensor![[T::default(); n]; n];
+
+        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
+        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
+
+        let mut s_mda = Tensor::from_elem(s_shape, T::default());
+        let mut u_mda = Tensor::from_elem(u_shape, T::default());
+        let mut vt_mda = Tensor::from_elem(vt_shape, T::default());
 
         // NOTE:
         // These tensors were previously created with `MaybeUninit` to avoid default-initialization.
@@ -63,18 +67,20 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
-        let mut s_mda = tensor![[T::default(); min_mn]; min_mn];
+
+        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let mut s_mda = Tensor::from_elem(s_shape, T::default());
 
         // NOTE:
         // Same rationale as in `svd`: `T::default()` is used instead of `MaybeUninit`,
         // because LLVM already optimizes default initializations effectively.
 
-        match svd_faer::<T, D0, D1, L, Dense, Dense, Dense>(a, &mut s_mda, None, None) {
+        match svd_faer::<T, D, L, Dense, Dense, Dense>(a, &mut s_mda, None, None) {
             Err(_) => Err(SVDError::BackendDidNotConverge {
                 superdiagonals: (0),
             }),
@@ -85,20 +91,20 @@ where
     /// Compute full SVD, overwriting existing matrices
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), L>,
-        s: &mut DSlice<T, 2, Ls>,
-        u: &mut DSlice<T, 2, Lu>,
-        vt: &mut DSlice<T, 2, Lvt>,
+        a: &mut Slice<T, (D, D), L>,
+        s: &mut Slice<T, (D, D), Ls>,
+        u: &mut Slice<T, (D, D), Lu>,
+        vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, D0, D1, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
+        svd_faer::<T, D, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
     }
 
     /// Compute only singular values, overwriting existing matrix
     fn svd_write_s<Ls: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), L>,
-        s: &mut DSlice<T, 2, Ls>,
+        a: &mut Slice<T, (D, D), L>,
+        s: &mut Slice<T, (D, D), Ls>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, D0, D1, L, Ls, Dense, Dense>(a, s, None, None)
+        svd_faer::<T, D, L, Ls, Dense, Dense>(a, s, None, None)
     }
 }

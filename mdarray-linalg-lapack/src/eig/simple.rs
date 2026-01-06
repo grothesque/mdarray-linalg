@@ -1,6 +1,6 @@
 use std::{ptr, ptr::null_mut};
 
-use mdarray::{DSlice, Layout};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
     eig::{EigError, SchurError},
     get_dims, into_i32, transpose_in_place,
@@ -16,17 +16,20 @@ pub fn geig<
     Lvl: Layout,
     Lvr: Layout,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    D0: Dim,
+    D1: Dim,
 >(
-    a: &mut DSlice<T, 2, La>,
-    eigenvalues_real: &mut DSlice<T, 2, Ler>,
-    eigenvalues_imag: &mut DSlice<T, 2, Lei>,
-    mut left_eigenvectors: Option<&mut DSlice<T, 2, Lvl>>,
-    mut right_eigenvectors: Option<&mut DSlice<T, 2, Lvr>>,
+    a: &mut Slice<T, (D0, D1), La>,
+    eigenvalues_real: &mut Slice<T, (D0,), Ler>,
+    eigenvalues_imag: &mut Slice<T, (D0,), Lei>,
+    mut left_eigenvectors: Option<&mut Slice<T, (D0, D1), Lvl>>,
+    mut right_eigenvectors: Option<&mut Slice<T, (D0, D1), Lvr>>,
 ) -> Result<(), EigError>
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
 
     if m != n {
         return Err(EigError::NotSquareMatrix);
@@ -45,7 +48,9 @@ where
 
     // Validate dimensions if eigenvectors are requested
     if let Some(ref vl) = left_eigenvectors {
-        let (mvl, nvl) = get_dims!(vl);
+        let vlsh = *vl.shape();
+        let (mvl, nvl) = (vlsh.dim(0), vlsh.dim(1));
+
         assert_eq!(
             mvl, n,
             "Left eigenvectors must have same number of rows as A"
@@ -54,21 +59,38 @@ where
     }
 
     if let Some(ref vr) = right_eigenvectors {
-        let (mvr, nvr) = get_dims!(vr);
+        let vrsh = *vr.shape();
+        let (mvr, nvr) = (vrsh.dim(0), vrsh.dim(1));
+
         assert_eq!(
-            mvr, n,
+            mvr,
+            n.try_into().unwrap(),
             "Right eigenvectors must have same number of rows as A"
         );
-        assert_eq!(nvr, n, "Right eigenvectors must be square (n × n)");
+        assert_eq!(
+            nvr,
+            n.try_into().unwrap(),
+            "Right eigenvectors must be square (n × n)"
+        );
     }
 
     // Validate eigenvalue vectors dimensions
-    let (mer, ner) = get_dims!(eigenvalues_real);
-    let (mei, nei) = get_dims!(eigenvalues_imag);
-    assert_eq!(mer, 1, "Real eigenvalues must be a row vector");
-    assert_eq!(ner, n, "Real eigenvalues must have n elements");
-    assert_eq!(mei, 1, "Imaginary eigenvalues must be a row vector");
-    assert_eq!(nei, n, "Imaginary eigenvalues must have n elements");
+    let ersh = *eigenvalues_real.shape();
+    let ner = ersh.dim(0);
+
+    let eish = *eigenvalues_imag.shape();
+    let nei = eish.dim(0);
+
+    assert_eq!(
+        ner,
+        n.try_into().unwrap(),
+        "Real eigenvalues must have n elements"
+    );
+    assert_eq!(
+        nei,
+        n.try_into().unwrap(),
+        "Imaginary eigenvalues must have n elements"
+    );
 
     let vl_ptr: *mut T = left_eigenvectors
         .as_mut()
@@ -79,7 +101,7 @@ where
 
     let info = call_geev(
         a,
-        n,
+        n.try_into().unwrap(),
         eigenvalues_real.as_mut_ptr(),
         eigenvalues_imag.as_mut_ptr(),
         vl_ptr,
@@ -112,32 +134,49 @@ pub fn geigh<
     Lw: Layout,
     Lv: Layout,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    D0: Dim,
+    D1: Dim,
 >(
-    a: &mut DSlice<T, 2, La>,
-    eigenvalues: &mut DSlice<T, 2, Lw>,
-    eigenvectors: &mut DSlice<T, 2, Lv>,
+    a: &mut Slice<T, (D0, D1), La>,
+    eigenvalues: &mut Slice<T, (D0,), Lw>,
+    eigenvectors: &mut Slice<T, (D0, D1), Lv>,
 ) -> Result<(), EigError>
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
 
     if m != n {
         return Err(EigError::NotSquareMatrix);
     }
 
     // Validate dimensions
-    let (mw, nw) = get_dims!(eigenvalues);
-    let (mv, nv) = get_dims!(eigenvectors);
+    let eush = *eigenvalues.shape();
+    let nw = eush.dim(0);
 
-    assert_eq!(mw, 1, "Eigenvalues must be a row vector");
-    assert_eq!(nw, n, "Eigenvalues must have n elements");
-    assert_eq!(mv, n, "Eigenvectors must have same number of rows as A");
-    assert_eq!(nv, n, "Eigenvectors must be square (n × n)");
+    let evsh = *eigenvectors.shape();
+    let (nv, mv) = (evsh.dim(0), evsh.dim(0));
+
+    assert_eq!(
+        nw,
+        n.try_into().unwrap(),
+        "Eigenvalues must have n elements"
+    );
+    assert_eq!(
+        mv,
+        n.try_into().unwrap(),
+        "Eigenvectors must have same number of rows as A"
+    );
+    assert_eq!(
+        nv,
+        n.try_into().unwrap(),
+        "Eigenvectors must be square (n × n)"
+    );
 
     let info = call_syev(
         a,
-        n,
+        n.try_into().unwrap(),
         eigenvalues.as_mut_ptr(),
         'V', // Always compute eigenvectors for geigh
         'U', // Use upper triangle
@@ -156,8 +195,13 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-fn call_geev<T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>, La: Layout>(
-    a: &mut DSlice<T, 2, La>,
+fn call_geev<
+    T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    La: Layout,
+    D0: Dim,
+    D1: Dim,
+>(
+    a: &mut Slice<T, (D0, D1), La>,
     n: i32,
     wr_ptr: *mut T,
     wi_ptr: *mut T,
@@ -233,8 +277,13 @@ where
     info
 }
 
-fn call_syev<T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>, La: Layout>(
-    a: &mut DSlice<T, 2, La>,
+fn call_syev<
+    T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    La: Layout,
+    D0: Dim,
+    D1: Dim,
+>(
+    a: &mut Slice<T, (D0, D1), La>,
     n: i32,
     w_ptr: *mut T,
     jobz: char,
@@ -303,16 +352,19 @@ pub fn gees<
     Lwi: Layout,
     Lvs: Layout,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    D0: Dim,
+    D1: Dim,
 >(
-    a: &mut DSlice<T, 2, La>,
-    eigenvalues_real: &mut DSlice<T, 2, Lwr>,
-    eigenvalues_imag: &mut DSlice<T, 2, Lwi>,
-    schur_vectors: &mut DSlice<T, 2, Lvs>,
+    a: &mut Slice<T, (D0, D1), La>,
+    eigenvalues_real: &mut Slice<T, (D0,), Lwr>,
+    eigenvalues_imag: &mut Slice<T, (D0,), Lwi>,
+    schur_vectors: &mut Slice<T, (D0, D1), Lvs>,
 ) -> Result<(), SchurError>
 where
     T::Real: Into<T>,
 {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0) as i32, ash.dim(1) as i32);
 
     if m != n {
         return Err(SchurError::NotSquareMatrix);
@@ -320,15 +372,19 @@ where
 
     let jobvs = b'V';
 
-    let (mvs, nvs) = get_dims!(schur_vectors);
+    let svsh = *schur_vectors.shape();
+    let (mvs, nvs) = (svsh.dim(0) as i32, svsh.dim(1) as i32);
+
     assert_eq!(mvs, n, "Schur vectors must have same number of rows as A");
     assert_eq!(nvs, n, "Schur vectors must be square (n × n)");
 
-    let (mwr, nwr) = get_dims!(eigenvalues_real);
-    let (mwi, nwi) = get_dims!(eigenvalues_imag);
-    assert_eq!(mwr, 1, "Real eigenvalues must be a row vector");
+    let ersh = *eigenvalues_real.shape();
+    let eish = *eigenvalues_imag.shape();
+
+    let nwr = ersh.dim(0) as i32;
+    let nwi = eish.dim(0) as i32;
+
     assert_eq!(nwr, n, "Real eigenvalues must have n elements");
-    assert_eq!(mwi, 1, "Imaginary eigenvalues must be a row vector");
     assert_eq!(nwi, n, "Imaginary eigenvalues must have n elements");
 
     transpose_in_place(a);
@@ -424,12 +480,16 @@ pub fn gees_complex<
     Lw: Layout,
     Lvs: Layout,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    D0: Dim,
+    D1: Dim,
 >(
-    a: &mut DSlice<T, 2, La>,
-    eigenvalues: &mut DSlice<T, 1, Lw>,    // shape (1, n)
-    schur_vectors: &mut DSlice<T, 2, Lvs>, // shape (n, n)
+    a: &mut Slice<T, (D0, D1), La>,
+    eigenvalues: &mut Slice<T, (D0,), Lw>,       // shape (1, n)
+    schur_vectors: &mut Slice<T, (D0, D1), Lvs>, // shape (n, n)
 ) -> Result<(), SchurError> {
-    let (m, n) = get_dims!(a);
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
+
     if m != n {
         return Err(SchurError::NotSquareMatrix);
     }
@@ -437,7 +497,9 @@ pub fn gees_complex<
     let jobvs = b'V';
 
     // shape checks
-    let (mvs, nvs) = get_dims!(schur_vectors);
+
+    let svsh = *schur_vectors.shape();
+    let (mvs, nvs) = (svsh.dim(0), svsh.dim(1));
     assert_eq!(mvs, n, "Schur vectors must have same number of rows as A");
     assert_eq!(nvs, n, "Schur vectors must be square (n × n)");
 
@@ -468,14 +530,14 @@ pub fn gees_complex<
                 jobvs.try_into().unwrap(),
                 b'N'.try_into().unwrap(), // no sorting
                 ptr::null_mut(),          // select (unused)
-                n,
+                n.try_into().unwrap(),
                 a.as_mut_ptr(),
-                n,
+                n.try_into().unwrap(),
                 &mut sdim,
                 eigenvalues.as_mut_ptr(),     // wr
                 ptr::null_mut(),              // _wi (unused for complex)
                 schur_vectors.as_mut_ptr(),   // vs
-                n,                            // ldvs
+                n.try_into().unwrap(),        // ldvs
                 work.as_mut_ptr(),            // work (query)
                 -1,                           // lwork = -1 -> query
                 rwork.as_mut_ptr() as *mut _, // rwork (cast to match expected pointer)
@@ -492,7 +554,7 @@ pub fn gees_complex<
 
     // allocate real work + bwork + rwork
     let mut work = T::allocate(lwork);
-    let rwork_len = T::rwork_len_gees(n);
+    let rwork_len = T::rwork_len_gees(n.try_into().unwrap());
     // let mut rwork = T::allocate(rwork_len as i32);
     let mut rwork = vec![0.0; rwork_len];
     let mut bwork_storage = if n > 0 {
@@ -510,14 +572,14 @@ pub fn gees_complex<
             jobvs.try_into().unwrap(),
             b'N'.try_into().unwrap(), // no sorting
             ptr::null_mut(),          // select
-            n,
+            n.try_into().unwrap(),
             a.as_mut_ptr(),
-            n,
+            n.try_into().unwrap(),
             &mut sdim,
             eigenvalues.as_mut_ptr(),   // wr
             ptr::null_mut(),            // _wi (unused)
             schur_vectors.as_mut_ptr(), // vs
-            n,                          // ldvs
+            n.try_into().unwrap(),      // ldvs
             work.as_mut_ptr(),
             lwork,
             rwork.as_mut_ptr() as *mut _,

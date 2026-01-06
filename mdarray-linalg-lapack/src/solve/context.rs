@@ -10,7 +10,7 @@
 //! It computes the LU factorization of A and then uses it to solve the linear system.
 //! The matrix A is overwritten by its LU factorization, and B is overwritten by the solution X.
 
-use mdarray::{DSlice, Dense, Layout, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::{
     get_dims, into_i32, ipiv_to_perm_mat,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
@@ -20,20 +20,22 @@ use num_complex::ComplexFloat;
 use super::{scalar::LapackScalar, simple::gesv};
 use crate::Lapack;
 
-impl<T> Solve<T> for Lapack
+impl<T, D0: Dim, D1: Dim> Solve<T, D0, D1> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar,
     T::Real: Into<T>,
 {
     fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &mut DSlice<T, 2, Lb>,
-        p: &mut DSlice<T, 2, Lp>,
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &mut Slice<T, (D0, D1), Lb>,
+        p: &mut Slice<T, (D0, D1), Lp>,
     ) -> Result<(), SolveError> {
-        let ipiv = gesv::<_, Lb, T>(a, b).unwrap();
-        let (n, _) = *a.shape();
-        let p_matrix = ipiv_to_perm_mat(&ipiv, n);
+        let ipiv = gesv::<_, Lb, T, D0, D1>(a, b).unwrap();
+        let ash = *a.shape();
+        let n = ash.dim(0);
+
+        let p_matrix = ipiv_to_perm_mat::<T, usize, usize>(&ipiv, n);
         for i in 0..n {
             for j in 0..n {
                 p[[i, j]] = p_matrix[[i, j]];
@@ -44,19 +46,25 @@ where
 
     fn solve<La: Layout, Lb: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &DSlice<T, 2, Lb>,
-    ) -> SolveResultType<T> {
-        let ((n, _), (_, nrhs)) = get_dims!(a, b);
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &Slice<T, (D0, D1), Lb>,
+    ) -> SolveResultType<T, D0, D1> {
+        let ash = *a.shape();
+        let bsh = *b.shape();
 
-        let mut b_copy = tensor![[T::default(); nrhs as usize]; n as usize];
+        let n = ash.dim(0);
+        let nrhs = bsh.dim(1);
+
+        let mut b_copy =
+            Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::default());
+
         for i in 0..(n as usize) {
             for j in 0..(nrhs as usize) {
                 b_copy[[i, j]] = b[[i, j]];
             }
         }
 
-        match gesv::<_, Dense, T>(a, &mut b_copy) {
+        match gesv::<_, Dense, T, D0, D1>(a, &mut b_copy) {
             Ok(ipiv) => Ok(SolveResult {
                 x: b_copy,
                 p: ipiv_to_perm_mat(&ipiv, n as usize),

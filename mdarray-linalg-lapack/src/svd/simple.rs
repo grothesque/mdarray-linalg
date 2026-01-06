@@ -1,6 +1,6 @@
 use std::ptr::null_mut;
 
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice};
+use mdarray::{DTensor, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{get_dims, into_i32, svd::SVDError, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -9,24 +9,23 @@ use crate::SVDConfig;
 
 pub fn gsvd<
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
     La: Layout,
     Ls: Layout,
     Lu: Layout,
     Lvt: Layout,
 >(
-    a: &mut Slice<T, (D0, D1), La>,
-    s: &mut DSlice<T, 2, Ls>,
-    mut u: Option<&mut DSlice<T, 2, Lu>>,
-    mut vt: Option<&mut DSlice<T, 2, Lvt>>,
+    a: &mut Slice<T, (D, D), La>,
+    s: &mut Slice<T, (D, D), Ls>,
+    mut u: Option<&mut Slice<T, (D, D), Lu>>,
+    mut vt: Option<&mut Slice<T, (D, D), Lvt>>,
     config: SVDConfig,
 ) -> Result<(), SVDError>
 where
     T::Real: Into<T>,
 {
     let ash = *a.shape();
-    let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+    let (m, n) = (ash.dim(0), ash.dim(1));
     let min_mn = m.min(n);
 
     // Determine which algorithm to use
@@ -41,7 +40,14 @@ where
 
     let job = match (&u, &vt) {
         (Some(x), Some(y)) => {
-            let ((mu, nu), (ms, ns), (mvt, nvt)) = get_dims!(x, s, y);
+            let ush = x.shape();
+            let (mu, nu) = (ush.dim(0), ush.dim(1));
+
+            let ssh = s.shape();
+            let (ms, ns) = (ssh.dim(0), ssh.dim(1));
+
+            let vtsh = y.shape();
+            let (mvt, nvt) = (vtsh.dim(0), vtsh.dim(1));
             // assert_eq!(mu, nu, "U must be square (m × m)");
             // assert_eq!(mvt, nvt, "VT must be square (n × n)");
             assert_eq!(ns, ms, "s must be square (min(m,n),min(m,n))");
@@ -78,9 +84,25 @@ where
     };
 
     let info = if use_divide_conquer {
-        call_gesdd(a, m, n, s.as_mut_ptr(), Some(u_ptr), Some(vt_ptr), job)
+        call_gesdd(
+            a,
+            into_i32(m),
+            into_i32(n),
+            s.as_mut_ptr(),
+            Some(u_ptr),
+            Some(vt_ptr),
+            job,
+        )
     } else {
-        call_gesvd(a, m, n, s.as_mut_ptr(), Some(u_ptr), Some(vt_ptr), job)
+        call_gesvd(
+            a,
+            into_i32(m),
+            into_i32(n),
+            s.as_mut_ptr(),
+            Some(u_ptr),
+            Some(vt_ptr),
+            job,
+        )
     };
 
     if info < 0 {
@@ -95,8 +117,8 @@ where
         let mut backup = a_backup.unwrap();
         let info = call_gesvd(
             &mut backup,
-            m,
-            n,
+            into_i32(m),
+            into_i32(n),
             s.as_mut_ptr(),
             Some(u_ptr),
             Some(vt_ptr),

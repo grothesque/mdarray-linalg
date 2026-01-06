@@ -1,17 +1,23 @@
-use mdarray::{DSlice, Layout};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{get_dims, into_i32, solve::SolveError, to_col_major, transpose_in_place};
 use num_complex::ComplexFloat;
 
 use super::scalar::LapackScalar;
 
-pub fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar>(
-    a: &mut DSlice<T, 2, La>,
-    b: &mut DSlice<T, 2, Lb>,
+pub fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar, D0, D1>(
+    a: &mut Slice<T, (D0, D1), La>,
+    b: &mut Slice<T, (D0, D1), Lb>,
 ) -> Result<Vec<i32>, SolveError>
 where
     T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
 {
-    let ((n_a, m_a), (n_b, nrhs)) = get_dims!(a, b);
+    let ash = *a.shape();
+    let (n_a, m_a) = (ash.dim(0), ash.dim(1));
+
+    let bsh = *b.shape();
+    let (n_b, nrhs) = (bsh.dim(0), bsh.dim(1));
 
     if n_a != m_a {
         return Err(SolveError::InvalidDimensions);
@@ -28,15 +34,17 @@ where
 
     let mut b_col_major = to_col_major(b);
 
+    dbg!("ici");
+
     unsafe {
         T::lapack_gesv(
-            n,
-            nrhs,
+            into_i32(n),
+            into_i32(nrhs),
             a.as_mut_ptr(),
-            n, // lda
+            into_i32(n), // lda
             ipiv.as_mut_ptr(),
             b_col_major.as_mut_ptr(),
-            n, // ldb
+            into_i32(n), // ldb
             &mut info,
         );
     }

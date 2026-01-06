@@ -1,7 +1,7 @@
 use std::ops::{Add, Mul};
 
 use cblas_sys::CBLAS_UPLO;
-use mdarray::{DSlice, DTensor, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{
     matmul::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
@@ -16,23 +16,28 @@ use super::{
 };
 use crate::Blas;
 
-struct BlasMatVecBuilder<'a, T, La, Lx>
+struct BlasMatVecBuilder<'a, T, D0, D1, La, Lx>
 where
+    D0: Dim,
+    D1: Dim,
     La: Layout,
     Lx: Layout,
 {
     alpha: T,
-    a: &'a DSlice<T, 2, La>,
-    x: &'a DSlice<T, 1, Lx>,
+    a: &'a Slice<T, (D0, D1), La>,
+    x: &'a Slice<T, (D1,), Lx>,
 }
 
-impl<'a, T, La, Lx> MatVecBuilder<'a, T, La, Lx> for BlasMatVecBuilder<'a, T, La, Lx>
+impl<'a, T, La, Lx, D0: Dim, D1: Dim> MatVecBuilder<'a, T, La, Lx, D0, D1>
+    for BlasMatVecBuilder<'a, T, D0, D1, La, Lx>
 where
     La: Layout,
     Lx: Layout,
     T: BlasScalar + ComplexFloat,
     i8: Into<T::Real>,
     T::Real: Into<T>,
+    D0: Dim,
+    D1: Dim,
 {
     fn parallelize(self) -> Self {
         self
@@ -43,26 +48,29 @@ where
         self
     }
 
-    fn eval(self) -> DTensor<T, 1> {
-        let mut y = DTensor::<T, 1>::from_elem([self.a.shape().0], 0.into().into());
+    fn eval(self) -> Tensor<T, (D1,)> {
+        let mut y = Tensor::<T, (D1,)>::from_elem(
+            <(D1,) as Shape>::from_dims(&[self.a.shape().dim(0)]),
+            0.into().into(),
+        );
         gemv(self.alpha, self.a, self.x, T::zero(), &mut y);
         y
     }
 
-    fn write<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+    fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
         gemv(self.alpha, self.a, self.x, T::zero(), y);
     }
 
-    fn add_to_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>) {
+    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
         gemv(self.alpha, self.a, self.x, T::one(), y);
     }
 
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut DSlice<T, 1, Ly>, beta: T) {
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>, beta: T) {
         gemv(self.alpha, self.a, self.x, beta, y);
     }
 }
 
-impl<T> MatVec<T> for Blas
+impl<T, D0: Dim, D1: Dim> MatVec<T, D0, D1> for Blas
 where
     T: BlasScalar + ComplexFloat,
     i8: Into<T::Real>,
@@ -70,9 +78,9 @@ where
 {
     fn matvec<'a, La, Lx>(
         &self,
-        a: &'a DSlice<T, 2, La>,
-        x: &'a DSlice<T, 1, Lx>,
-    ) -> impl MatVecBuilder<'a, T, La, Lx>
+        a: &'a Slice<T, (D0, D1), La>,
+        x: &'a Slice<T, (D1,), Lx>,
+    ) -> impl MatVecBuilder<'a, T, La, Lx, D0, D1>
     where
         La: Layout,
         Lx: Layout,
@@ -85,31 +93,33 @@ where
     }
 }
 
-impl<T: ComplexFloat + BlasScalar + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy>
-    VecOps<T> for Blas
+impl<
+    T: ComplexFloat + BlasScalar + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy,
+    D1: Dim,
+> VecOps<T, D1> for Blas
 {
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
-        x: &DSlice<T, 1, Lx>,
-        y: &mut DSlice<T, 1, Ly>,
+        x: &Slice<T, (D1,), Lx>,
+        y: &mut Slice<T, (D1,), Ly>,
     ) {
         axpy(alpha, x, y);
     }
 
-    fn dot<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+    fn dot<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T {
         dotu(x, y)
     }
 
-    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &DSlice<T, 1, Lx>, y: &DSlice<T, 1, Ly>) -> T {
+    fn dotc<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T {
         dotc(x, y)
     }
 
-    fn norm2<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real {
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real {
         nrm2(x)
     }
 
-    fn norm1<Lx: Layout>(&self, x: &DSlice<T, 1, Lx>) -> T::Real
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
     where
         T: ComplexFloat,
     {
@@ -118,8 +128,8 @@ impl<T: ComplexFloat + BlasScalar + 'static + Add<Output = T> + Mul<Output = T> 
 
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        _x: &mut DSlice<T, 1, Lx>,
-        _y: &mut DSlice<T, 1, Ly>,
+        _x: &mut Slice<T, (D1,), Lx>,
+        _y: &mut Slice<T, (D1,), Ly>,
         _c: T::Real,
         _s: T,
     ) where
@@ -204,47 +214,52 @@ where
     }
 }
 
-struct BlasOuterBuilder<'a, T, Lx, Ly>
+struct BlasOuterBuilder<'a, T, Dx, Dy, Lx, Ly>
 where
     Lx: Layout,
     Ly: Layout,
+    Dx: Dim,
+    Dy: Dim,
 {
     alpha: T,
-    x: &'a DSlice<T, 1, Lx>,
-    y: &'a DSlice<T, 1, Ly>,
+    x: &'a Slice<T, (Dx,), Lx>,
+    y: &'a Slice<T, (Dy,), Ly>,
 }
 
-impl<'a, T, Lx, Ly> OuterBuilder<'a, T, Lx, Ly> for BlasOuterBuilder<'a, T, Lx, Ly>
+impl<'a, T, Dx, Dy, Lx, Ly> OuterBuilder<'a, T, Lx, Ly, Dx, Dy>
+    for BlasOuterBuilder<'a, T, Dx, Dy, Lx, Ly>
 where
     Lx: Layout,
     Ly: Layout,
     T: BlasScalar + ComplexFloat,
     i8: Into<T::Real>,
     T::Real: Into<T>,
+    Dx: Dim,
+    Dy: Dim,
 {
     fn scale(mut self, alpha: T) -> Self {
         self.alpha = alpha * self.alpha;
         self
     }
 
-    fn eval(self) -> DTensor<T, 2> {
-        let shape = [self.x.len(), self.y.len()];
-        let mut a = DTensor::<T, 2>::from_elem(shape, 0.into().into());
+    fn eval(self) -> Tensor<T, (Dx, Dy)> {
+        let shape = <(Dx, Dy) as Shape>::from_dims(&[self.x.len(), self.y.len()]);
+        let mut a = Tensor::<T, (Dx, Dy)>::from_elem(shape, 0.into().into());
         ger(self.alpha, self.x, self.y, &mut a);
         a
     }
 
-    fn write<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn write<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>) {
         let zero = T::zero();
         a.fill(zero);
         ger(self.alpha, self.x, self.y, a);
     }
 
-    fn add_to<La: Layout>(self, a: &mut DSlice<T, 2, La>) {
+    fn add_to<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>) {
         ger(self.alpha, self.x, self.y, a);
     }
 
-    fn add_to_special(self, a: &mut DSlice<T, 2>, ty: Type, tr: Triangle) {
+    fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
         let cblas_uplo = match tr {
             Triangle::Lower => CBLAS_UPLO::CblasLower,
             Triangle::Upper => CBLAS_UPLO::CblasUpper,
@@ -252,22 +267,24 @@ where
         match ty {
             Type::Sym => syr(cblas_uplo, self.alpha, self.x, a), // Assume x == y
             Type::Her => her(cblas_uplo, self.alpha.re(), self.x, a),
-            Type::Tri => ger(self.alpha, self.x, self.x, a),
+            Type::Tri => ger(self.alpha, self.x, self.y, a),
         }
     }
 }
 
-impl<T> Outer<T> for Blas
+impl<T, Dx, Dy> Outer<T, Dx, Dy> for Blas
 where
     T: BlasScalar + ComplexFloat,
     i8: Into<T::Real>,
     T::Real: Into<T>,
+    Dx: Dim,
+    Dy: Dim,
 {
     fn outer<'a, Lx, Ly>(
         &self,
-        x: &'a DSlice<T, 1, Lx>,
-        y: &'a DSlice<T, 1, Ly>,
-    ) -> impl OuterBuilder<'a, T, Lx, Ly>
+        x: &'a Slice<T, (Dx,), Lx>,
+        y: &'a Slice<T, (Dy,), Ly>,
+    ) -> impl OuterBuilder<'a, T, Lx, Ly, Dx, Dy>
     where
         Lx: Layout,
         Ly: Layout,

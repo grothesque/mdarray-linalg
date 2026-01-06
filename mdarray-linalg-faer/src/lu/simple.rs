@@ -1,6 +1,6 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Dim, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use crate::into_faer_mut;
@@ -15,9 +15,9 @@ pub fn lu_faer<
     Lp: Layout,
 >(
     a: &mut Slice<T, (D0, D1), La>,
-    l_mda: &mut DSlice<T, 2, Ll>,
-    u_mda: &mut DSlice<T, 2, Lu>,
-    p_mda: &mut DSlice<T, 2, Lp>,
+    l_mda: &mut Slice<T, (D0, D0), Ll>,
+    u_mda: &mut Slice<T, (D0, D1), Lu>,
+    p_mda: &mut Slice<T, (D0, D0), Lp>,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

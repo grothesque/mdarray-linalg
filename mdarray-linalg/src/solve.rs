@@ -1,5 +1,5 @@
 //! Linear system solving utilities for equations of the form Ax = B
-use mdarray::{DSlice, DTensor, Layout};
+use mdarray::{Dim, Layout, Slice, Tensor};
 use thiserror::Error;
 
 /// Error types related to linear system solving
@@ -17,17 +17,17 @@ pub enum SolveError {
 
 /// Holds the results of a linear system solve, including
 /// the solution matrix and permutation matrix
-pub struct SolveResult<T> {
-    pub x: DTensor<T, 2>,
-    pub p: DTensor<T, 2>,
+pub struct SolveResult<T, D0: Dim, D1: Dim> {
+    pub x: Tensor<T, (D0, D1)>,
+    pub p: Tensor<T, (D0, D1)>,
 }
 
 /// Result type for linear system solving, returning either a
 /// `SolveResult` or a `SolveError`
-pub type SolveResultType<T> = Result<SolveResult<T>, SolveError>;
+pub type SolveResultType<T, D0, D1> = Result<SolveResult<T, D0, D1>, SolveError>;
 
 /// Linear system solver using LU decomposition
-pub trait Solve<T> {
+pub trait Solve<T, D0: Dim, D1: Dim> {
     /// Solves linear system AX = b overwriting existing matrices
     /// A is overwritten with its LU decomposition
     /// B is overwritten with the solution X
@@ -35,9 +35,9 @@ pub trait Solve<T> {
     /// Returns Ok(()) on success, Err(SolveError) on failure
     fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &mut DSlice<T, 2, Lb>,
-        p: &mut DSlice<T, 2, Lp>,
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &mut Slice<T, (D0, D1), Lb>,
+        p: &mut Slice<T, (D0, D1), Lp>,
     ) -> Result<(), SolveError>;
 
     /// Solves linear system AX = B with new allocated solution matrix
@@ -45,7 +45,7 @@ pub trait Solve<T> {
     /// Returns the solution X and P the permutation matrix, or error
     fn solve<La: Layout, Lb: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &DSlice<T, 2, Lb>,
-    ) -> SolveResultType<T>;
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &Slice<T, (D0, D1), Lb>,
+    ) -> SolveResultType<T, D0, D1>;
 }

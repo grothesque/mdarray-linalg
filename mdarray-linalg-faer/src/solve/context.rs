@@ -15,16 +15,16 @@
 
 use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Layout, tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::{
-    identity,
+    identity, into_i32,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
 };
 use num_complex::ComplexFloat;
 
 use crate::{Faer, into_faer, into_faer_mut};
 
-impl<T> Solve<T> for Faer
+impl<T, D0: Dim, D1: Dim> Solve<T, D0, D1> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -37,11 +37,14 @@ where
     /// Returns the solution X and P the permutation matrix (identity in that case), or error
     fn solve<La: Layout, Lb: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &DSlice<T, 2, Lb>,
-    ) -> SolveResultType<T> {
-        let (m, n) = *a.shape();
-        let (b_m, b_n) = *b.shape();
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &Slice<T, (D0, D1), Lb>,
+    ) -> SolveResultType<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
+        let bsh = *b.shape();
+        let (b_m, b_n) = (bsh.dim(0), bsh.dim(1));
 
         if m != n {
             return Err(SolveError::InvalidDimensions);
@@ -58,7 +61,8 @@ where
         let b_faer = into_faer(b);
         let x_faer = solver.solve(b_faer);
 
-        let mut x_mda = tensor![[T::default(); b_n]; m];
+        let mut x_mda = Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[m, b_n]), T::default());
+
         let mut x_faer_mut = into_faer_mut(&mut x_mda);
         for i in 0..m {
             for j in 0..b_n {
@@ -78,12 +82,15 @@ where
     /// Returns Ok(()) on success, Err(SolveError) on failure
     fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut DSlice<T, 2, La>,
-        b: &mut DSlice<T, 2, Lb>,
-        p: &mut DSlice<T, 2, Lp>,
+        a: &mut Slice<T, (D0, D1), La>,
+        b: &mut Slice<T, (D0, D1), Lb>,
+        p: &mut Slice<T, (D0, D1), Lp>,
     ) -> Result<(), SolveError> {
-        let (m, n) = *a.shape();
-        let (b_m, b_n) = *b.shape();
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
+        let bsh = *b.shape();
+        let (b_m, b_n) = (bsh.dim(0), bsh.dim(1));
 
         if m != n {
             return Err(SolveError::InvalidDimensions);

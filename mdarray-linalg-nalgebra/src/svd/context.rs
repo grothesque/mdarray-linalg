@@ -8,15 +8,15 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 use std::fmt::Debug;
 
-use mdarray::{DSlice, DTensor, Dense, Dim, Layout, Shape, Slice, tensor};
-use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError, SVDResult};
 use num_complex::ComplexFloat;
 
 use matamorph::ref_::MataConvertRef;
 
 use crate::Nalgebra;
 
-impl<T, D0, D1, L> SVD<T, D0, D1, L> for Nalgebra
+impl<T, D, L> SVD<T, D, L> for Nalgebra
 where
     T: ComplexFloat
         + Default
@@ -24,18 +24,16 @@ where
         + Debug
         + simba::scalar::ComplexField<RealField = T>
         + 'static,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
     L: Layout,
-    for<'a> mdarray::View<'a, T, (D0, D1), L>: MataConvertRef<'a, T>,
+    for<'a> mdarray::View<'a, T, (D, D), L>: MataConvertRef<'a, T>,
 {
     /// Compute full SVD with new allocated matrices
-    fn svd(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SVDDecomp<T>, SVDError> {
+    fn svd(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
-        let max_mn = m.max(n);
 
         let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
         // let a_nalgebra = a.view(.., ..).to_nalgebra();
@@ -43,33 +41,32 @@ where
         let svd_result = a_nalgebra.svd(true, true);
 
         let singular_values = svd_result.singular_values;
-        dbg!(&min_mn);
-        // dbg!(&singular_values);
         let u = svd_result.u.ok_or(SVDError::BackendError(-1))?;
         let v_t = svd_result.v_t.ok_or(SVDError::BackendError(-1))?;
 
-        let mut s_mda = tensor![[T::default(); m]; n];
-        let mut u_mda = tensor![[T::default(); m]; m];
-        let mut vt_mda = tensor![[T::default(); n]; n];
+        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
+        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
+
+        let mut s_mda = Tensor::<T, (D, D)>::from_elem(s_shape, T::default());
+        let mut u_mda = Tensor::<T, (D, D)>::from_elem(u_shape, T::default());
+        let mut vt_mda = Tensor::<T, (D, D)>::from_elem(vt_shape, T::default());
 
         for i in 0..min_mn {
             s_mda[[0, i]] = singular_values[i];
         }
 
-        dbg!(&m);
-        dbg!(&min_mn);
-        dbg!(&u_mda);
-        dbg!(&u);
-
+        let u_cols = u.ncols();
         for i in 0..m {
-            for j in 0..min_mn {
+            for j in 0..u_cols {
                 u_mda[[i, j]] = u[(i, j)];
+            }
+            for j in u_cols..m {
+                u_mda[[i, j]] = T::zero();
             }
         }
 
-        dbg!("ici");
-
-        for i in 0..min_mn {
+        for i in 0..n {
             for j in 0..n {
                 vt_mda[[i, j]] = v_t[(i, j)];
             }
@@ -83,17 +80,17 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<DTensor<T, 2>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
         todo!()
     }
 
     /// Compute full SVD, overwriting existing matrices
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), L>,
-        s: &mut DSlice<T, 2, Ls>,
-        u: &mut DSlice<T, 2, Lu>,
-        vt: &mut DSlice<T, 2, Lvt>,
+        a: &mut Slice<T, (D, D), L>,
+        s: &mut Slice<T, (D, D), Ls>,
+        u: &mut Slice<T, (D, D), Lu>,
+        vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
         todo!()
     }
@@ -101,8 +98,8 @@ where
     /// Compute only singular values, overwriting existing matrix
     fn svd_write_s<Ls: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), L>,
-        s: &mut DSlice<T, 2, Ls>,
+        a: &mut Slice<T, (D, D), L>,
+        s: &mut Slice<T, (D, D), Ls>,
     ) -> Result<(), SVDError> {
         todo!()
     }

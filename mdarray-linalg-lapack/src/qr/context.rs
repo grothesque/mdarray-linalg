@@ -8,7 +8,7 @@
 //! The function `geqrf` (LAPACK) computes the QR factorization of a general m-by-n matrix A using a blocking algorithm.
 //! The matrix Q is orthogonal, and R is upper triangular.
 
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor, tensor};
 use mdarray_linalg::{into_i32, qr::QR};
 use num_complex::ComplexFloat;
 
@@ -26,18 +26,20 @@ where
     fn qr_write<L: Layout, Lq: Layout, Lr: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        q: &mut DSlice<T, 2, Lq>,
-        r: &mut DSlice<T, 2, Lr>,
+        q: &mut Slice<T, (D0, D1), Lq>,
+        r: &mut Slice<T, (D0, D1), Lr>,
     ) {
         geqrf(a, q, r)
     }
 
-    fn qr<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> (DTensor<T, 2>, DTensor<T, 2>) {
+    fn qr<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> (Tensor<T, (D0, D1)>, Tensor<T, (D0, D1)>) {
         let ash = *a.shape();
-        let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
 
-        let mut q = tensor![[T::default(); m as usize]; m as usize];
-        let mut r = tensor![[T::default(); n as usize]; m as usize];
+        let mut q = Tensor::from_elem(ash, T::default());
+        let mut r = Tensor::from_elem(ash, T::default());
 
         geqrf(a, &mut q, &mut r);
 

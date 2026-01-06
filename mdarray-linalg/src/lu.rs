@@ -1,5 +1,5 @@
 //! LU, Cholesky, matrix inversion, and determinant computation utilities
-use mdarray::{DSlice, DTensor, Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Tensor};
 use thiserror::Error;
 
 /// Error types related to matrix inversion
@@ -23,7 +23,7 @@ pub enum InvError {
 }
 
 /// Result type for matrix inversion
-pub type InvResult<T, D0: Dim, D1: Dim> = Result<Tensor<T, (D0, D1)>, InvError>;
+pub type InvResult<T, D0, D1> = Result<Tensor<T, (D0, D1)>, InvError>;
 
 ///  LU decomposition and matrix inversion
 pub trait LU<T, D0: Dim, D1: Dim> {
@@ -31,16 +31,20 @@ pub trait LU<T, D0: Dim, D1: Dim> {
     fn lu_write<L: Layout, Ll: Layout, Lu: Layout, Lp: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        l: &mut DSlice<T, 2, Ll>,
-        u: &mut DSlice<T, 2, Lu>,
-        p: &mut DSlice<T, 2, Lp>,
+        l: &mut Slice<T, (D0, D0), Ll>,
+        u: &mut Slice<T, (D0, D1), Lu>,
+        p: &mut Slice<T, (D0, D0), Lp>,
     );
 
     /// Computes LU decomposition with new allocated matrices: L, U, P (permutation matrix)
     fn lu<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-    ) -> (DTensor<T, 2>, DTensor<T, 2>, DTensor<T, 2>);
+    ) -> (
+        Tensor<T, (D0, D0)>,
+        Tensor<T, (D0, D1)>,
+        Tensor<T, (D0, D0)>,
+    );
 
     /// Computes inverse overwriting the input matrix
     fn inv_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
