@@ -248,16 +248,18 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
         ab_resh.to_owned().into_dyn()
     } else if keep_shape_a.is_empty() {
+        // Only B has non-contracted indices, reshape to keep_shape_b
         ab_resh
             .view(0, ..)
-            .reshape(keep_shape_a)
+            .reshape(keep_shape_b)
             .to_owned()
             .into_dyn()
             .into()
     } else if keep_shape_b.is_empty() {
+        // Only A has non-contracted indices, reshape to keep_shape_a
         ab_resh
             .view(.., 0)
-            .reshape(keep_shape_b)
+            .reshape(keep_shape_a)
             .to_owned()
             .into_dyn()
             .into()
