@@ -8,9 +8,9 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{
-    get_dims, into_i32, ipiv_to_perm_mat,
+    into_i32, ipiv_to_perm_mat,
     lu::{InvError, InvResult, LU},
     transpose_in_place,
 };

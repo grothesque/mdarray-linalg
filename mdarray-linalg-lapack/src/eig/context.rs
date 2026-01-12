@@ -16,8 +16,7 @@
 
 use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{
-    eig::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult},
-    get_dims, into_i32, transpose_in_place,
+    eig::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult}, transpose_in_place,
 };
 use num_complex::{Complex, ComplexFloat};
 use num_traits::identities::Zero;

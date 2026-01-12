@@ -7,7 +7,7 @@
 //     - For thin QR: Q is m × min(m,n) and R is min(m,n) × n
 
 use faer_traits::ComplexField;
-use mdarray::{Dim, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{identity, into_i32, qr::QR};
 use num_complex::ComplexFloat;
 
@@ -28,7 +28,7 @@ where
         a: &mut Slice<T, (D0, D1), L>,
     ) -> (Tensor<T, (D0, D1)>, Tensor<T, (D0, D1)>) {
         let ash = *a.shape();
-        let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+        let (m, _) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
 
         let mut q_mda = identity(m as usize);
 

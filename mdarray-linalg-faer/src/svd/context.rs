@@ -8,7 +8,7 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
 use faer_traits::ComplexField;
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 

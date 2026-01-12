@@ -10,9 +10,9 @@
 //! It computes the LU factorization of A and then uses it to solve the linear system.
 //! The matrix A is overwritten by its LU factorization, and B is overwritten by the solution X.
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::{
-    get_dims, into_i32, ipiv_to_perm_mat,
+    ipiv_to_perm_mat,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
 };
 use num_complex::ComplexFloat;

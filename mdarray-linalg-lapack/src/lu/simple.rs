@@ -1,4 +1,4 @@
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice};
+use mdarray::{DTensor, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 

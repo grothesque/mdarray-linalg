@@ -80,17 +80,17 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
+    fn svd_s(&self, _a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
         todo!()
     }
 
     /// Compute full SVD, overwriting existing matrices
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
-        a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D, D), Ls>,
-        u: &mut Slice<T, (D, D), Lu>,
-        vt: &mut Slice<T, (D, D), Lvt>,
+        _a: &mut Slice<T, (D, D), L>,
+        _s: &mut Slice<T, (D, D), Ls>,
+        _u: &mut Slice<T, (D, D), Lu>,
+        _vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
         todo!()
     }
@@ -98,8 +98,8 @@ where
     /// Compute only singular values, overwriting existing matrix
     fn svd_write_s<Ls: Layout>(
         &self,
-        a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D, D), Ls>,
+        _a: &mut Slice<T, (D, D), L>,
+        _s: &mut Slice<T, (D, D), Ls>,
     ) -> Result<(), SVDError> {
         todo!()
     }

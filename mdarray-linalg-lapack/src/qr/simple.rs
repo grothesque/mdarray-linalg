@@ -1,5 +1,5 @@
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
+use mdarray_linalg::{into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};

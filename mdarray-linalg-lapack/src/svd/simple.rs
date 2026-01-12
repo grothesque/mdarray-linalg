@@ -1,7 +1,7 @@
 use std::ptr::null_mut;
 
 use mdarray::{DTensor, Dim, Layout, Shape, Slice};
-use mdarray_linalg::{get_dims, into_i32, svd::SVDError, transpose_in_place};
+use mdarray_linalg::{into_i32, svd::SVDError, transpose_in_place};
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};
@@ -48,8 +48,8 @@ where
 
             let vtsh = y.shape();
             let (mvt, nvt) = (vtsh.dim(0), vtsh.dim(1));
-            // assert_eq!(mu, nu, "U must be square (m × m)");
-            // assert_eq!(mvt, nvt, "VT must be square (n × n)");
+            assert_eq!(mu, nu, "U must be square (m × m)");
+            assert_eq!(mvt, nvt, "VT must be square (n × n)");
             assert_eq!(ns, ms, "s must be square (min(m,n),min(m,n))");
             assert_eq!(
                 ms, min_mn,
