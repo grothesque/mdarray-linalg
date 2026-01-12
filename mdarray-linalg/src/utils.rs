@@ -5,18 +5,19 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{DSlice, DTensor, Dim, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Tensor, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
 /// Displays a numeric `mdarray` in a human-readable format (NumPy-style)
-pub fn pretty_print<T: ComplexFloat + std::fmt::Display>(mat: &DTensor<T, 2>)
-where
+pub fn pretty_print<T: ComplexFloat + std::fmt::Display, D0: Dim, D1: Dim>(
+    mat: &Tensor<T, (D0, D1)>,
+) where
     <T as num_complex::ComplexFloat>::Real: std::fmt::Display,
 {
     let shape = mat.shape();
-    for i in 0..shape.0 {
-        for j in 0..shape.1 {
+    for i in 0..shape.dim(0) {
+        for j in 0..shape.dim(1) {
             let v = mat[[i, j]];
             print!("{:>10.4} {:+.4}i  ", v.re(), v.im(),);
         }
@@ -197,12 +198,15 @@ where
 /// let tr = trace(&a);
 /// assert_eq!(tr, 15.0);
 /// ```
-pub fn trace<T, L>(a: &DSlice<T, 2, L>) -> T
+pub fn trace<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> T
 where
     T: ComplexFloat + std::ops::Add<Output = T> + Copy,
+    D0: Dim,
+    D1: Dim,
     L: Layout,
 {
-    let (m, n) = *a.shape();
+    let ash = *a.shape();
+    let (m, n) = (ash.dim(0), ash.dim(1));
     assert_eq!(m, n, "trace is only defined for square matrices");
 
     let mut tr = T::zero();
@@ -235,14 +239,14 @@ pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Tensor<T, (D0, D1)
 /// - `k < 0` → k-th diagonal below the main one
 /// # Examples
 /// ```
-/// use mdarray::tensor;
+/// use mdarray::{Const, tensor};
 /// use mdarray_linalg::identity_k;
 ///
-/// let i3 = identity_k::<f64>(3, 1);
+/// let i3 = identity_k::<f64, Const<3>, Const<3>>(3, 1);
 /// assert_eq!(i3, tensor![[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]]);
 /// ```
-pub fn identity_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
-    DTensor::<T, 2>::from_fn([n, n], |i| {
+pub fn identity_k<T: Zero + One, D0: Dim, D1: Dim>(n: usize, k: isize) -> Tensor<T, (D0, D1)> {
+    Tensor::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
         if (i[1] as isize - i[0] as isize) == k {
             T::one()
         } else {
@@ -277,18 +281,26 @@ pub fn identity_k<T: Zero + One>(n: usize, k: isize) -> DTensor<T, 2> {
 ///     [18., 21., 24., 28.]
 /// ]);
 /// ```
-pub fn kron<T, La, Lb>(a: &DSlice<T, 2, La>, b: &DSlice<T, 2, Lb>) -> DTensor<T, 2>
+pub fn kron<T, D0, D1, La, Lb>(
+    a: &Slice<T, (D0, D1), La>,
+    b: &Slice<T, (D0, D1), Lb>,
+) -> Tensor<T, (D0, D1)>
 where
     T: ComplexFloat + std::ops::Mul<Output = T> + Copy,
+    D0: Dim,
+    D1: Dim,
     La: Layout,
     Lb: Layout,
 {
-    let (ma, na) = *a.shape();
-    let (mb, nb) = *b.shape();
+    let ash = *a.shape();
+    let (ma, na) = (ash.dim(0), ash.dim(1));
 
-    let out_shape = [ma * mb, na * nb];
+    let bsh = *b.shape();
+    let (mb, nb) = (bsh.dim(0), bsh.dim(1));
 
-    DTensor::<T, 2>::from_fn(out_shape, |idx| {
+    let out_shape = <(D0, D1) as Shape>::from_dims(&[ma * mb, na * nb]);
+
+    Tensor::<T, (D0, D1)>::from_fn(out_shape, |idx| {
         let i = idx[0];
         let j = idx[1];
 

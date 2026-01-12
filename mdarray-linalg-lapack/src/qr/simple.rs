@@ -1,4 +1,4 @@
-use mdarray::{DSlice, Dim, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{get_dims, into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -22,10 +22,10 @@ pub fn geqrf<
     let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
 
     let qsh = *q.shape();
-    let (mq, nq) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+    let (mq, nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
 
     let rsh = *q.shape();
-    let (mr, nr) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+    let (mr, nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
 
     let min_mn = m.min(n);
 

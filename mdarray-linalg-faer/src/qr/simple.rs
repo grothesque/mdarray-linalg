@@ -1,9 +1,7 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Dim, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
-
-use mdarray_linalg::into_i32;
 
 use crate::{into_faer, into_faer_mut};
 

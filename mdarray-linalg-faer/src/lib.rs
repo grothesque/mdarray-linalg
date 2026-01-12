@@ -125,7 +125,7 @@ pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
 //     DTensor::<T, 2>::from(view_strided)
 // }
 
-/// Converts a `DSlice<T, 2, L>` (from `mdarray`) into a
+/// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a
 /// `faer::MatMut<'static, T>` and transposes data.  This function
 /// **does not copy** any data.
 pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
@@ -150,7 +150,7 @@ pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
     }
 }
 
-/// Converts a mutable `DSlice<T, 2, L>` (from `mdarray`) into a `faer::diag::DiagMut<'static, T>`,
+/// Converts a mutable `Slice<T, (D0, D1), L>` (from `mdarray`) into a `faer::diag::DiagMut<'static, T>`,
 /// which is a mutable view over the diagonal elements of a matrix in Faer.
 ///
 /// # Important Notes for Users:

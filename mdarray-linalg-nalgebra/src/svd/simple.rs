@@ -1,5 +1,5 @@
 use dyn_stack::{MemBuffer, MemStack};
-use mdarray::{DSlice, Dim, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::SVDError;
 use nalgebra_traits::ComplexField;
 use num_complex::ComplexFloat;

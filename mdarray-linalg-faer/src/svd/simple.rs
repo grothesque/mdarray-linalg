@@ -1,6 +1,6 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{DSlice, Dim, Layout, Shape, Slice};
+use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::SVDError;
 use num_complex::ComplexFloat;
 
