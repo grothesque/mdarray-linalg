@@ -136,6 +136,19 @@ where
     }
 }
 
+/// Conjugates a matrix in-place.
+/// For complex matrices, replaces each element z with its conjugate conj(z).
+/// For real matrices, this is a no-op.
+pub fn conjugate_in_place<T, D0, D1, L>(c: &mut Slice<T, (D0, D1), L>)
+where
+    T: ComplexFloat + Default,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    c.iter_mut().for_each(|elem| *elem = elem.conj());
+}
+
 /// Convert pivot indices to permutation matrix
 pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
     ipiv: &[i32],

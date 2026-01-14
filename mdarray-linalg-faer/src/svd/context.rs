@@ -7,7 +7,7 @@
 //     - V^T is n × n      (transpose of right singular vectors, orthogonal)
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
-use faer_traits::ComplexField;
+use faer_traits::{ComplexField, Conjugate};
 use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
@@ -22,6 +22,7 @@ where
         + Default
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>
         + 'static,
+    // + Conjugate<Conj = T>,
     D: Dim,
     L: Layout,
 {

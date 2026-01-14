@@ -124,3 +124,32 @@ pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
 
     assert_complex_matrix_eq!(a, usvt);
 }
+
+/// Test complex SVD with random matrix having significant imaginary parts.
+/// This test is specifically designed to catch the V^T vs V^H bug.
+pub fn test_svd_cplx_random_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
+    let mut rng = rand::rng();
+    let n = 5;
+
+    // Create random complex matrix with significant imaginary parts
+    let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |_| {
+        Complex::new(
+            rng.random::<f64>() * 2.0 - 1.0,
+            rng.random::<f64>() * 2.0 - 1.0,
+        )
+    });
+
+    let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
+
+    // Build sigma matrix
+    let mut sigma = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+    for i in 0..n {
+        sigma[[i, i]] = s[[0, i]];
+    }
+
+    // Reconstruct: A = U * Σ * V^H (vt should be V^H)
+    let us = naive_matmul(&u, &sigma);
+    let usvt = naive_matmul(&us, &vt);
+
+    assert_complex_matrix_eq!(a, usvt);
+}

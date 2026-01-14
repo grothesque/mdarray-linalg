@@ -1,13 +1,13 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::svd::SVDError;
+use mdarray_linalg::{conjugate_in_place, svd::SVDError};
 use num_complex::ComplexFloat;
 
 use crate::{into_faer, into_faer_diag_mut, into_faer_mut, into_faer_mut_transpose};
 
 pub fn svd_faer<
-    T: ComplexFloat + ComplexField + Default + 'static,
+    T: 'static + ComplexField + Default + ComplexFloat,
     D: Dim,
     La: Layout,
     Ls: Layout,
@@ -48,6 +48,9 @@ pub fn svd_faer<
                 ))),
                 faer::prelude::default(),
             );
+
+            conjugate_in_place(y);
+
             match ret {
                 Ok(()) => Ok(()),
                 Err(_) => Err(SVDError::BackendDidNotConverge {
