@@ -21,7 +21,12 @@ fn test_backend_svd_random_matrix() {
     test_svd_random_matrix(&Nalgebra);
 }
 
-// #[test]
-// fn test_backend_svd_cplx_square_matrix() {
-//     test_svd_cplx_square_matrix(&Nalgebra);
-// }
+#[test]
+fn test_backend_svd_cplx_square_matrix() {
+    test_svd_cplx_square_matrix(&Nalgebra);
+}
+
+#[test]
+fn test_backend_svd_cplx_random_matrix() {
+    test_svd_cplx_random_matrix(&Nalgebra);
+}

@@ -242,7 +242,7 @@ where
         match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
             Ok(_) => {
                 println!("{}", n / 2);
-                for i in 0..((n / 2 + 1) as usize) {
+                for i in 0..(n / 2 + 1) {
                     eigenvalues[[2 * i]] = Complex::new(eigenvalues_real[i].re(), x.re());
                     if 2 * i + 1 < n {
                         eigenvalues[2 * i + 1] = Complex::new(eigenvalues_real[i].im(), x.re());

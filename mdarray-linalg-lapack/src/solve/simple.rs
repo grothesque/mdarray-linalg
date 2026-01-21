@@ -27,7 +27,7 @@ where
     }
 
     let n = n_a;
-    let mut ipiv = vec![0i32; n as usize];
+    let mut ipiv = vec![0i32; n];
     let mut info = 0;
 
     transpose_in_place(a);
@@ -53,8 +53,8 @@ where
     match info {
         0 => {
             // Copy solution back to B (row-major)
-            for i in 0..(n as usize) {
-                for j in 0..(nrhs as usize) {
+            for i in 0..n {
+                for j in 0..nrhs {
                     b[[i, j]] = b_col_major[[j, i]];
                 }
             }

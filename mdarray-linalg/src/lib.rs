@@ -8,8 +8,8 @@
 //!
 //! - [`Blas`](https://docs.rs/mdarray-linalg-blas): bindings to [BLAS](https://www.netlib.org/blas/)
 //! - [`Lapack`](https://docs.rs/mdarray-linalg-lapack): bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [Faer](https://faer.veganb.tw/)
-//! - [`Nalgebra`](https://docs.rs/mdarray-linalg-nalgebra): bindings to [Nalgebra](https://nalgebra.rs/)
+//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [faer](https://faer.veganb.tw/)
+//! - [`Nalgebra`](https://docs.rs/mdarray-linalg-nalgebra): bindings to [nalgebra](https://nalgebra.rs/)
 //! - `Naive`: simple demo backend, integrated into this crate
 //! > **Note:** Not all backends support all functionalities.
 //!

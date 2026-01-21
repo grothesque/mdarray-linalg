@@ -2,7 +2,8 @@ use std::{ptr, ptr::null_mut};
 
 use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    eig::{EigError, SchurError}, transpose_in_place,
+    eig::{EigError, SchurError},
+    transpose_in_place,
 };
 use num_complex::ComplexFloat;
 
@@ -62,15 +63,10 @@ where
         let (mvr, nvr) = (vrsh.dim(0), vrsh.dim(1));
 
         assert_eq!(
-            mvr,
-            n.try_into().unwrap(),
+            mvr, n,
             "Right eigenvectors must have same number of rows as A"
         );
-        assert_eq!(
-            nvr,
-            n.try_into().unwrap(),
-            "Right eigenvectors must be square (n × n)"
-        );
+        assert_eq!(nvr, n, "Right eigenvectors must be square (n × n)");
     }
 
     // Validate eigenvalue vectors dimensions
@@ -80,16 +76,8 @@ where
     let eish = *eigenvalues_imag.shape();
     let nei = eish.dim(0);
 
-    assert_eq!(
-        ner,
-        n.try_into().unwrap(),
-        "Real eigenvalues must have n elements"
-    );
-    assert_eq!(
-        nei,
-        n.try_into().unwrap(),
-        "Imaginary eigenvalues must have n elements"
-    );
+    assert_eq!(ner, n, "Real eigenvalues must have n elements");
+    assert_eq!(nei, n, "Imaginary eigenvalues must have n elements");
 
     let vl_ptr: *mut T = left_eigenvectors
         .as_mut()
@@ -157,21 +145,9 @@ where
     let evsh = *eigenvectors.shape();
     let (nv, mv) = (evsh.dim(0), evsh.dim(0));
 
-    assert_eq!(
-        nw,
-        n.try_into().unwrap(),
-        "Eigenvalues must have n elements"
-    );
-    assert_eq!(
-        mv,
-        n.try_into().unwrap(),
-        "Eigenvectors must have same number of rows as A"
-    );
-    assert_eq!(
-        nv,
-        n.try_into().unwrap(),
-        "Eigenvectors must be square (n × n)"
-    );
+    assert_eq!(nw, n, "Eigenvalues must have n elements");
+    assert_eq!(mv, n, "Eigenvectors must have same number of rows as A");
+    assert_eq!(nv, n, "Eigenvectors must be square (n × n)");
 
     let info = call_syev(
         a,
@@ -515,11 +491,7 @@ pub fn gees_complex<
         let mut rwork = vec![0.; 1];
 
         // keep bwork alive
-        let mut bwork_storage = if n > 0 {
-            Some(vec![0i32; n as usize])
-        } else {
-            None
-        };
+        let mut bwork_storage = if n > 0 { Some(vec![0i32; n]) } else { None };
         let bwork: *mut i32 = bwork_storage
             .as_mut()
             .map_or(ptr::null_mut(), |v| v.as_mut_ptr());
@@ -556,11 +528,7 @@ pub fn gees_complex<
     let rwork_len = T::rwork_len_gees(n.try_into().unwrap());
     // let mut rwork = T::allocate(rwork_len as i32);
     let mut rwork = vec![0.0; rwork_len];
-    let mut bwork_storage = if n > 0 {
-        Some(vec![0i32; n as usize])
-    } else {
-        None
-    };
+    let mut bwork_storage = if n > 0 { Some(vec![0i32; n]) } else { None };
     let bwork: *mut i32 = bwork_storage
         .as_mut()
         .map_or(ptr::null_mut(), |v| v.as_mut_ptr());

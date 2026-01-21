@@ -1,16 +1,17 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box as bb;
 
-use mdarray::{Const, DTensor, Dyn, Slice, array};
+use mdarray::{Const, DTensor, Dyn, Slice};
 
+use mdarray_linalg::prelude::*;
 use mdarray_linalg::svd::SVDDecomp;
-use mdarray_linalg::{Naive, prelude::*};
 use mdarray_linalg_faer::Faer;
 use mdarray_linalg_lapack::Lapack;
+use mdarray_linalg_nalgebra::Nalgebra;
 
 use nalgebra::{DMatrix, Matrix4, SVD};
 
-const N: i32 = 300;
+const N: i32 = 100;
 
 type Slice4x4Const = Slice<f64, (Const<4>, Const<4>)>;
 // type Slice10x10Const = Slice<f64, (Const<10>, Const<10>)>;
@@ -34,16 +35,23 @@ pub fn svd_4x4_nalgebra_static(
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> SVDDecomp<f64> {
+pub fn svd_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> SVDDecomp<f64> {
+pub fn svd_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
+    bd.svd(&mut a_copy).expect("SVD failed")
+}
+
+#[inline(never)]
+pub fn svd_4x4_dyn_backend_nalgebra(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
+    let mut a_copy = a.to_owned();
+    let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
@@ -58,16 +66,23 @@ pub fn svd_4x4_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> 
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_n_dyn_backend_lapack(a: &SliceNDyn) -> SVDDecomp<f64> {
+pub fn svd_n_dyn_backend_lapack(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_n_dyn_backend_faer(a: &SliceNDyn) -> SVDDecomp<f64> {
+pub fn svd_n_dyn_backend_faer(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
+    bd.svd(&mut a_copy).expect("SVD failed")
+}
+
+#[inline(never)]
+pub fn svd_n_dyn_backend_nalgebra(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
+    let mut a_copy = a.to_owned();
+    let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
@@ -82,16 +97,23 @@ pub fn svd_n_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> {
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64> {
+pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64> {
+pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
+    bd.svd(&mut a_copy).expect("SVD failed")
+}
+
+#[inline(never)]
+pub fn svd_4x4_const_backend_nalgebra(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
+    let mut a_copy = a.to_owned();
+    let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
@@ -119,12 +141,16 @@ fn criterion_benchmark(crit: &mut Criterion) {
     let a_4x4_data: Vec<f64> = (0..16).map(|x| (x as f64) * 0.5).collect();
 
     // With allocation
-    crit.bench_function("svd_4x4_dyn_lapack", |bencher| {
+    crit.bench_function("svd_4x4_dyn_backend_lapack", |bencher| {
         bencher.iter(|| svd_4x4_dyn_backend_lapack(bb(&a_4x4_dyn)))
     });
 
-    crit.bench_function("svd_4x4_dyn_faer", |bencher| {
+    crit.bench_function("svd_4x4_dyn_backend_faer", |bencher| {
         bencher.iter(|| svd_4x4_dyn_backend_faer(bb(&a_4x4_dyn)))
+    });
+
+    crit.bench_function("svd_4x4_dyn_backend_nalgebra", |bencher| {
+        bencher.iter(|| svd_4x4_dyn_backend_nalgebra(bb(&a_4x4_dyn)))
     });
 
     crit.bench_function("svd_4x4_nalgebra", |bencher| {
@@ -138,12 +164,16 @@ fn criterion_benchmark(crit: &mut Criterion) {
     let a_4x4_const: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
     let a_4x4_const = a_4x4_const.reshape((Const::<4>, Const::<4>));
 
-    crit.bench_function("svd_4x4_const_lapack", |bencher| {
+    crit.bench_function("svd_4x4_const_backend_lapack", |bencher| {
         bencher.iter(|| svd_4x4_const_backend_lapack(bb(&a_4x4_const)))
     });
 
-    crit.bench_function("svd_4x4_const_faer", |bencher| {
+    crit.bench_function("svd_4x4_const_backend_faer", |bencher| {
         bencher.iter(|| svd_4x4_const_backend_faer(bb(&a_4x4_const)))
+    });
+
+    crit.bench_function("svd_4x4_const_backend_nalgebra", |bencher| {
+        bencher.iter(|| svd_4x4_const_backend_nalgebra(bb(&a_4x4_const)))
     });
 
     // ========================================================================
@@ -158,12 +188,16 @@ fn criterion_benchmark(crit: &mut Criterion) {
     let a_n_data: Vec<f64> = (0..N * N).map(|x| (x as f64) * 0.5).collect();
 
     // With allocation
-    crit.bench_function("svd_n_dyn_lapack", |bencher| {
+    crit.bench_function("svd_n_dyn_backend_lapack", |bencher| {
         bencher.iter(|| svd_n_dyn_backend_lapack(bb(&a_n_dyn)))
     });
 
-    crit.bench_function("svd_n_dyn_faer", |bencher| {
+    crit.bench_function("svd_n_dyn_backend_faer", |bencher| {
         bencher.iter(|| svd_n_dyn_backend_faer(bb(&a_n_dyn)))
+    });
+
+    crit.bench_function("svd_n_dyn_backend_nalgebra", |bencher| {
+        bencher.iter(|| svd_n_dyn_backend_nalgebra(bb(&a_n_dyn)))
     });
 
     crit.bench_function("svd_n_nalgebra", |bencher| {

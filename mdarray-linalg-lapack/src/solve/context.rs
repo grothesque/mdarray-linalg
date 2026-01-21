@@ -58,8 +58,8 @@ where
         let mut b_copy =
             Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::default());
 
-        for i in 0..(n as usize) {
-            for j in 0..(nrhs as usize) {
+        for i in 0..n {
+            for j in 0..nrhs {
                 b_copy[[i, j]] = b[[i, j]];
             }
         }
@@ -67,7 +67,7 @@ where
         match gesv::<_, Dense, T, D0, D1>(a, &mut b_copy) {
             Ok(ipiv) => Ok(SolveResult {
                 x: b_copy,
-                p: ipiv_to_perm_mat(&ipiv, n as usize),
+                p: ipiv_to_perm_mat(&ipiv, n),
             }),
             Err(e) => Err(e),
         }

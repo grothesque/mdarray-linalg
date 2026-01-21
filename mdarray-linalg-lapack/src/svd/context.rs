@@ -3,7 +3,7 @@
 //! where:
 //!     - A is m × n         (input matrix)
 //!     - U is m × m         (left singular vectors, orthogonal)
-//!     - Σ is m × n         (diagonal matrix with singular values on the diagonal)
+//!     - Σ is µ × µ         (diagonal matrix with singular values on the diagonal, µ = min(m,n))
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 

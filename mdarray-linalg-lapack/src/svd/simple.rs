@@ -72,9 +72,9 @@ where
     // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer
     // This allows fallback to gesvd with the original matrix if gesdd fails
     let a_backup = if use_divide_conquer && matches!(config, SVDConfig::Auto) {
-        let mut ab = DTensor::<T, 2>::from_elem([m as usize, n as usize], T::default());
-        for i in 0..(m as usize) {
-            for j in 0..(n as usize) {
+        let mut ab = DTensor::<T, 2>::from_elem([m, n], T::default());
+        for i in 0..m {
+            for j in 0..n {
                 ab[[i, j]] = a[[i, j]];
             }
         }

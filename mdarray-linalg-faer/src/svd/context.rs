@@ -3,11 +3,11 @@
 // where:
 //     - A is m × n         (input matrix)
 //     - U is m × m        (left singular vectors, orthogonal)
-//     - Σ is m × n         (diagonal matrix with singular values on the diagonal)
+//     - Σ is µ × µ         (diagonal matrix with singular values on the diagonal, µ = min(m,n))
 //     - V^T is n × n      (transpose of right singular vectors, orthogonal)
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
-use faer_traits::{ComplexField, Conjugate};
+use faer_traits::ComplexField;
 use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
@@ -22,7 +22,6 @@ where
         + Default
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>
         + 'static,
-    // + Conjugate<Conj = T>,
     D: Dim,
     L: Layout,
 {
