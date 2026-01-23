@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-default-backend:
+    name: Test (default backend, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OpenBLAS (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev
+
+      - name: Install OpenBLAS (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install openblas
+
+      - name: Set BLAS paths (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "LIBRARY_PATH=$(brew --prefix openblas)/lib" >> $GITHUB_ENV
+          echo "CPATH=$(brew --prefix openblas)/include" >> $GITHUB_ENV
+
+      - name: Build
+        run: cargo build --workspace
+
+      - name: Run tests
+        run: cargo test --workspace
+
+  test-inject-backend:
+    name: Test (inject backend, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OpenBLAS (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev
+
+      - name: Install OpenBLAS (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install openblas
+
+      - name: Set BLAS paths (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "LIBRARY_PATH=$(brew --prefix openblas)/lib" >> $GITHUB_ENV
+          echo "CPATH=$(brew --prefix openblas)/include" >> $GITHUB_ENV
+
+      - name: Build mdarray-linalg-blas (inject)
+        run: cargo build -p mdarray-linalg-blas --no-default-features --features cblas-inject-backend
+
+      - name: Build mdarray-linalg-lapack (inject)
+        run: cargo build -p mdarray-linalg-lapack --no-default-features --features lapack-inject-backend
