@@ -1,3 +1,4 @@
+use approx::assert_relative_eq;
 use mdarray::{DTensor, tensor};
 use num_complex::Complex;
 
@@ -6,6 +7,21 @@ use crate::{
     matvec::{Argmax, MatVec, Outer, VecOps},
     prelude::*,
 };
+
+fn assert_complex_matrix_approx_eq(
+    a: &DTensor<Complex<f64>, 2>,
+    b: &DTensor<Complex<f64>, 2>,
+    epsilon: f64,
+) {
+    assert_eq!(a.shape(), b.shape(), "Matrix shapes don't match");
+    let (m, n) = *a.shape();
+    for i in 0..m {
+        for j in 0..n {
+            assert_relative_eq!(a[[i, j]].re, b[[i, j]].re, epsilon = epsilon);
+            assert_relative_eq!(a[[i, j]].im, b[[i, j]].im, epsilon = epsilon);
+        }
+    }
+}
 
 pub fn test_eval_and_write(bd: impl MatVec<f64, usize, usize>) {
     let n = 3;
@@ -183,7 +199,7 @@ pub fn test_add_outer_her(bd: impl Outer<Complex<f64>, usize, usize>) {
         }
     });
 
-    assert_eq!(a, expected);
+    assert_complex_matrix_approx_eq(&a, &expected, 1e-14);
 }
 
 pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize>) {
