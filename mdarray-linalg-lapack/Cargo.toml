@@ -10,9 +10,15 @@ categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
 build = "build.rs"
 
+[features]
+default = ["lapack-sys-backend"]
+lapack-sys-backend = ["lapack-sys", "cblas-sys"]
+lapack-inject-backend = ["lapack-inject"]
+
 [dependencies]
-cblas-sys.workspace = true
-lapack-sys.workspace = true
+cblas-sys = { workspace = true, optional = true }
+lapack-sys = { workspace = true, optional = true }
+lapack-inject = { workspace = true, optional = true }
 mdarray-linalg.workspace = true
 mdarray.workspace = true
 num-complex.workspace = true
