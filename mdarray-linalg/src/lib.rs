@@ -52,7 +52,7 @@
 //! The following example demonstrates basic functionality:
 //!
 //! ```rust
-//! use mdarray::tensor;
+//! use mdarray::array;
 //!
 //! // The prelude does not expose any names.  It only provides traits as _.
 //! use mdarray_linalg::prelude::*;
@@ -63,12 +63,12 @@
 //!
 //! fn main() {
 //!     // Declare two vectors
-//!     let x = tensor![1., 2.];
-//!     let y = tensor![2., 4.];
+//!     let x = array![1., 2.];
+//!     let y = array![2., 4.];
 //!
 //!     // Declare two matrices
-//!     let a = tensor![[1., 2.], [3., 4.]];
-//!     let b = tensor![[5., 6.], [7., 8.]];
+//!     let a = array![[1., 2.], [3., 4.]];
+//!     let b = array![[5., 6.], [7., 8.]];
 //!
 //!     // ----- Scalar product -----
 //!     let dot_result = Naive.dot(&x, &y);
