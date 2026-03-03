@@ -42,11 +42,6 @@ where
     D1: Dim,
     D2: Dim,
 {
-    /// Enable parallelization.
-    fn parallelize(self) -> Self {
-        self
-    }
-
     /// Multiplies the result by a scalar factor.
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;

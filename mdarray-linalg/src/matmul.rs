@@ -111,9 +111,6 @@ where
     D1: Dim,
     D2: Dim,
 {
-    /// Enable parallelization.
-    fn parallelize(self) -> Self;
-
     /// Multiplies the result by a scalar factor.
     fn scale(self, factor: T) -> Self;
 

@@ -11,12 +11,12 @@
 //! let b = tensor![[5., 6.], [7., 8.]];
 //!
 //! // ----- Matrix multiplication -----
-//! let c = Faer.matmul(&a, &b).eval();
+//! let c = Faer::default().matmul(&a, &b).eval();
 //! println!("A * B = {:?}", c);
 //!
 //! // ----- Eigenvalue decomposition -----
 //! // Note: we must clone `a` here because decomposition routines destroy the input.
-//! let bd = Faer;
+//! let bd = Faer::default();
 //! let EigDecomp {
 //!     eigenvalues,
 //!     right_eigenvectors,
@@ -52,7 +52,9 @@ pub mod solve;
 pub mod svd;
 
 #[derive(Default)]
-pub struct Faer;
+pub struct Faer {
+    parallelize: bool,
+}
 
 use mdarray::{Dim, Layout, Shape, Slice};
 

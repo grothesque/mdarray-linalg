@@ -1,15 +1,15 @@
 use std::num::NonZero;
 
-use faer::{linalg::matmul::matmul, Accum, Par};
+use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
-    Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type, _contract,
+    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
-use crate::{into_faer, into_faer_mut, Faer};
+use crate::{Faer, into_faer, into_faer_mut};
 
 struct FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
@@ -45,12 +45,6 @@ where
     D2: Dim,
     T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
 {
-    #[allow(dead_code)]
-    pub fn parallelize(mut self) -> Self {
-        // Alternative ??? : use faer::get_global_parallelism()
-        self.par = Par::Rayon(NonZero::new(num_cpus::get()).unwrap());
-        self
-    }
 }
 
 impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
@@ -63,12 +57,6 @@ where
     D2: Dim,
     T: ComplexFloat + ComplexField + One + 'static,
 {
-    fn parallelize(mut self) -> Self {
-        // Alternative ?????
-        self.par = Par::Rayon(NonZero::new(num_cpus::get()).unwrap());
-        self
-    }
-
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
         self
@@ -150,7 +138,13 @@ where
     }
 
     fn eval(self) -> Tensor<T, DynRank> {
-        _contract(Faer, self.a, self.b, self.axes, self.alpha)
+        _contract(
+            Faer { parallelize: true },
+            self.a,
+            self.b,
+            self.axes,
+            self.alpha,
+        )
     }
 
     fn write(self, _c: &mut Slice<T>) {
@@ -178,7 +172,11 @@ where
             alpha: T::one(),
             a,
             b,
-            par: Par::Seq,
+            par: if self.parallelize {
+                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
+            } else {
+                Par::Seq
+            },
         }
     }
 

@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
 use mdarray::{Dense, Dim, DynRank, Layout, Slice, Tensor};
 use mdarray_linalg::matmul::{
-    Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type, _contract,
+    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
@@ -48,10 +48,6 @@ where
     D1: Dim,
     D2: Dim,
 {
-    fn parallelize(self) -> Self {
-        self
-    }
-
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
         self

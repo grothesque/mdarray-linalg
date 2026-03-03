@@ -3,25 +3,25 @@ use mdarray_linalg_faer::Faer;
 
 #[test]
 fn solve_single_rhs() {
-    test_solve_single_rhs(&Faer);
+    test_solve_single_rhs(&Faer::default());
 }
 
 #[test]
 fn solve_multiple_rhs() {
-    test_solve_multiple_rhs(&Faer);
+    test_solve_multiple_rhs(&Faer::default());
 }
 
 #[test]
 fn solve_write() {
-    test_solve_write(&Faer);
+    test_solve_write(&Faer::default());
 }
 
 #[test]
 fn solve_identity_matrix() {
-    test_solve_identity_matrix(&Faer);
+    test_solve_identity_matrix(&Faer::default());
 }
 
 #[test]
 fn solve_complex() {
-    test_solve_complex(&Faer);
+    test_solve_complex(&Faer::default());
 }
