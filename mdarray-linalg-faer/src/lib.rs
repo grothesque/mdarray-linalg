@@ -51,9 +51,14 @@ pub mod qr;
 pub mod solve;
 pub mod svd;
 
-#[derive(Default)]
 pub struct Faer {
     parallelize: bool,
+}
+
+impl Default for Faer {
+    fn default() -> Self {
+        Self { parallelize: true }
+    }
 }
 
 use mdarray::{Dim, Layout, Shape, Slice};
