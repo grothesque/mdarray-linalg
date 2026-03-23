@@ -15,7 +15,7 @@
 //!
 //!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
 //!let result_specific = Naive
-//!    .contract(&a, &b, vec![1], vec![0])
+//!    .contract(&a, &b, &[1], &[0])
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
@@ -90,8 +90,8 @@ pub trait MatMul<T: One + MulAdd<Output = T>> {
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-        axes_a: impl Into<Box<[usize]>>,
-        axes_b: impl Into<Box<[usize]>>,
+        axes_a: &'a [usize],
+        axes_b: &'a [usize],
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
@@ -165,10 +165,10 @@ where
     fn write(self, c: &mut Slice<T>);
 }
 
-pub enum Axes {
+pub enum Axes<'a> {
     All,
     LastFirst { k: usize },
-    Specific(Box<[usize]>, Box<[usize]>),
+    Specific(&'a [usize], &'a [usize]),
 }
 
 /// Helper for implementing contraction through matrix multiplication
@@ -189,9 +189,12 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     let shape_a = extract_shape(a.shape());
     let shape_b = extract_shape(b.shape());
 
+    let axes_a_storage: Vec<_> = (0..rank_a).collect();
+    let axes_b_storage: Vec<_> = (0..rank_b).collect();
+
     let (axes_a, axes_b) = match axes {
-        Axes::All => ((0..rank_a).collect(), (0..rank_b).collect()),
-        Axes::LastFirst { k } => (((rank_a - k)..rank_a).collect(), (0..k).collect()),
+        Axes::All => (&axes_a_storage[..], &axes_b_storage[..]),
+        Axes::LastFirst { k } => (&axes_a_storage[(rank_a - k)..rank_a], &axes_b_storage[0..k]),
         Axes::Specific(ax_a, ax_b) => (ax_a, ax_b),
     };
 
@@ -203,7 +206,7 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
         axes_b.len()
     );
 
-    axes_a.iter().zip(&axes_b).for_each(|(a_ax, b_ax)| {
+    axes_a.iter().zip(axes_b).for_each(|(a_ax, b_ax)| {
         assert_eq!(
             shape_a[*a_ax], shape_b[*b_ax],
             "Dimension mismatch at contraction: A[axis {}] = {} ≠ B[axis {}] = {}",
@@ -214,8 +217,8 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     let compute_keep_axes = |rank: usize, axes: &[usize]| -> Vec<usize> {
         (0..rank).filter(|k| !axes.contains(k)).collect()
     };
-    let keep_axes_a = compute_keep_axes(rank_a, &axes_a);
-    let keep_axes_b = compute_keep_axes(rank_b, &axes_b);
+    let keep_axes_a = compute_keep_axes(rank_a, axes_a);
+    let keep_axes_b = compute_keep_axes(rank_b, axes_b);
     let compute_keep_shape = |axes: &[usize], shape: &[usize]| -> Vec<usize> {
         axes.iter().map(|&ax| shape[ax]).collect()
     };
@@ -226,8 +229,8 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     let compute_size =
         |axes: &[usize], shape: &[usize]| -> usize { axes.iter().map(|&k| shape[k]).product() };
 
-    let contract_size_a = compute_size(&axes_a, &shape_a);
-    let contract_size_b = compute_size(&axes_b, &shape_b);
+    let contract_size_a = compute_size(axes_a, &shape_a);
+    let contract_size_b = compute_size(axes_b, &shape_b);
     let keep_size_a = compute_size(&keep_axes_a, &shape_a);
     let keep_size_b = compute_size(&keep_axes_b, &shape_b);
 

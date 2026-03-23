@@ -33,7 +33,7 @@ where
     alpha: T,
     a: &'a Slice<T, DynRank, La>,
     b: &'a Slice<T, DynRank, Lb>,
-    axes: Axes,
+    axes: Axes<'a>,
 }
 
 impl<'a, T, La, Lb, D0, D1, D2> FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
@@ -229,8 +229,8 @@ where
         &self,
         a: &'a Slice<T, DynRank, La>,
         b: &'a Slice<T, DynRank, Lb>,
-        axes_a: impl Into<Box<[usize]>>,
-        axes_b: impl Into<Box<[usize]>>,
+        axes_a: &'a [usize],
+        axes_b: &'a [usize],
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
@@ -241,7 +241,7 @@ where
             alpha: T::one(),
             a,
             b,
-            axes: Axes::Specific(axes_a.into(), axes_b.into()),
+            axes: Axes::Specific(axes_a, axes_b),
         }
     }
 }

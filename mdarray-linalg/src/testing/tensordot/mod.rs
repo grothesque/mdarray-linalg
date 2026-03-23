@@ -27,7 +27,7 @@ pub fn tensordot_specific_axes_matrix_multiplication_impl(backend: &impl MatMul<
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
     let expected = tensor![[19., 22.], [43., 50.]].into_dyn();
-    let result = backend.contract(&a, &b, vec![1], vec![0]).eval();
+    let result = backend.contract(&a, &b, &[1], &[0]).eval();
     assert_eq!(result, expected);
 }
 
@@ -58,7 +58,7 @@ pub fn tensordot_increase_deep_impl(backend: &impl MatMul<f64>) {
     let r = tensor![[[1.]]].into_dyn();
     let mps = tensor![[[1.], [0.]]].into_dyn();
     let expected = tensor![[[[1.0], [0.]]]].into_dyn();
-    let result = backend.contract(&r, &mps, vec![1], vec![0]).eval();
+    let result = backend.contract(&r, &mps, &[1], &[0]).eval();
     assert_eq!(result, expected);
 }
 
