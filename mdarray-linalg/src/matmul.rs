@@ -5,8 +5,8 @@
 //!use mdarray_linalg::prelude::*;
 //!use mdarray_linalg::Naive;
 //!
-//!let a = tensor![[1., 2.], [3., 4.]].into_dyn(); // requires dynamic tensor
-//!let b = tensor![[5., 6.], [7., 8.]].into_dyn();
+//!let a = tensor![[1., 2.], [3., 4.]];
+//!let b = tensor![[5., 6.], [7., 8.]];
 //!
 //!let expected_all = tensor![[70.0]].into_dyn();
 //!let result_all = Naive.contract_all(&a, &b).eval();
@@ -19,7 +19,7 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
-use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Shape, Slice, Tensor};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -58,45 +58,48 @@ pub trait MatMul<T: One + MulAdd<Output = T>> {
         D2: Dim;
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract_all<'a, La, Lb>(
+    fn contract_all<'a, La, Lb, S>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
-        Lb: Layout;
+        Lb: Layout,
+        S: Shape;
 
     /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
     /// # Example
     /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-    fn contract_n<'a, La, Lb>(
+    fn contract_n<'a, La, Lb, S>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
         n: usize,
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
-        Lb: Layout;
+        Lb: Layout,
+        S: Shape;
 
     /// Specifies exactly which axes to contract_all.
     /// # Example
     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
     /// with axes 3 and 4 of `b`.
-    fn contract<'a, La, Lb>(
+    fn contract<'a, La, Lb, S>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
-        Lb: Layout;
+        Lb: Layout,
+        S: Shape;
 }
 
 /// Builder interface for configuring matrix-matrix operations
@@ -184,13 +187,15 @@ struct ContractAxes {
 /// Resolves the axis partition for a tensor contraction, avoiding
 /// allocations when axes are already provided as slices
 /// (`Axes::Specific`).
-fn extract_axes(
-    axes: Axes,
-    shape_a: &[usize],
-    shape_b: &[usize],
-) -> ContractAxes {
-    let rank_a = shape_a.len();
-    let rank_b = shape_b.len();
+fn extract_axes<T, La, Lb, S>(axes: Axes, a: &Slice<T, S, La>, b: &Slice<T, S, Lb>) -> ContractAxes
+where
+    T: Zero + ComplexFloat + MulAdd<Output = T>,
+    La: Layout,
+    Lb: Layout,
+    S: Shape,
+{
+    let rank_a = a.rank();
+    let rank_b = b.rank();
 
     let axes_a_storage: Option<Vec<usize>>;
     let axes_b_storage: Option<Vec<usize>>;
@@ -199,34 +204,42 @@ fn extract_axes(
         Axes::All => {
             axes_a_storage = Some((0..rank_a).collect());
             axes_b_storage = Some((0..rank_b).collect());
-            (axes_a_storage.as_deref().unwrap(), axes_b_storage.as_deref().unwrap())
+            (
+                axes_a_storage.as_deref().unwrap(),
+                axes_b_storage.as_deref().unwrap(),
+            )
         }
         Axes::LastFirst { k } => {
             axes_a_storage = Some(((rank_a - k)..rank_a).collect());
             axes_b_storage = Some((0..k).collect());
-            (axes_a_storage.as_deref().unwrap(), axes_b_storage.as_deref().unwrap())
+            (
+                axes_a_storage.as_deref().unwrap(),
+                axes_b_storage.as_deref().unwrap(),
+            )
         }
-        Axes::Specific(ax_a, ax_b) => {
-            axes_a_storage = None;
-            axes_b_storage = None;
-            (ax_a, ax_b)
-        }
+        Axes::Specific(ax_a, ax_b) => (ax_a, ax_b),
     };
 
     assert_eq!(
-        axes_a.len(), axes_b.len(),
+        axes_a.len(),
+        axes_b.len(),
         "Axis count mismatch: {} (tensor A) vs {} (tensor B)",
-        axes_a.len(), axes_b.len()
+        axes_a.len(),
+        axes_b.len()
     );
 
     let mut contract_size = 1;
     for (&a_ax, &b_ax) in axes_a.iter().zip(axes_b) {
         assert_eq!(
-            shape_a[a_ax], shape_b[b_ax],
+            a.dim(a_ax),
+            b.dim(b_ax),
             "Dimension mismatch at contraction: A[axis {}] = {} ≠ B[axis {}] = {}",
-            a_ax, shape_a[a_ax], b_ax, shape_b[b_ax]
+            a_ax,
+            a.dim(a_ax),
+            b_ax,
+            b.dim(b_ax)
         );
-        contract_size *= shape_a[a_ax];
+        contract_size *= a.dim(a_ax);
     }
 
     let mut keep_shape_a = Vec::new();
@@ -235,8 +248,8 @@ fn extract_axes(
 
     for i in 0..rank_a {
         if !axes_a.contains(&i) {
-            keep_shape_a.push(shape_a[i]);
-            keep_size_a *= shape_a[i];
+            keep_shape_a.push(a.dim(i));
+            keep_size_a *= a.dim(i);
             order_a.push(i);
         }
     }
@@ -249,8 +262,8 @@ fn extract_axes(
 
     for i in 0..rank_b {
         if !axes_b.contains(&i) {
-            keep_shape_b.push(shape_b[i]);
-            keep_size_b *= shape_b[i];
+            keep_shape_b.push(b.dim(i));
+            keep_size_b *= b.dim(i);
             order_b.push(i);
         }
     }
@@ -267,25 +280,19 @@ fn extract_axes(
 }
 
 /// Helper for implementing contraction through matrix multiplication
-pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: Layout>(
+pub fn _contract<T, La, Lb, S>(
     bd: impl MatMul<T>,
-    a: &Slice<T, DynRank, La>,
-    b: &Slice<T, DynRank, Lb>,
+    a: &Slice<T, S, La>,
+    b: &Slice<T, S, Lb>,
     axes: Axes,
     alpha: T,
-) -> Tensor<T, DynRank> {
-    let extract_shape = |s: &DynRank| match s {
-        DynRank::Dyn(arr) => arr.clone(),
-        DynRank::One(n) => Box::new([*n]),
-    };
-    let shape_a = extract_shape(a.shape());
-    let shape_b = extract_shape(b.shape());
-
-
-    // Each tensor's axes are partitioned into `keep_axes` and `contract_axes` (their union
-    // covering all axes), computed by `extract_axes` which also validates dimension compatibility.
-    // Both tensors are then permuted and reshaped into 2D matrices so that a single matmul
-    // performs the contraction, and the result is reshaped back to `[keep_shape_a | keep_shape_b]`.
+) -> Tensor<T, DynRank>
+where
+    T: Zero + ComplexFloat + MulAdd<Output = T>,
+    La: Layout,
+    Lb: Layout,
+    S: Shape,
+{
     let ContractAxes {
         keep_size_a,
         keep_size_b,
@@ -295,7 +302,7 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
         order_a,
         order_b,
         ..
-    } = extract_axes(axes, &shape_a, &shape_b);
+    } = extract_axes(axes, a, b);
 
     let trans_a = a.permute(order_a).to_tensor();
     let trans_b = b.permute(order_b).to_tensor();
@@ -308,9 +315,19 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
         ab_resh.to_owned().into_dyn()
     } else if keep_shape_a.is_empty() {
-        ab_resh.view(0, ..).reshape(keep_shape_b).to_owned().into_dyn().into()
+        ab_resh
+            .view(0, ..)
+            .reshape(keep_shape_b)
+            .to_owned()
+            .into_dyn()
+            .into()
     } else if keep_shape_b.is_empty() {
-        ab_resh.view(.., 0).reshape(keep_shape_a).to_owned().into_dyn().into()
+        ab_resh
+            .view(.., 0)
+            .reshape(keep_shape_a)
+            .to_owned()
+            .into_dyn()
+            .into()
     } else {
         keep_shape_a.extend(keep_shape_b);
         ab_resh.reshape(keep_shape_a).to_owned().into_dyn().into()

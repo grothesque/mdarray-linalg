@@ -1,7 +1,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{Dense, Dim, DynRank, Layout, Slice, Tensor};
+use mdarray::{Dense, Dim, DynRank, Layout, Shape, Slice, Tensor};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
@@ -27,14 +27,15 @@ where
     b: &'a Slice<T, (D1, D2), Lb>,
 }
 
-struct BlasContractBuilder<'a, T, La, Lb>
+struct BlasContractBuilder<'a, T, La, Lb, S>
 where
     La: Layout,
     Lb: Layout,
+    S: Shape,
 {
     alpha: T,
-    a: &'a Slice<T, DynRank, La>,
-    b: &'a Slice<T, DynRank, Lb>,
+    a: &'a Slice<T, S, La>,
+    b: &'a Slice<T, S, Lb>,
     axes: Axes<'a>,
 }
 
@@ -119,11 +120,12 @@ where
     }
 }
 
-impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for BlasContractBuilder<'a, T, La, Lb>
+impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for BlasContractBuilder<'a, T, La, Lb, S>
 where
     La: Layout,
     Lb: Layout,
     T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T>,
+    S: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -163,15 +165,16 @@ where
     }
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract_all<'a, La, Lb>(
+    fn contract_all<'a, La, Lb, S>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
+        S: Shape,
     {
         BlasContractBuilder {
             alpha: T::one(),
@@ -184,14 +187,15 @@ where
     /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
     /// # Example
     /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-    fn contract_n<'a, La: Layout, Lb: Layout>(
+    fn contract_n<'a, La: Layout, Lb: Layout, S>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
         n: usize,
     ) -> impl ContractBuilder<'a, T, La, Lb>
     where
         T: 'a,
+        S: Shape,
     {
         BlasContractBuilder {
             alpha: T::one(),
@@ -205,10 +209,10 @@ where
     /// # Example
     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
     /// with axes 3 and 4 of `b`.
-    fn contract<'a, La: Layout, Lb: Layout>(
+    fn contract<'a, La: Layout, Lb: Layout, S: Shape>(
         &self,
-        a: &'a Slice<T, DynRank, La>,
-        b: &'a Slice<T, DynRank, Lb>,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
     ) -> impl ContractBuilder<'a, T, La, Lb>
