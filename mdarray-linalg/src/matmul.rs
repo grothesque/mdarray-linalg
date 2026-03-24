@@ -171,6 +171,101 @@ pub enum Axes<'a> {
     Specific(&'a [usize], &'a [usize]),
 }
 
+struct ContractAxes {
+    keep_size_a: usize,
+    keep_size_b: usize,
+    contract_size: usize,
+    keep_shape_a: Vec<usize>,
+    keep_shape_b: Vec<usize>,
+    order_a: Vec<usize>,
+    order_b: Vec<usize>,
+}
+
+/// Resolves the axis partition for a tensor contraction, avoiding
+/// allocations when axes are already provided as slices
+/// (`Axes::Specific`).
+fn extract_axes(
+    axes: Axes,
+    shape_a: &[usize],
+    shape_b: &[usize],
+) -> ContractAxes {
+    let rank_a = shape_a.len();
+    let rank_b = shape_b.len();
+
+    let axes_a_storage: Option<Vec<usize>>;
+    let axes_b_storage: Option<Vec<usize>>;
+
+    let (axes_a, axes_b): (&[usize], &[usize]) = match axes {
+        Axes::All => {
+            axes_a_storage = Some((0..rank_a).collect());
+            axes_b_storage = Some((0..rank_b).collect());
+            (axes_a_storage.as_deref().unwrap(), axes_b_storage.as_deref().unwrap())
+        }
+        Axes::LastFirst { k } => {
+            axes_a_storage = Some(((rank_a - k)..rank_a).collect());
+            axes_b_storage = Some((0..k).collect());
+            (axes_a_storage.as_deref().unwrap(), axes_b_storage.as_deref().unwrap())
+        }
+        Axes::Specific(ax_a, ax_b) => {
+            axes_a_storage = None;
+            axes_b_storage = None;
+            (ax_a, ax_b)
+        }
+    };
+
+    assert_eq!(
+        axes_a.len(), axes_b.len(),
+        "Axis count mismatch: {} (tensor A) vs {} (tensor B)",
+        axes_a.len(), axes_b.len()
+    );
+
+    let mut contract_size = 1;
+    for (&a_ax, &b_ax) in axes_a.iter().zip(axes_b) {
+        assert_eq!(
+            shape_a[a_ax], shape_b[b_ax],
+            "Dimension mismatch at contraction: A[axis {}] = {} ≠ B[axis {}] = {}",
+            a_ax, shape_a[a_ax], b_ax, shape_b[b_ax]
+        );
+        contract_size *= shape_a[a_ax];
+    }
+
+    let mut keep_shape_a = Vec::new();
+    let mut keep_size_a = 1;
+    let mut order_a = Vec::with_capacity(rank_a);
+
+    for i in 0..rank_a {
+        if !axes_a.contains(&i) {
+            keep_shape_a.push(shape_a[i]);
+            keep_size_a *= shape_a[i];
+            order_a.push(i);
+        }
+    }
+    order_a.extend_from_slice(axes_a);
+
+    let mut keep_shape_b = Vec::new();
+    let mut keep_size_b = 1;
+    let mut order_b = Vec::with_capacity(rank_b);
+    order_b.extend_from_slice(axes_b);
+
+    for i in 0..rank_b {
+        if !axes_b.contains(&i) {
+            keep_shape_b.push(shape_b[i]);
+            keep_size_b *= shape_b[i];
+            order_b.push(i);
+        }
+    }
+
+    ContractAxes {
+        keep_size_a,
+        keep_size_b,
+        contract_size,
+        keep_shape_a,
+        keep_shape_b,
+        order_a,
+        order_b,
+    }
+}
+
 /// Helper for implementing contraction through matrix multiplication
 pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: Layout>(
     bd: impl MatMul<T>,
@@ -179,9 +274,6 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     axes: Axes,
     alpha: T,
 ) -> Tensor<T, DynRank> {
-    let rank_a = a.rank();
-    let rank_b = b.rank();
-
     let extract_shape = |s: &DynRank| match s {
         DynRank::Dyn(arr) => arr.clone(),
         DynRank::One(n) => Box::new([*n]),
@@ -189,80 +281,36 @@ pub fn _contract<T: Zero + ComplexFloat + MulAdd<Output = T>, La: Layout, Lb: La
     let shape_a = extract_shape(a.shape());
     let shape_b = extract_shape(b.shape());
 
-    let axes_a_storage: Vec<_> = (0..rank_a).collect();
-    let axes_b_storage: Vec<_> = (0..rank_b).collect();
 
-    let (axes_a, axes_b) = match axes {
-        Axes::All => (&axes_a_storage[..], &axes_b_storage[..]),
-        Axes::LastFirst { k } => (&axes_a_storage[(rank_a - k)..rank_a], &axes_b_storage[0..k]),
-        Axes::Specific(ax_a, ax_b) => (ax_a, ax_b),
-    };
-
-    assert_eq!(
-        axes_a.len(),
-        axes_b.len(),
-        "Axis count mismatch: {} (tensor A) vs {} (tensor B)",
-        axes_a.len(),
-        axes_b.len()
-    );
-
-    axes_a.iter().zip(axes_b).for_each(|(a_ax, b_ax)| {
-        assert_eq!(
-            shape_a[*a_ax], shape_b[*b_ax],
-            "Dimension mismatch at contraction: A[axis {}] = {} ≠ B[axis {}] = {}",
-            *a_ax, shape_a[*a_ax], *b_ax, shape_b[*b_ax]
-        );
-    });
-
-    let compute_keep_axes = |rank: usize, axes: &[usize]| -> Vec<usize> {
-        (0..rank).filter(|k| !axes.contains(k)).collect()
-    };
-    let keep_axes_a = compute_keep_axes(rank_a, axes_a);
-    let keep_axes_b = compute_keep_axes(rank_b, axes_b);
-    let compute_keep_shape = |axes: &[usize], shape: &[usize]| -> Vec<usize> {
-        axes.iter().map(|&ax| shape[ax]).collect()
-    };
-
-    let mut keep_shape_a = compute_keep_shape(&keep_axes_a, &shape_a);
-    let keep_shape_b = compute_keep_shape(&keep_axes_b, &shape_b);
-
-    let compute_size =
-        |axes: &[usize], shape: &[usize]| -> usize { axes.iter().map(|&k| shape[k]).product() };
-
-    let contract_size_a = compute_size(axes_a, &shape_a);
-    let contract_size_b = compute_size(axes_b, &shape_b);
-    let keep_size_a = compute_size(&keep_axes_a, &shape_a);
-    let keep_size_b = compute_size(&keep_axes_b, &shape_b);
-
-    let order_a: Vec<usize> = keep_axes_a.iter().chain(axes_a.iter()).copied().collect();
-    let order_b: Vec<usize> = axes_b.iter().chain(keep_axes_b.iter()).copied().collect();
+    // Each tensor's axes are partitioned into `keep_axes` and `contract_axes` (their union
+    // covering all axes), computed by `extract_axes` which also validates dimension compatibility.
+    // Both tensors are then permuted and reshaped into 2D matrices so that a single matmul
+    // performs the contraction, and the result is reshaped back to `[keep_shape_a | keep_shape_b]`.
+    let ContractAxes {
+        keep_size_a,
+        keep_size_b,
+        contract_size,
+        mut keep_shape_a,
+        keep_shape_b,
+        order_a,
+        order_b,
+        ..
+    } = extract_axes(axes, &shape_a, &shape_b);
 
     let trans_a = a.permute(order_a).to_tensor();
     let trans_b = b.permute(order_b).to_tensor();
 
-    let a_resh = trans_a.reshape([keep_size_a, contract_size_a]);
-    let b_resh = trans_b.reshape([contract_size_b, keep_size_b]);
+    let a_resh = trans_a.reshape([keep_size_a, contract_size]);
+    let b_resh = trans_b.reshape([contract_size, keep_size_b]);
 
     let ab_resh = bd.matmul(&a_resh, &b_resh).scale(alpha).eval();
 
     if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
         ab_resh.to_owned().into_dyn()
     } else if keep_shape_a.is_empty() {
-        // Only B has non-contracted indices, reshape to keep_shape_b
-        ab_resh
-            .view(0, ..)
-            .reshape(keep_shape_b)
-            .to_owned()
-            .into_dyn()
-            .into()
+        ab_resh.view(0, ..).reshape(keep_shape_b).to_owned().into_dyn().into()
     } else if keep_shape_b.is_empty() {
-        // Only A has non-contracted indices, reshape to keep_shape_a
-        ab_resh
-            .view(.., 0)
-            .reshape(keep_shape_a)
-            .to_owned()
-            .into_dyn()
-            .into()
+        ab_resh.view(.., 0).reshape(keep_shape_a).to_owned().into_dyn().into()
     } else {
         keep_shape_a.extend(keep_shape_b);
         ab_resh.reshape(keep_shape_a).to_owned().into_dyn().into()
