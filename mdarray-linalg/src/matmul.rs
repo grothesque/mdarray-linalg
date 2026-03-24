@@ -19,7 +19,7 @@
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```
-use mdarray::{Dim, DynRank, Layout, Shape, Slice, Tensor};
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -118,7 +118,7 @@ where
     fn scale(self, factor: T) -> Self;
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> Tensor<T, (D0, D2)>;
+    fn eval(self) -> Array<T, (D0, D2)>;
 
     /// Overwrites the provided slice with the result.
     fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>);
@@ -147,8 +147,8 @@ where
     /// for triangular matrices it specifies which half is used.
     ///
     /// # Returns
-    /// A new tensor with the result.
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Tensor<T, (D0, D2)>;
+    /// A new matrix with the result.
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Array<T, (D0, D2)>;
 }
 
 /// Builder interface for configuring tensor contraction operations
@@ -162,7 +162,7 @@ where
     fn scale(self, factor: T) -> Self;
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> Tensor<T, DynRank>;
+    fn eval(self) -> Array<T, DynRank>;
 
     /// Overwrites the provided tensor with the result.
     fn write(self, c: &mut Slice<T>);
@@ -286,13 +286,18 @@ pub fn _contract<T, La, Lb, S>(
     b: &Slice<T, S, Lb>,
     axes: Axes,
     alpha: T,
-) -> Tensor<T, DynRank>
+) -> Array<T, DynRank>
 where
     T: Zero + ComplexFloat + MulAdd<Output = T>,
     La: Layout,
     Lb: Layout,
     S: Shape,
 {
+    // Contracts tensors `a` and `b` along the specified axes via matrix multiplication.
+    // Each tensor's axes are partitioned into `keep_axes` and `contract_axes` (their union
+    // covering all axes), computed by `extract_axes` which also validates dimension compatibility.
+    // Both tensors are then permuted and reshaped into 2D matrices so that a single matmul
+    // performs the contraction, and the result is reshaped back to `[keep_shape_a | keep_shape_b]`.
     let ContractAxes {
         keep_size_a,
         keep_size_b,
