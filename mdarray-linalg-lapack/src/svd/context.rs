@@ -7,7 +7,7 @@
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
@@ -34,9 +34,9 @@ where
         let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
         let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
 
-        let mut s = Tensor::from_elem(s_shape, T::default());
-        let mut u = Tensor::from_elem(u_shape, T::default());
-        let mut vt = Tensor::from_elem(vt_shape, T::default());
+        let mut s = Array::from_elem(s_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
+        let mut vt = Array::from_elem(vt_shape, T::default());
 
         match gsvd(a, &mut s, Some(&mut u), Some(&mut vt), self.svd_config) {
             Ok(_) => Ok(SVDDecomp { s, u, vt }),
@@ -45,7 +45,7 @@ where
     }
 
     // Computes only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -53,7 +53,7 @@ where
 
         // Only allocate space for singular values
         let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
-        let mut s = Tensor::from_elem(s_shape, T::default());
+        let mut s = Array::from_elem(s_shape, T::default());
 
         match gsvd::<T, D, L, Dense, Dense, Dense>(a, &mut s, None, None, self.svd_config) {
             Ok(_) => Ok(s),

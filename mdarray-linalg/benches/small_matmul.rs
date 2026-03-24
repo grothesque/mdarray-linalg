@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box as bb;
 
-use mdarray::{Const, DTensor, Dim, Slice, array};
+use mdarray::{Const, DArray, Dim, Slice, array};
 use nalgebra::SMatrix;
 
 use mdarray_linalg::{Naive, prelude::*};
@@ -109,9 +109,9 @@ pub fn matmuln_nalgebra<const N: usize>(
 }
 
 fn criterion_benchmark(crit: &mut Criterion) {
-    let a: DTensor<_, 1> = (0..16).map(f64::from).collect::<Vec<_>>().into();
+    let a: DArray<_, 1> = (0..16).map(f64::from).collect::<Vec<_>>().into();
     let a = a.reshape((Const::<4>, Const::<4>));
-    let b: DTensor<_, 1> = (16..32).map(f64::from).collect::<Vec<_>>().into();
+    let b: DArray<_, 1> = (16..32).map(f64::from).collect::<Vec<_>>().into();
     let b = b.reshape((Const::<4>, Const::<4>));
     crit.bench_function("matmul_baseline", |bencher| {
         let mut c = array![[0.0; 4]; 4];
@@ -139,9 +139,9 @@ fn criterion_benchmark(crit: &mut Criterion) {
     });
 
     // === NxN ===
-    let a_n: DTensor<_, 1> = (0..N * N).map(f64::from).collect::<Vec<_>>().into();
+    let a_n: DArray<_, 1> = (0..N * N).map(f64::from).collect::<Vec<_>>().into();
     let a_n = a_n.reshape((Const::<{ N as usize }>, Const::<{ N as usize }>));
-    let b_n: DTensor<_, 1> = (N * N..2 * N * N).map(f64::from).collect::<Vec<_>>().into();
+    let b_n: DArray<_, 1> = (N * N..2 * N * N).map(f64::from).collect::<Vec<_>>().into();
     let b_n = b_n.reshape((Const::<{ N as usize }>, Const::<{ N as usize }>));
     crit.bench_function("matmulN_bd_naive", |bencher| {
         let mut c = array![[0.0; N as usize]; N as usize];

@@ -3,7 +3,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
@@ -71,8 +71,8 @@ pub fn gemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
-) -> Tensor<T, (D0, D2)>
+    mut c: Array<MaybeUninit<T>, (D0, D2)>,
+) -> Array<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
@@ -177,10 +177,10 @@ pub fn symm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
+    mut c: Array<MaybeUninit<T>, (D0, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> Tensor<T, (D0, D2)>
+) -> Array<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
@@ -284,10 +284,10 @@ pub fn hemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D1, D2), Lb>,
     beta: T,
-    mut c: Tensor<MaybeUninit<T>, (D0, D2)>,
+    mut c: Array<MaybeUninit<T>, (D0, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> Tensor<T, (D0, D2)>
+) -> Array<T, (D0, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,
@@ -386,10 +386,10 @@ pub fn trmm<T, La, Lb, D0, D1, D2>(
 pub fn trmm_uninit<T, La, Lb, D0, D1, D2>(
     alpha: T,
     a: &Slice<T, (D0, D1), La>,
-    mut b: Tensor<MaybeUninit<T>, (D1, D2)>,
+    mut b: Array<MaybeUninit<T>, (D1, D2)>,
     side: CBLAS_SIDE,
     uplo: CBLAS_UPLO,
-) -> Tensor<T, (D1, D2)>
+) -> Array<T, (D1, D2)>
 where
     T: BlasScalar + ComplexFloat,
     La: Layout,

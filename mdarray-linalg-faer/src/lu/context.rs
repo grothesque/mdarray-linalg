@@ -8,7 +8,7 @@
 
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
@@ -28,9 +28,9 @@ where
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> (
-        Tensor<T, (D0, D0)>,
-        Tensor<T, (D0, D1)>,
-        Tensor<T, (D0, D0)>,
+        Array<T, (D0, D0)>,
+        Array<T, (D0, D1)>,
+        Array<T, (D0, D0)>,
     ) {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
@@ -42,9 +42,9 @@ where
         let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
         let p_shape = <(D0, D0) as Shape>::from_dims(&[m, m]);
 
-        let mut l_mda = Tensor::from_elem(l_shape, T::default());
-        let mut u_mda = Tensor::from_elem(u_shape, T::default());
-        let mut p_mda = Tensor::from_elem(p_shape, T::default());
+        let mut l_mda = Array::from_elem(l_shape, T::default());
+        let mut u_mda = Array::from_elem(u_shape, T::default());
+        let mut p_mda = Array::from_elem(p_shape, T::default());
 
         lu_faer(a, &mut l_mda, &mut u_mda, &mut p_mda);
 
@@ -106,7 +106,7 @@ where
             )
         };
 
-        let mut inv_mat = Tensor::<T, (D0, D1)>::from_elem(ash, T::zero());
+        let mut inv_mat = Array::<T, (D0, D1)>::from_elem(ash, T::zero());
         let mut inv_mat_faer = into_faer_mut(&mut inv_mat);
 
         faer::linalg::lu::partial_pivoting::inverse::inverse(

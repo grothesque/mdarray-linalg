@@ -8,7 +8,7 @@
 //! The function `geqrf` (LAPACK) computes the QR factorization of a general m-by-n matrix A using a blocking algorithm.
 //! The matrix Q is orthogonal, and R is upper triangular.
 
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 use mdarray_linalg::qr::QR;
 use num_complex::ComplexFloat;
 
@@ -35,11 +35,11 @@ where
     fn qr<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-    ) -> (Tensor<T, (D0, D1)>, Tensor<T, (D0, D1)>) {
+    ) -> (Array<T, (D0, D1)>, Array<T, (D0, D1)>) {
         let ash = *a.shape();
 
-        let mut q = Tensor::from_elem(ash, T::default());
-        let mut r = Tensor::from_elem(ash, T::default());
+        let mut q = Array::from_elem(ash, T::default());
+        let mut r = Array::from_elem(ash, T::default());
 
         geqrf(a, &mut q, &mut r);
 

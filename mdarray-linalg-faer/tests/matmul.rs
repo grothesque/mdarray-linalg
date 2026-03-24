@@ -1,4 +1,4 @@
-use mdarray::{Tensor, expr::Expression, tensor};
+use mdarray::{Array, expr::Expression, tensor};
 use mdarray_linalg::{
     matmul::{Side, Triangle, Type},
     prelude::*,
@@ -22,8 +22,8 @@ fn dimension_mismatch_panic() {
 
 #[test]
 fn empty_matrix_multiplication() {
-    let a = Tensor::from_elem([0, 3], 0.0f64);
-    let b = Tensor::from_elem([3, 0], 0.0f64);
+    let a = Array::from_elem([0, 3], 0.0f64);
+    let b = Array::from_elem([3, 0], 0.0f64);
 
     let result = Faer::default().matmul(&a, &b).eval();
 
@@ -52,8 +52,8 @@ fn rectangular_matrices() {
 
 #[test]
 fn zero_matrices() {
-    let a = Tensor::from_elem([2, 3], 0.0f64);
-    let b = Tensor::from_elem([3, 2], 5.0f64);
+    let a = Array::from_elem([2, 3], 0.0f64);
+    let b = Array::from_elem([3, 2], 5.0f64);
 
     let result = Faer::default().matmul(&a, &b).eval();
 

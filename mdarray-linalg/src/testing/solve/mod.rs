@@ -1,10 +1,10 @@
 use approx::assert_relative_eq;
-use mdarray::DTensor;
+use mdarray::DArray;
 
 use super::common::random_matrix;
 use crate::solve::{Solve, SolveResult};
 
-fn test_solve_verification<T>(original_a: &DTensor<T, 2>, x: &DTensor<T, 2>, b: &DTensor<T, 2>)
+fn test_solve_verification<T>(original_a: &DArray<T, 2>, x: &DArray<T, 2>, b: &DArray<T, 2>)
 where
     T: Default
         + std::fmt::Debug
@@ -16,7 +16,7 @@ where
 {
     let (n, nrhs) = *b.shape();
 
-    let mut ax = DTensor::<T, 2>::zeros([n, nrhs]);
+    let mut ax = DArray::<T, 2>::zeros([n, nrhs]);
     for i in 0..n {
         for j in 0..nrhs {
             let mut sum = T::default();
@@ -65,7 +65,7 @@ pub fn test_solve_write(bd: &impl Solve<f64, usize, usize>) {
     let original_a = a.clone();
     let mut b = random_matrix(n, nrhs);
     let original_b = b.clone();
-    let mut p = DTensor::<f64, 2>::zeros([n, n]);
+    let mut p = DArray::<f64, 2>::zeros([n, n]);
 
     let _ = bd.solve_write(&mut a, &mut b, &mut p);
 
@@ -77,7 +77,7 @@ pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize, usize>) {
     let n = 3;
     let nrhs = 2;
 
-    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+    let mut a = DArray::<f64, 2>::zeros([n, n]);
     for i in 0..n {
         a[[i, i]] = 1.0;
     }
@@ -106,14 +106,14 @@ pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize, usiz
     let re = random_matrix(n, n);
     let im = random_matrix(n, n);
 
-    let mut a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+    let mut a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new(re[[i[0], i[1]]], im[[i[0], i[1]]])
     });
     println!("a={a:?}");
     let original_a = a.clone();
 
     // Create random complex right-hand side
-    let b = DTensor::<Complex<f64>, 2>::from_fn([n, nrhs], |i| {
+    let b = DArray::<Complex<f64>, 2>::from_fn([n, nrhs], |i| {
         Complex::new((i[0] + 2 * i[1] + 1) as f64, (2 * i[0] + i[1] + 1) as f64)
     });
     println!("b={b:?}");

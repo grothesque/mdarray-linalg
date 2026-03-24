@@ -10,7 +10,7 @@
 //! It computes the LU factorization of A and then uses it to solve the linear system.
 //! The matrix A is overwritten by its LU factorization, and B is overwritten by the solution X.
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
     ipiv_to_perm_mat,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
@@ -56,7 +56,7 @@ where
         let nrhs = bsh.dim(1);
 
         let mut b_copy =
-            Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::default());
+            Array::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::default());
 
         for i in 0..n {
             for j in 0..nrhs {

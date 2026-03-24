@@ -15,7 +15,7 @@
 
 use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
     identity,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
@@ -61,7 +61,7 @@ where
         let b_faer = into_faer(b);
         let x_faer = solver.solve(b_faer);
 
-        let mut x_mda = Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[m, b_n]), T::default());
+        let mut x_mda = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[m, b_n]), T::default());
 
         let mut x_faer_mut = into_faer_mut(&mut x_mda);
         for i in 0..m {

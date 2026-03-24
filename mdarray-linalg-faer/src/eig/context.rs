@@ -20,7 +20,7 @@
 //     - T is n × n         (upper triangular for complex, quasi-upper triangular for real)
 
 use faer_traits::ComplexField;
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::eig::{Eig, EigDecomp, EigError, EigResult, SchurError, SchurResult};
 use num_complex::{Complex, ComplexFloat};
 
@@ -62,8 +62,8 @@ where
 
                 let x = T::default();
                 let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
-                let mut right_vecs_mda = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+                let mut eigenvalues_mda = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
+                let mut right_vecs_mda = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
                 for i in 0..n {
                     eigenvalues_mda[i] = complex_from_faer!(&eigenvalues[i], T);
@@ -320,7 +320,7 @@ where
             Ok(eigenvalues) => {
                 let x = T::default();
                 let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+                let mut eigenvalues_mda = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
                 for i in 0..n {
                     eigenvalues_mda[i] = complex_from_faer!(&eigenvalues[i], T);
@@ -355,8 +355,8 @@ where
 
                 let x = T::default();
                 let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-                let mut eigenvalues_mda = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
-                let mut right_vecs_mda = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+                let mut eigenvalues_mda = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
+                let mut right_vecs_mda = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
                 dbg!("ici");
 

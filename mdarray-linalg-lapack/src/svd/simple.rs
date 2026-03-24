@@ -1,6 +1,6 @@
 use std::ptr::null_mut;
 
-use mdarray::{DTensor, Dim, Layout, Shape, Slice};
+use mdarray::{DArray, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, svd::SVDError, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -72,7 +72,7 @@ where
     // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer
     // This allows fallback to gesvd with the original matrix if gesdd fails
     let a_backup = if use_divide_conquer && matches!(config, SVDConfig::Auto) {
-        let mut ab = DTensor::<T, 2>::from_elem([m, n], T::default());
+        let mut ab = DArray::<T, 2>::from_elem([m, n], T::default());
         for i in 0..m {
             for j in 0..n {
                 ab[[i, j]] = a[[i, j]];

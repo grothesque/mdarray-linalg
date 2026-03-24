@@ -1,5 +1,5 @@
 //! LU, Cholesky, matrix inversion, and determinant computation utilities
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 use thiserror::Error;
 
 /// Error types related to matrix inversion
@@ -23,7 +23,7 @@ pub enum InvError {
 }
 
 /// Result type for matrix inversion
-pub type InvResult<T, D0, D1> = Result<Tensor<T, (D0, D1)>, InvError>;
+pub type InvResult<T, D0, D1> = Result<Array<T, (D0, D1)>, InvError>;
 
 ///  LU decomposition and matrix inversion
 pub trait LU<T, D0: Dim, D1: Dim> {
@@ -41,9 +41,9 @@ pub trait LU<T, D0: Dim, D1: Dim> {
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> (
-        Tensor<T, (D0, D0)>,
-        Tensor<T, (D0, D1)>,
-        Tensor<T, (D0, D0)>,
+        Array<T, (D0, D0)>,
+        Array<T, (D0, D1)>,
+        Array<T, (D0, D0)>,
     );
 
     /// Computes inverse overwriting the input matrix

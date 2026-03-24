@@ -1,5 +1,5 @@
 //! ```rust
-//! use mdarray::{DTensor, tensor};
+//! use mdarray::{DArray, tensor};
 //! use mdarray_linalg::prelude::*; // Imports traits anonymously
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
@@ -36,8 +36,8 @@
 //!
 //! // ----- QR Decomposition -----
 //! let (m, n) = *a.shape();
-//! let mut q = DTensor::<f64, 2>::zeros([m, m]);
-//! let mut r = DTensor::<f64, 2>::zeros([m, n]);
+//! let mut q = DArray::<f64, 2>::zeros([m, m]);
+//! let mut r = DArray::<f64, 2>::zeros([m, n]);
 //!
 //! bd.qr_write(&mut a.clone(), &mut q, &mut r); //
 //! println!("Q: {:?}", q);
@@ -109,10 +109,10 @@ pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
     }
 }
 
-// Converts a `faer::Mat<T>` into a `DTensor<T, 2>` (from `mdarray`) by constructing
+// Converts a `faer::Mat<T>` into a `DArray<T, 2>` (from `mdarray`) by constructing
 // a strided view over the matrix memory. This function **does not copy** any data.
-// pub fn into_mdarray<T: std::clone::Clone>(mat: faer::Mat<T>) -> DTensor<T, 2> {
-//     // Manually dropping to avoid a double free: DTensor will take ownership of the data,
+// pub fn into_mdarray<T: std::clone::Clone>(mat: faer::Mat<T>) -> DArray<T, 2> {
+//     // Manually dropping to avoid a double free: DArray will take ownership of the data,
 //     // so we must prevent Rust from automatically dropping the original matrix.
 //     let mut mat = ManuallyDrop::new(mat);
 
@@ -129,7 +129,7 @@ pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
 //     let view_strided: View<'_, _, (usize, usize), Strided> =
 //         unsafe { mdarray::View::new_unchecked(mat.as_ptr_mut(), mapping) };
 
-//     DTensor::<T, 2>::from(view_strided)
+//     DArray::<T, 2>::from(view_strided)
 // }
 
 /// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a

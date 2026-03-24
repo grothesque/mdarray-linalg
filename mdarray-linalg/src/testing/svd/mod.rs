@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::{DTensor, Dense, Dyn};
+use mdarray::{DArray, Dense, Dyn};
 use num_complex::{Complex, ComplexFloat};
 use rand::Rng;
 
@@ -9,7 +9,7 @@ use crate::{
     svd::{SVD, SVDDecomp},
 };
 
-fn test_svd_reconstruction<T>(bd: &impl SVD<T, Dyn, Dense>, a: &DTensor<T, 2>, debug_print: bool)
+fn test_svd_reconstruction<T>(bd: &impl SVD<T, Dyn, Dense>, a: &DArray<T, 2>, debug_print: bool)
 where
     T: ComplexFloat<Real = f64>
         + Default
@@ -29,7 +29,7 @@ where
     // assert_eq!(*u.shape(), (m, m));
     // assert_eq!(*vt.shape(), (n, n));
 
-    let mut sigma = DTensor::<T, 2>::zeros([m, n]);
+    let mut sigma = DArray::<T, 2>::zeros([m, n]);
     for i in 0..min_dim {
         sigma[[i, i]] = s[[0, i]];
     }
@@ -66,32 +66,32 @@ where
 
 pub fn test_svd_square_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
     let n = 3;
-    let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
+    let a = DArray::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, true);
 }
 
 pub fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64, Dyn, Dense>) {
     let (m, n) = (4, 3);
-    let a = DTensor::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1]) as f64);
+    let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, true);
 }
 
 pub fn test_svd_big_square_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
     let n = 200;
-    let a = DTensor::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
+    let a = DArray::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, false);
 }
 
 pub fn test_svd_random_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
     let mut rng = rand::rng();
     let n = 4;
-    let a = DTensor::<f64, 2>::from_fn([n, n], |_| rng.random::<f64>());
+    let a = DArray::<f64, 2>::from_fn([n, n], |_| rng.random::<f64>());
     test_svd_reconstruction(bd, &a, true);
 }
 
 pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
     let n = 3;
-    let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |i| {
+    let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] * i[1]) as f64, i[1] as f64)
     });
 
@@ -101,7 +101,7 @@ pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
     assert_eq!(*u.shape(), (n, n));
     assert_eq!(*vt.shape(), (n, n));
 
-    let mut sigma = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+    let mut sigma = DArray::<Complex<f64>, 2>::zeros([n, n]);
     for i in 0..n {
         sigma[[i, i]] = s[[0, i]];
     }
@@ -132,7 +132,7 @@ pub fn test_svd_cplx_random_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
     let n = 5;
 
     // Create random complex matrix with significant imaginary parts
-    let a = DTensor::<Complex<f64>, 2>::from_fn([n, n], |_| {
+    let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |_| {
         Complex::new(
             rng.random::<f64>() * 2.0 - 1.0,
             rng.random::<f64>() * 2.0 - 1.0,
@@ -142,7 +142,7 @@ pub fn test_svd_cplx_random_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
     let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 
     // Build sigma matrix
-    let mut sigma = DTensor::<Complex<f64>, 2>::zeros([n, n]);
+    let mut sigma = DArray::<Complex<f64>, 2>::zeros([n, n]);
     for i in 0..n {
         sigma[[i, i]] = s[[0, i]];
     }

@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
@@ -45,7 +45,7 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, (D1,)> {
+    fn eval(self) -> Array<T, (D1,)> {
         let ash = *self.a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         let x_len = self.x.shape().dim(0);
@@ -53,7 +53,7 @@ where
         assert!(n == x_len, "Matrix columns must match vector length");
 
         let result_shape = <(D1,) as Shape>::from_dims(&[m]);
-        let mut result = Tensor::<T, (D1,)>::from_elem(result_shape, 0.into().into());
+        let mut result = Array::<T, (D1,)>::from_elem(result_shape, 0.into().into());
 
         for i in 0..m {
             let mut sum = 0.into().into();
@@ -341,12 +341,12 @@ where
     }
 
     /// Returns `α·xy`
-    fn eval(self) -> Tensor<T, (Dx, Dy)> {
+    fn eval(self) -> Array<T, (Dx, Dy)> {
         let m = self.x.shape().dim(0);
         let n = self.y.shape().dim(0);
 
         let a_shape = <(Dx, Dy) as Shape>::from_dims(&[m, n]);
-        let mut a = Tensor::<T, (Dx, Dy)>::from_elem(a_shape, 0.into().into());
+        let mut a = Array::<T, (Dx, Dy)>::from_elem(a_shape, 0.into().into());
 
         naive_outer(&mut a, self.x, self.y, self.alpha, None, None);
 

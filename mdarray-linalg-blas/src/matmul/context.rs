@@ -1,7 +1,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{Dense, Dim, DynRank, Layout, Shape, Slice, Tensor};
+use mdarray::{Array, Dense, Dim, Layout, Shape, Slice};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
@@ -54,10 +54,10 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, (D0, D2)> {
+    fn eval(self) -> Array<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let c = Tensor::from_elem((m, n), MaybeUninit::<T>::uninit());
+        let c = Array::from_elem((m, n), MaybeUninit::<T>::uninit());
         gemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(self.alpha, self.a, self.b, T::zero(), c)
         // formerly 0.into().into() instead of T::zero() but
         // propagating the associated bounds was causing a lot of
@@ -76,10 +76,10 @@ where
         gemm(self.alpha, self.a, self.b, beta, c);
     }
 
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Tensor<T, (D0, D2)> {
+    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Array<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let c = Tensor::from_elem((m, n), MaybeUninit::<T>::uninit());
+        let c = Array::from_elem((m, n), MaybeUninit::<T>::uninit());
         let cblas_side = match lr {
             Side::Left => CBLAS_SIDE::CblasLeft,
             Side::Right => CBLAS_SIDE::CblasRight,
@@ -108,11 +108,11 @@ where
                 cblas_triangle,
             ),
             Type::Tri => {
-                let mut b_copy = Tensor::<T, (D1, D2)>::from_elem(*self.b.shape(), T::zero());
+                let mut b_copy = Array::<T, (D1, D2)>::from_elem(*self.b.shape(), T::zero());
                 b_copy.assign(self.b);
                 trmm(self.alpha, self.a, &mut b_copy, cblas_side, cblas_triangle);
 
-                let mut c_copy = Tensor::<T, (D0, D2)>::from_elem(*c.shape(), T::zero());
+                let mut c_copy = Array::<T, (D0, D2)>::from_elem(*c.shape(), T::zero());
                 c_copy.assign(b_copy);
                 c_copy
             }
@@ -132,7 +132,7 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T> {
+    fn eval(self) -> Array<T> {
         _contract(Blas, self.a, self.b, self.axes, self.alpha)
     }
 

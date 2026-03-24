@@ -1,5 +1,5 @@
 //! Singular Value Decomposition (SVD)
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 use thiserror::Error;
 
 /// Error types related to singular value decomposition
@@ -18,9 +18,9 @@ pub enum SVDError {
 /// Holds the results of a singular value decomposition, including
 /// singular values and the left and right singular vectors
 pub struct SVDDecomp<T, D: Dim> {
-    pub s: Tensor<T, (D, D)>,
-    pub u: Tensor<T, (D, D)>,
-    pub vt: Tensor<T, (D, D)>,
+    pub s: Array<T, (D, D)>,
+    pub u: Array<T, (D, D)>,
+    pub vt: Array<T, (D, D)>,
 }
 
 /// Result type for singular value decomposition, returning either an
@@ -33,7 +33,7 @@ pub trait SVD<T, D: Dim, L: Layout> {
     fn svd(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D>;
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError>;
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError>;
 
     /// Compute full SVD, overwriting existing matrices
     /// The matrix A is decomposed as A = U * S * V^T where:

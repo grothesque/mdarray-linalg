@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box as bb;
 
-use mdarray::{Const, DTensor, Dyn, Slice};
+use mdarray::{Const, DArray, Dyn, Slice};
 
 use mdarray_linalg::prelude::*;
 use mdarray_linalg::svd::SVDDecomp;
@@ -136,7 +136,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     });
 
     // 4x4 dynamic
-    let a_4x4_dyn: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    let a_4x4_dyn: DArray<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
     let a_4x4_dyn = a_4x4_dyn.reshape((4, 4));
     let a_4x4_data: Vec<f64> = (0..16).map(|x| (x as f64) * 0.5).collect();
 
@@ -161,7 +161,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // 4x4 Const dimension benchmarks
     // ========================================================================
 
-    let a_4x4_const: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    let a_4x4_const: DArray<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
     let a_4x4_const = a_4x4_const.reshape((Const::<4>, Const::<4>));
 
     crit.bench_function("svd_4x4_const_backend_lapack", |bencher| {
@@ -180,7 +180,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // NxN benchmarks
     // ========================================================================
 
-    let a_n_dyn: DTensor<_, 1> = (0..N * N)
+    let a_n_dyn: DArray<_, 1> = (0..N * N)
         .map(|x| (x as f64) * 0.5)
         .collect::<Vec<_>>()
         .into();

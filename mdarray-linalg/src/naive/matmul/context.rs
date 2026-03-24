@@ -1,4 +1,4 @@
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -50,10 +50,10 @@ where
     }
 
     /// Returns a new owned tensor containing the result.
-    fn eval(self) -> Tensor<T, (D0, D2)> {
+    fn eval(self) -> Array<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let mut c = Tensor::from_elem((m, n), T::zero());
+        let mut c = Array::from_elem((m, n), T::zero());
         naive_matmul(self.alpha, self.a, self.b, T::zero(), &mut c);
         c
     }
@@ -92,7 +92,7 @@ where
     ///
     /// # Returns
     /// A new tensor with the result.
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
         todo!()
     }
 }
@@ -109,7 +109,7 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T> {
+    fn eval(self) -> Array<T> {
         _contract(Naive, self.a, self.b, self.axes, self.alpha)
     }
 
@@ -205,7 +205,7 @@ where
             alpha: T::one(),
             a,
             b,
-            axes: Axes::Specific(&axes_a, &axes_b),
+            axes: Axes::Specific(axes_a, axes_b),
         }
     }
 }

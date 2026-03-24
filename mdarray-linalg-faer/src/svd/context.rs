@@ -8,7 +8,7 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 
 use faer_traits::ComplexField;
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
@@ -36,9 +36,9 @@ where
         let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
         let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
 
-        let mut s_mda = Tensor::from_elem(s_shape, T::default());
-        let mut u_mda = Tensor::from_elem(u_shape, T::default());
-        let mut vt_mda = Tensor::from_elem(vt_shape, T::default());
+        let mut s_mda = Array::from_elem(s_shape, T::default());
+        let mut u_mda = Array::from_elem(u_shape, T::default());
+        let mut vt_mda = Array::from_elem(vt_shape, T::default());
 
         // NOTE:
         // These tensors were previously created with `MaybeUninit` to avoid default-initialization.
@@ -67,14 +67,14 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
 
         let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
-        let mut s_mda = Tensor::from_elem(s_shape, T::default());
+        let mut s_mda = Array::from_elem(s_shape, T::default());
 
         // NOTE:
         // Same rationale as in `svd`: `T::default()` is used instead of `MaybeUninit`,

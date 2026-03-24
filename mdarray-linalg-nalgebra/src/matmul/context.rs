@@ -1,7 +1,7 @@
 // use std::fmt::Debug;
 // use std::ops::{AddAssign, MulAssign};
 
-// use mdarray::{Dim, DynRank, Layout, Slice, Tensor};
+// use mdarray::{Dim, DynRank, Layout, Slice, Array};
 // use mdarray_linalg::matmul::{
 //     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 // };
@@ -53,7 +53,7 @@
 // }
 
 // // pub fn into_nalgebra<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim>(
-// //     mat: &mut Tensor<T, (D0, D1)>,
+// //     mat: &mut Array<T, (D0, D1)>,
 // // ) -> nalgebra::DMatrix<T> {
 // //     let (rows, cols) = mat.shape();
 // //     let m = rows.size();
@@ -65,7 +65,7 @@
 // // }
 
 // pub fn into_nalgebra<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim>(
-//     mat: &Tensor<T, (D0, D1)>,
+//     mat: &Array<T, (D0, D1)>,
 // ) -> nalgebra::DMatrix<T> {
 //     let (rows, cols) = mat.shape();
 //     let m = rows.size();
@@ -137,7 +137,7 @@
 //     T: ComplexFloat + One + Debug + AddAssign + MulAssign + 'static,
 //     // mdarray::View<'a, T, (D0, D1), La>: MataConvertRef<'a, T>,
 //     // mdarray::View<'a, T, (D1, D2), Lb>: MataConvertRef<'a, T>,
-//     // Tensor<T, (D0, D2)>: MataConvertRef<'a, T>,
+//     // Array<T, (D0, D2)>: MataConvertRef<'a, T>,
 // {
 //     fn parallelize(mut self) -> Self {
 //         self
@@ -148,7 +148,7 @@
 //         self
 //     }
 
-//     fn eval(self) -> Tensor<T, (D0, D2)> {
+//     fn eval(self) -> Array<T, (D0, D2)> {
 //         let (ma, _) = *self.a.shape();
 //         let (_, nb) = *self.b.shape();
 
@@ -161,7 +161,7 @@
 //         let a_nalgebra = into_nalgebra_ref(self.a);
 //         let b_nalgebra = into_nalgebra_ref(self.b);
 
-//         let mut c = Tensor::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
+//         let mut c = Array::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
 //         let mut c_nalgebra = into_nalgebra_mut(&mut c);
 
 //         dbg!(a_nalgebra);
@@ -191,7 +191,7 @@
 //         todo!()
 //     }
 
-//     fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
+//     fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
 //         self.eval()
 //     }
 // }
@@ -207,7 +207,7 @@
 //         self
 //     }
 
-//     fn eval(self) -> Tensor<T, DynRank> {
+//     fn eval(self) -> Array<T, DynRank> {
 //         _contract(Nalgebra, self.a, self.b, self.axes, self.alpha)
 //     }
 

@@ -1,5 +1,5 @@
 //! Linear system solving utilities for equations of the form Ax = B
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 use thiserror::Error;
 
 /// Error types related to linear system solving
@@ -18,8 +18,8 @@ pub enum SolveError {
 /// Holds the results of a linear system solve, including
 /// the solution matrix and permutation matrix
 pub struct SolveResult<T, D0: Dim, D1: Dim> {
-    pub x: Tensor<T, (D0, D1)>,
-    pub p: Tensor<T, (D0, D1)>,
+    pub x: Array<T, (D0, D1)>,
+    pub p: Array<T, (D0, D1)>,
 }
 
 /// Result type for linear system solving, returning either a

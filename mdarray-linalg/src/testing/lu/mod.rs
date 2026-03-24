@@ -1,15 +1,15 @@
 use approx::assert_relative_eq;
-use mdarray::{DSlice, DTensor, Dense, tensor};
+use mdarray::{DSlice, DArray, Dense, tensor};
 use num_complex::ComplexFloat;
 
 use super::common::{naive_matmul, random_matrix};
 use crate::{identity, lu::LU, pretty_print, transpose_in_place};
 
 pub fn test_lu_reconstruction<T>(
-    a: &DTensor<T, 2>,
-    l: &DTensor<T, 2>,
-    u: &DTensor<T, 2>,
-    p: &DTensor<T, 2>,
+    a: &DArray<T, 2>,
+    l: &DArray<T, 2>,
+    u: &DArray<T, 2>,
+    p: &DArray<T, 2>,
 ) where
     T: Default
         + ComplexFloat
@@ -68,9 +68,9 @@ pub fn test_lu_write(bd: &impl LU<f64, usize, usize>) {
     let mut a = random_matrix(n, n);
     let original_a = a.clone();
 
-    let mut l = DTensor::<f64, 2>::zeros([n, n]);
-    let mut u = DTensor::<f64, 2>::zeros([n, n]);
-    let mut p = DTensor::<f64, 2>::zeros([n, n]);
+    let mut l = DArray::<f64, 2>::zeros([n, n]);
+    let mut u = DArray::<f64, 2>::zeros([n, n]);
+    let mut p = DArray::<f64, 2>::zeros([n, n]);
 
     bd.lu_write(&mut a, &mut l, &mut u, &mut p);
 
@@ -83,9 +83,9 @@ pub fn test_lu_write_rectangular(bd: &impl LU<f64, usize, usize>) {
     let mut a = random_matrix(n, m);
     let original_a = a.clone();
 
-    let mut l = DTensor::<f64, 2>::zeros([n, std::cmp::min(n, m)]);
-    let mut u = DTensor::<f64, 2>::zeros([std::cmp::min(n, m), m]);
-    let mut p = DTensor::<f64, 2>::zeros([n, n]);
+    let mut l = DArray::<f64, 2>::zeros([n, std::cmp::min(n, m)]);
+    let mut u = DArray::<f64, 2>::zeros([std::cmp::min(n, m), m]);
+    let mut p = DArray::<f64, 2>::zeros([n, n]);
 
     bd.lu_write(&mut a, &mut l, &mut u, &mut p);
 
@@ -125,7 +125,7 @@ pub fn test_inverse_write(bd: &impl LU<f64, usize, usize>) {
 
 pub fn test_inverse_singular_should_panic(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
-    let mut a = DTensor::<f64, 2>::from_elem([n, n], 1.);
+    let mut a = DArray::<f64, 2>::from_elem([n, n], 1.);
     let _ = bd.inv(&mut a);
 }
 
@@ -187,7 +187,7 @@ where
     det
 }
 
-pub fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
+pub fn random_positive_definite_matrix(n: usize) -> DArray<f64, 2> {
     // A^T + A + nI is positive definite
     let a = random_matrix(n, n);
     let mut a_t = a.clone();
@@ -199,7 +199,7 @@ pub fn random_positive_definite_matrix(n: usize) -> DTensor<f64, 2> {
     b
 }
 
-pub fn test_cholesky_reconstruction<T>(a: &DTensor<T, 2>, l: &DTensor<T, 2>)
+pub fn test_cholesky_reconstruction<T>(a: &DArray<T, 2>, l: &DArray<T, 2>)
 where
     T: Default
         + ComplexFloat
@@ -212,7 +212,7 @@ where
 {
     let (n, m) = *a.shape();
     assert_eq!(n, m, "Matrix must be square");
-    let mut ln = DTensor::<T, 2>::zeros([n, n]);
+    let mut ln = DArray::<T, 2>::zeros([n, n]);
     for i in 0..n {
         for j in 0..n {
             if i >= j {
@@ -222,7 +222,7 @@ where
     }
 
     // Compute L^T
-    let mut lt = DTensor::<T, 2>::zeros([n, m]);
+    let mut lt = DArray::<T, 2>::zeros([n, m]);
     for i in 0..n {
         for j in 0..m {
             if i <= j {
@@ -273,7 +273,7 @@ pub fn test_cholesky_write(bd: &impl LU<f64, usize, usize>) {
 pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
     // Create a matrix that is not positive definite (has negative eigenvalues)
-    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+    let mut a = DArray::<f64, 2>::zeros([n, n]);
 
     // Fill with a pattern that creates a non-positive definite matrix
     for i in 0..n {
@@ -293,7 +293,7 @@ pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64, usize, usize>) {
 
 pub fn test_cholesky_identity_matrix(bd: &impl LU<f64, usize, usize>) {
     let n = 4;
-    let mut a = DTensor::<f64, 2>::zeros([n, n]);
+    let mut a = DArray::<f64, 2>::zeros([n, n]);
 
     // Create identity matrix (positive definite)
     for i in 0..n {

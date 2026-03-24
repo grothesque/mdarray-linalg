@@ -1,5 +1,5 @@
 //! QR decomposition
-use mdarray::{Dim, Layout, Slice, Tensor};
+use mdarray::{Dim, Layout, Slice, Array};
 
 /// QR decomposition for orthogonal-triangular factorization
 pub trait QR<T, D0: Dim, D1: Dim> {
@@ -15,5 +15,5 @@ pub trait QR<T, D0: Dim, D1: Dim> {
     fn qr<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-    ) -> (Tensor<T, (D0, D1)>, Tensor<T, (D0, D1)>);
+    ) -> (Array<T, (D0, D1)>, Array<T, (D0, D1)>);
 }

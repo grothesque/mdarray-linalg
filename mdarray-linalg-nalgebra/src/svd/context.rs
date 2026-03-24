@@ -8,7 +8,7 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 use std::fmt::Debug;
 
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError, SVDResult};
 
 use matamorph::ref_::MataConvertRef;
@@ -50,9 +50,9 @@ where
         let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
         let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
 
-        let mut s_mda = Tensor::<T, (D, D)>::from_elem(s_shape, T::default());
-        let mut u_mda = Tensor::<T, (D, D)>::from_elem(u_shape, T::default());
-        let mut vt_mda = Tensor::<T, (D, D)>::from_elem(vt_shape, T::default());
+        let mut s_mda = Array::<T, (D, D)>::from_elem(s_shape, T::default());
+        let mut u_mda = Array::<T, (D, D)>::from_elem(u_shape, T::default());
+        let mut vt_mda = Array::<T, (D, D)>::from_elem(vt_shape, T::default());
 
         for i in 0..min_mn {
             s_mda[[0, i]] = T::from_real(singular_values[i]);
@@ -82,7 +82,7 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Tensor<T, (D, D)>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -91,7 +91,7 @@ where
         let svd_result = a_nalgebra.svd(false, false);
         let singular_values = svd_result.singular_values;
         let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
-        let mut s_mda = Tensor::<T, (D, D)>::from_elem(s_shape, T::default());
+        let mut s_mda = Array::<T, (D, D)>::from_elem(s_shape, T::default());
 
         for i in 0..min_mn {
             s_mda[[0, i]] = T::from_real(singular_values[i]);

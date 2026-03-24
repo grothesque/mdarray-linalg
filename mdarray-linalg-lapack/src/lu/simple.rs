@@ -1,4 +1,4 @@
-use mdarray::{DTensor, Dim, Layout, Shape, Slice};
+use mdarray::{DArray, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
 
@@ -38,7 +38,7 @@ where
     let mut ipiv = vec![0i32; min_mn as usize];
     let mut info = 0;
 
-    let mut a_col_major = DTensor::<T, 2>::zeros([n as usize, m as usize]);
+    let mut a_col_major = DArray::<T, 2>::zeros([n as usize, m as usize]);
     for i in 0..(n as usize) {
         for j in 0..(m as usize) {
             a_col_major[[i, j]] = a[[j, i]];

@@ -8,7 +8,7 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
     into_i32, ipiv_to_perm_mat,
     lu::{InvError, InvResult, LU},
@@ -52,9 +52,9 @@ where
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> (
-        Tensor<T, (D0, D0)>,
-        Tensor<T, (D0, D1)>,
-        Tensor<T, (D0, D0)>,
+        Array<T, (D0, D0)>,
+        Array<T, (D0, D1)>,
+        Array<T, (D0, D0)>,
     ) {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
@@ -64,8 +64,8 @@ where
         let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
         let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
 
-        let mut l = Tensor::from_elem(l_shape, T::default());
-        let mut u = Tensor::from_elem(u_shape, T::default());
+        let mut l = Array::from_elem(l_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
 
         let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
@@ -90,8 +90,8 @@ where
         let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
         let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
 
-        let mut l = Tensor::from_elem(l_shape, T::default());
-        let mut u = Tensor::from_elem(u_shape, T::default());
+        let mut l = Array::from_elem(l_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
         let mut ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
         match getri::<T, D0, D1, _>(a, &mut ipiv) {
@@ -112,7 +112,7 @@ where
             });
         }
 
-        let mut a_inv = Tensor::<T, (D0, D1)>::zeros(ash);
+        let mut a_inv = Array::<T, (D0, D1)>::zeros(ash);
 
         // let mut a_inv_mut = a_inv.view_mut(.., ..);
 
@@ -127,8 +127,8 @@ where
         let l_shape = <(D0, D0) as Shape>::from_dims(&[m, min_mn]);
         let u_shape = <(D0, D1) as Shape>::from_dims(&[min_mn, n]);
 
-        let mut l = Tensor::from_elem(l_shape, T::default());
-        let mut u = Tensor::from_elem(u_shape, T::default());
+        let mut l = Array::from_elem(l_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
         let mut ipiv = getrf::<T, D0, D1, _, _, _>(&mut a_inv, &mut l, &mut u);
 
         match getri::<T, D0, D1, L>(a, &mut ipiv) {
@@ -145,8 +145,8 @@ where
 
         let l_shape = <(D0, D0) as Shape>::from_dims(&[n, n]);
         let u_shape = <(D0, D1) as Shape>::from_dims(&[n, n]);
-        let mut l = Tensor::from_elem(l_shape, T::default());
-        let mut u = Tensor::from_elem(u_shape, T::default());
+        let mut l = Array::from_elem(l_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
 
         let ipiv = getrf::<T, D0, D1, _, _, _>(a, &mut l, &mut u);
 
@@ -170,7 +170,7 @@ where
         let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");
 
-        let mut l = Tensor::<T, (D0, D1)>::zeros(ash);
+        let mut l = Array::<T, (D0, D1)>::zeros(ash);
 
         match potrf::<T, D0, D1, _>(a, 'L') {
             0 => {

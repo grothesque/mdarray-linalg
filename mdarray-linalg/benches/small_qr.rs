@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box as bb;
 
-use mdarray::{Const, DTensor, Dyn, Slice};
+use mdarray::{Const, DArray, Dyn, Slice};
 
 use mdarray_linalg::Naive;
 use mdarray_linalg::qr::QR;
@@ -33,21 +33,21 @@ pub fn qr_4x4_nalgebra_static(
 // ============================================================================
 
 #[inline(never)]
-pub fn qr_4x4_dyn_backend_naive(a: &Slice4x4Dyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_4x4_dyn_backend_naive(a: &Slice4x4Dyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Naive;
     bd.qr(&mut a_copy)
 }
 
 #[inline(never)]
-pub fn qr_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.qr(&mut a_copy)
 }
 
 #[inline(never)]
-pub fn qr_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.qr(&mut a_copy)
@@ -64,21 +64,21 @@ pub fn qr_4x4_nalgebra(data: &[f64]) -> nalgebra::linalg::QR<f64, nalgebra::Dyn,
 // ============================================================================
 
 #[inline(never)]
-pub fn qr_n_dyn_backend_naive(a: &SliceNDyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_n_dyn_backend_naive(a: &SliceNDyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Naive;
     bd.qr(&mut a_copy)
 }
 
 #[inline(never)]
-pub fn qr_n_dyn_backend_lapack(a: &SliceNDyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_n_dyn_backend_lapack(a: &SliceNDyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.qr(&mut a_copy)
 }
 
 #[inline(never)]
-pub fn qr_n_dyn_backend_faer(a: &SliceNDyn) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+pub fn qr_n_dyn_backend_faer(a: &SliceNDyn) -> (DArray<f64, 2>, DArray<f64, 2>) {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.qr(&mut a_copy)
@@ -95,21 +95,21 @@ pub fn qr_n_nalgebra(data: &[f64]) -> nalgebra::linalg::QR<f64, nalgebra::Dyn, n
 // ============================================================================
 
 // #[inline(never)]
-// pub fn qr_4x4_const_backend_naive(a: &Slice4x4Const) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+// pub fn qr_4x4_const_backend_naive(a: &Slice4x4Const) -> (DArray<f64, 2>, DArray<f64, 2>) {
 //     let mut a_copy = a.to_owned();
 //     let bd = Naive;
 //     bd.qr(&mut a_copy)
 // }
 
 // #[inline(never)]
-// pub fn qr_4x4_const_backend_lapack(a: &Slice4x4Const) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+// pub fn qr_4x4_const_backend_lapack(a: &Slice4x4Const) -> (DArray<f64, 2>, DArray<f64, 2>) {
 //     let mut a_copy = a.to_owned();
 //     let bd = Lapack::new();
 //     bd.qr(&mut a_copy)
 // }
 
 // #[inline(never)]
-// pub fn qr_4x4_const_backend_faer(a: &Slice4x4Const) -> (DTensor<f64, 2>, DTensor<f64, 2>) {
+// pub fn qr_4x4_const_backend_faer(a: &Slice4x4Const) -> (DArray<f64, 2>, DArray<f64, 2>) {
 //     let mut a_copy = a.to_owned();
 //     let bd = Faer;
 //     bd.qr(&mut a_copy)
@@ -134,7 +134,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     });
 
     // 4x4 dynamic
-    let a_4x4_dyn: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    let a_4x4_dyn: DArray<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
     let a_4x4_dyn = a_4x4_dyn.reshape((4, 4));
     let a_4x4_data: Vec<f64> = (0..16).map(|x| (x as f64) * 0.5).collect();
 
@@ -159,7 +159,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // 4x4 Const dimension benchmarks
     // ========================================================================
 
-    // let a_4x4_const: DTensor<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
+    // let a_4x4_const: DArray<_, 1> = (0..16).map(|x| (x as f64) * 0.5).collect::<Vec<_>>().into();
     // let a_4x4_const = a_4x4_const.reshape((Const::<4>, Const::<4>));
 
     // crit.bench_function("qr_4x4_const_naive", |bencher| {
@@ -178,7 +178,7 @@ fn criterion_benchmark(crit: &mut Criterion) {
     // NxN benchmarks
     // ========================================================================
 
-    let a_n_dyn: DTensor<_, 1> = (0..N * N)
+    let a_n_dyn: DArray<_, 1> = (0..N * N)
         .map(|x| (x as f64) * 0.5)
         .collect::<Vec<_>>()
         .into();

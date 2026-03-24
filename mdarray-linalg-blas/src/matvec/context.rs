@@ -1,7 +1,7 @@
 use std::ops::{Add, Mul};
 
 use cblas_sys::CBLAS_UPLO;
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
     matmul::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
@@ -48,8 +48,8 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, (D1,)> {
-        let mut y = Tensor::<T, (D1,)>::from_elem(
+    fn eval(self) -> Array<T, (D1,)> {
+        let mut y = Array::<T, (D1,)>::from_elem(
             <(D1,) as Shape>::from_dims(&[self.a.shape().dim(0)]),
             0.into().into(),
         );
@@ -242,9 +242,9 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, (Dx, Dy)> {
+    fn eval(self) -> Array<T, (Dx, Dy)> {
         let shape = <(Dx, Dy) as Shape>::from_dims(&[self.x.len(), self.y.len()]);
-        let mut a = Tensor::<T, (Dx, Dy)>::from_elem(shape, 0.into().into());
+        let mut a = Array::<T, (Dx, Dy)>::from_elem(shape, 0.into().into());
         ger(self.alpha, self.x, self.y, &mut a);
         a
     }

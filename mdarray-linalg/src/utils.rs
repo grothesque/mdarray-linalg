@@ -5,13 +5,13 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{Dim, Layout, Shape, Slice, Tensor, tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
 /// Displays a numeric `mdarray` in a human-readable format (NumPy-style)
 pub fn pretty_print<T: ComplexFloat + std::fmt::Display, D0: Dim, D1: Dim>(
-    mat: &Tensor<T, (D0, D1)>,
+    mat: &Array<T, (D0, D1)>,
 ) where
     <T as num_complex::ComplexFloat>::Real: std::fmt::Display,
 {
@@ -153,8 +153,8 @@ where
 pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
     ipiv: &[i32],
     m: usize,
-) -> Tensor<T, (D0, D1)> {
-    let mut p = Tensor::from_elem(<(D0, D1) as Shape>::from_dims(&[m, m]), T::zero());
+) -> Array<T, (D0, D1)> {
+    let mut p = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[m, m]), T::zero());
 
     for i in 0..m {
         p[[i, i]] = T::one();
@@ -178,7 +178,7 @@ pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
 /// Given an input matrix of shape `(m × n)`, this function creates and returns
 /// a new matrix of shape `(n × m)`, where each element at position `(i, j)` in the
 /// original is moved to position `(j, i)` in the result.
-pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Tensor<T, (D0, D1)>
+pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Array<T, (D0, D1)>
 where
     T: ComplexFloat + Default + Clone,
     L: Layout,
@@ -187,7 +187,7 @@ where
     let (m, n) = (csh.dim(0), csh.dim(1));
 
     let shape = <(D0, D1) as Shape>::from_dims(&[n, m]);
-    let mut result = Tensor::<T, (D0, D1)>::zeros(shape);
+    let mut result = Array::<T, (D0, D1)>::zeros(shape);
 
     for i in 0..m {
         for j in 0..n {
@@ -238,8 +238,8 @@ where
 /// let i3 = identity::<f64, usize, usize>(3);
 /// assert_eq!(i3, tensor![[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]);
 /// ```
-pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Tensor<T, (D0, D1)> {
-    Tensor::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
+pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Array<T, (D0, D1)> {
+    Array::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
         if i[0] == i[1] { T::one() } else { T::zero() }
     })
 }
@@ -258,8 +258,8 @@ pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Tensor<T, (D0, D1)
 /// let i3 = identity_k::<f64, Const<3>, Const<3>>(3, 1);
 /// assert_eq!(i3, tensor![[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]]);
 /// ```
-pub fn identity_k<T: Zero + One, D0: Dim, D1: Dim>(n: usize, k: isize) -> Tensor<T, (D0, D1)> {
-    Tensor::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
+pub fn identity_k<T: Zero + One, D0: Dim, D1: Dim>(n: usize, k: isize) -> Array<T, (D0, D1)> {
+    Array::<T, (D0, D1)>::from_fn(<(D0, D1) as Shape>::from_dims(&[n, n]), |i| {
         if (i[1] as isize - i[0] as isize) == k {
             T::one()
         } else {
@@ -297,7 +297,7 @@ pub fn identity_k<T: Zero + One, D0: Dim, D1: Dim>(n: usize, k: isize) -> Tensor
 pub fn kron<T, D0, D1, La, Lb>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D0, D1), Lb>,
-) -> Tensor<T, (D0, D1)>
+) -> Array<T, (D0, D1)>
 where
     T: ComplexFloat + std::ops::Mul<Output = T> + Copy,
     D0: Dim,
@@ -313,7 +313,7 @@ where
 
     let out_shape = <(D0, D1) as Shape>::from_dims(&[ma * mb, na * nb]);
 
-    Tensor::<T, (D0, D1)>::from_fn(out_shape, |idx| {
+    Array::<T, (D0, D1)>::from_fn(out_shape, |idx| {
         let i = idx[0];
         let j = idx[1];
 
@@ -331,10 +331,10 @@ where
 /// # Examples
 ///
 /// ```
-/// use mdarray::DTensor;
+/// use mdarray::DArray;
 /// use mdarray_linalg::unravel_index;
 ///
-/// let x = DTensor::<usize, 2>::from_fn([2,3], |i| i[0] + i[1]);
+/// let x = DArray::<usize, 2>::from_fn([2,3], |i| i[0] + i[1]);
 ///
 /// assert_eq!(unravel_index(&x, 0), vec![0, 0]);
 /// assert_eq!(unravel_index(&x, 4), vec![1, 1]);

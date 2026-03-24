@@ -1,5 +1,5 @@
 //! ```rust
-//! use mdarray::{DTensor, tensor};
+//! use mdarray::{DArray, tensor};
 //! use mdarray_linalg::prelude::*; // Imports traits anonymously
 //!
 //! use mdarray_linalg_nalgebra::Nalgebra;

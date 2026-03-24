@@ -1,6 +1,6 @@
 // Helper module with common code for integration tests.
 // See https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html
-use mdarray::{DSlice, DTensor, expr, tensor};
+use mdarray::{DSlice, DArray, expr, tensor};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 use rand::Rng;
@@ -48,13 +48,13 @@ macro_rules! assert_complex_matrix_eq {
 }
 
 /// Generate a random matrix of size m x n
-pub fn random_matrix(m: usize, n: usize) -> DTensor<f64, 2> {
+pub fn random_matrix(m: usize, n: usize) -> DArray<f64, 2> {
     let mut rng = rand::rng();
-    DTensor::<f64, 2>::from_fn([m, n], |_| rng.random_range(0.0..1.0))
+    DArray::<f64, 2>::from_fn([m, n], |_| rng.random_range(0.0..1.0))
 }
 
 /// Generate a rank-k matrix by multiplying m×k and k×n matrices
-pub fn rank_k_matrix(m: usize, n: usize, k: usize) -> DTensor<f64, 2> {
+pub fn rank_k_matrix(m: usize, n: usize, k: usize) -> DArray<f64, 2> {
     assert!(k <= n.min(m));
 
     let a = random_matrix(m, k);
@@ -65,7 +65,7 @@ pub fn rank_k_matrix(m: usize, n: usize, k: usize) -> DTensor<f64, 2> {
 
 /// Textbook implementation of matrix multiplication, in order for
 /// this crate to be independant of any backend.
-pub fn naive_matmul<T: ComplexFloat + Zero>(a: &DSlice<T, 2>, b: &DSlice<T, 2>) -> DTensor<T, 2> {
+pub fn naive_matmul<T: ComplexFloat + Zero>(a: &DSlice<T, 2>, b: &DSlice<T, 2>) -> DArray<T, 2> {
     let (ma, na) = *a.shape();
     let (mb, nb) = *b.shape();
 

@@ -14,7 +14,7 @@
 //!     - λ are real eigenvalues
 //!     - v are orthonormal eigenvectors
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
     eig::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult}, transpose_in_place,
 };
@@ -48,12 +48,12 @@ where
         let x = T::default();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues_imag = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues_imag = Array::from_elem(ash1, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
-        let mut right_eigenvectors_tmp = Tensor::from_elem(ash, T::default());
-        let mut right_eigenvectors = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+        let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
+        let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
         match geig::<L, Dense, Dense, Dense, Dense, T, D0, D1>(
             a,
@@ -113,16 +113,16 @@ where
         // let x = T::default();
         // let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        // let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        // let mut eigenvalues_imag = Tensor::from_elem(ash1, T::default());
-        // let mut eigenvalues = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+        // let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        // let mut eigenvalues_imag = Array::from_elem(ash1, T::default());
+        // let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
-        // let mut left_eigenvectors_tmp = Tensor::from_elem(ash, T::default());
-        // let mut right_eigenvectors_tmp = Tensor::from_elem(ash, T::default());
+        // let mut left_eigenvectors_tmp = Array::from_elem(ash, T::default());
+        // let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
 
         // let x = T::default();
-        // let mut left_eigenvectors = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
-        // let mut right_eigenvectors = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+        // let mut left_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
+        // let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
         // match geig(
         //     a,
@@ -192,9 +192,9 @@ where
         let x = T::default();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues_imag = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues_imag = Array::from_elem(ash1, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
         match geig::<L, Dense, Dense, Dense, Dense, T, D0, D1>(
             a,
@@ -231,13 +231,13 @@ where
         let x = T::default();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
-        let mut right_eigenvectors_tmp = Tensor::from_elem(ash, T::default());
+        let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
 
         let x = T::default();
-        let mut right_eigenvectors = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+        let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
         match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
             Ok(_) => {
@@ -278,13 +278,13 @@ where
         let x = T::default();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues = Tensor::from_elem(ash1, Complex::new(x.re(), x.re()));
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
 
-        let mut right_eigenvectors_tmp = Tensor::from_elem(ash, T::default());
+        let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
 
         let x = T::default();
-        let mut right_eigenvectors = Tensor::from_elem(ash, Complex::new(x.re(), x.re()));
+        let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
 
         match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
             Ok(_) => {
@@ -320,9 +320,9 @@ where
 
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
 
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues_imag = Tensor::from_elem(ash1, T::default());
-        let mut schur_vectors = Tensor::from_elem(ash, T::default());
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues_imag = Array::from_elem(ash1, T::default());
+        let mut schur_vectors = Array::from_elem(ash, T::default());
 
         match gees::<L, Dense, Dense, Dense, T, D0, D1>(
             a,
@@ -331,7 +331,7 @@ where
             &mut schur_vectors,
         ) {
             Ok(_) => {
-                let mut t = Tensor::from_elem(ash, T::default());
+                let mut t = Array::from_elem(ash, T::default());
                 for j in 0..n {
                     for i in 0..n {
                         t[[i, j]] = a[[j, i]];
@@ -370,8 +370,8 @@ where
         }
 
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-        let mut eigenvalues_real = Tensor::from_elem(ash1, T::default());
-        let mut eigenvalues_imag = Tensor::from_elem(ash1, T::default());
+        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
+        let mut eigenvalues_imag = Array::from_elem(ash1, T::default());
 
         let result = gees::<Dense, Dense, Dense, Dense, T, D0, D1>(
             t,
@@ -394,12 +394,12 @@ where
         }
 
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-        let mut eigenvalues = Tensor::from_elem(ash1, T::default());
-        let mut schur_vectors = Tensor::from_elem(ash, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, T::default());
+        let mut schur_vectors = Array::from_elem(ash, T::default());
 
         match gees_complex::<L, Dense, Dense, T, D0, D1>(a, &mut eigenvalues, &mut schur_vectors) {
             Ok(_) => {
-                let mut t = Tensor::from_elem(ash, T::default());
+                let mut t = Array::from_elem(ash, T::default());
                 for j in 0..n {
                     for i in 0..n {
                         t[[i, j]] = a[[j, i]];
@@ -438,7 +438,7 @@ where
         }
 
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-        let mut eigenvalues = Tensor::from_elem(ash1, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, T::default());
         let result = gees_complex::<Dense, Dense, Dense, T, D0, D1>(t, &mut eigenvalues, z);
 
         transpose_in_place(z);

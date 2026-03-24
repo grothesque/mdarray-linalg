@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::DTensor;
+use mdarray::DArray;
 use num_complex::Complex;
 use rand::prelude::*;
 
@@ -10,28 +10,28 @@ pub fn test_qr_random_matrix(bd: &impl QR<f64, usize, usize>) {
     let (m, n) = (5, 5);
     let mut rng = rand::rng();
 
-    let a = DTensor::<f64, 2>::from_fn([m, n], |_| rng.random::<f64>());
+    let a = DArray::<f64, 2>::from_fn([m, n], |_| rng.random::<f64>());
     test_qr_reconstruction(bd, &a);
 }
 
 pub fn test_qr_structured_matrix(bd: &impl QR<f64, usize, usize>) {
     let (m, n) = (3, 3);
 
-    let a = DTensor::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1] + 1) as f64);
+    let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1] + 1) as f64);
     test_qr_reconstruction(bd, &a);
 }
 
 pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>, usize, usize>) {
     let (m, n) = (3, 3);
 
-    let mut a = DTensor::<Complex<f64>, 2>::from_fn([m, n], |i| {
+    let mut a = DArray::<Complex<f64>, 2>::from_fn([m, n], |i| {
         Complex::new((i[0] + 1) as f64, (i[1] + 1) as f64)
     });
 
     a[[1, 2]] = Complex::new(1., 5.); // destroy symmetry
 
-    let mut q = DTensor::<Complex<f64>, 2>::zeros([m, m]);
-    let mut r = DTensor::<Complex<f64>, 2>::zeros([m, n]);
+    let mut q = DArray::<Complex<f64>, 2>::zeros([m, m]);
+    let mut r = DArray::<Complex<f64>, 2>::zeros([m, n]);
 
     bd.qr_write(&mut a.clone(), &mut q, &mut r);
     let reconstructed = naive_matmul(&q, &r);
@@ -45,7 +45,7 @@ pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>, usize, usize>) {
     pretty_print(&reconstructed);
 }
 
-pub fn test_qr_reconstruction<T>(bd: &impl QR<T, usize, usize>, a: &DTensor<T, 2>)
+pub fn test_qr_reconstruction<T>(bd: &impl QR<T, usize, usize>, a: &DArray<T, 2>)
 where
     T: num_traits::float::FloatConst
         + Default
@@ -58,8 +58,8 @@ where
         + std::convert::From<i8>,
 {
     let (m, n) = *a.shape();
-    let mut q = DTensor::<T, 2>::zeros([m, m]);
-    let mut r = DTensor::<T, 2>::zeros([m, n]);
+    let mut q = DArray::<T, 2>::zeros([m, m]);
+    let mut r = DArray::<T, 2>::zeros([m, n]);
 
     bd.qr_write(&mut a.clone(), &mut q, &mut r);
     let reconstructed = naive_matmul(&q, &r);

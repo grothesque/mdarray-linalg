@@ -1,4 +1,4 @@
-use mdarray::{DTensor, Tensor, expr, expr::Expression as _};
+use mdarray::{DArray, Array, expr, expr::Expression as _};
 use num_complex::Complex64;
 
 use super::common::*;
@@ -32,8 +32,8 @@ pub fn test_matmul_complex_with_scaling_impl(backend: &impl MatMul<Complex64>) {
     assert_eq!(result, expected);
 }
 
-pub fn create_symmetric_matrix_f64(size: usize) -> DTensor<f64, 2> {
-    let mut matrix = Tensor::from_elem([size, size], 0.0);
+pub fn create_symmetric_matrix_f64(size: usize) -> DArray<f64, 2> {
+    let mut matrix = Array::from_elem([size, size], 0.0);
     for i in 0..size {
         for j in 0..size {
             let value = ((i + 1) * (j + 1)) as f64;
@@ -44,8 +44,8 @@ pub fn create_symmetric_matrix_f64(size: usize) -> DTensor<f64, 2> {
     matrix
 }
 
-pub fn create_upper_triangular_f64(size: usize) -> DTensor<f64, 2> {
-    let mut matrix = Tensor::from_elem([size, size], 0.0);
+pub fn create_upper_triangular_f64(size: usize) -> DArray<f64, 2> {
+    let mut matrix = Array::from_elem([size, size], 0.0);
     for i in 0..size {
         for j in i..size {
             matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
@@ -54,8 +54,8 @@ pub fn create_upper_triangular_f64(size: usize) -> DTensor<f64, 2> {
     matrix
 }
 
-pub fn create_lower_triangular_f64(size: usize) -> DTensor<f64, 2> {
-    let mut matrix = Tensor::from_elem([size, size], 0.0);
+pub fn create_lower_triangular_f64(size: usize) -> DArray<f64, 2> {
+    let mut matrix = Array::from_elem([size, size], 0.0);
     for i in 0..size {
         for j in 0..=i {
             matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
@@ -64,8 +64,8 @@ pub fn create_lower_triangular_f64(size: usize) -> DTensor<f64, 2> {
     matrix
 }
 
-pub fn create_hermitian_matrix_complex(size: usize) -> DTensor<Complex64, 2> {
-    let mut matrix = Tensor::from_elem([size, size], Complex64::new(0.0, 0.0));
+pub fn create_hermitian_matrix_complex(size: usize) -> DArray<Complex64, 2> {
+    let mut matrix = Array::from_elem([size, size], Complex64::new(0.0, 0.0));
     for i in 0..size {
         for j in 0..size {
             if i == j {

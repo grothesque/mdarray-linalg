@@ -1,5 +1,5 @@
 //! Eigenvalue, eigenvector, and Schur decomposition utilities for general and Hermitian matrices
-use mdarray::{Dense, Dim, Layout, Slice, Tensor};
+use mdarray::{Dense, Dim, Layout, Slice, Array};
 use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;
 
@@ -19,9 +19,9 @@ pub enum EigError {
 /// Holds the results of an eigenvalue decomposition, including
 /// eigenvalues (complex) and optionally left and right eigenvectors
 pub struct EigDecomp<T: ComplexFloat, D0: Dim, D1: Dim> {
-    pub eigenvalues: Tensor<Complex<T::Real>, (D0,)>,
-    pub left_eigenvectors: Option<Tensor<Complex<T::Real>, (D0, D1)>>,
-    pub right_eigenvectors: Option<Tensor<Complex<T::Real>, (D0, D1)>>,
+    pub eigenvalues: Array<Complex<T::Real>, (D0,)>,
+    pub left_eigenvectors: Option<Array<Complex<T::Real>, (D0, D1)>>,
+    pub right_eigenvectors: Option<Array<Complex<T::Real>, (D0, D1)>>,
 }
 
 /// Result type for eigenvalue decomposition, returning either an
@@ -45,9 +45,9 @@ pub enum SchurError {
 /// where Z is unitary and T is upper-triangular (complex) or quasi-upper triangular (real)
 pub struct SchurDecomp<T: ComplexFloat, D0: Dim, D1: Dim> {
     /// Schur form T (upper-triangular for complex, quasi-upper triangular for real)
-    pub t: Tensor<T, (D0, D1)>,
+    pub t: Array<T, (D0, D1)>,
     /// Unitary Schur transformation matrix Z
-    pub z: Tensor<T, (D0, D1)>,
+    pub z: Array<T, (D0, D1)>,
 }
 
 /// Result type for Schur decomposition, returning either a

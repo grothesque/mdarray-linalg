@@ -183,7 +183,7 @@
 //! // |1+2i| + |2+3i| = (|1|+|2|) + (|2|+|3|) = 8
 //! assert_eq!(norm, 8.0);
 //! ```
-use mdarray::{Dim, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, Layout, Shape, Slice, Array};
 use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
@@ -215,7 +215,7 @@ where
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·A·x`
-    fn eval(self) -> Tensor<T, (D1,)>;
+    fn eval(self) -> Array<T, (D1,)>;
 
     /// `y := α·A·x`
     fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>);
@@ -308,7 +308,7 @@ where
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·xy`
-    fn eval(self) -> Tensor<T, (Dx, Dy)>;
+    fn eval(self) -> Array<T, (Dx, Dy)>;
 
     /// `a := α·xy`
     fn write<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>);

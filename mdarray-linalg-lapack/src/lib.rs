@@ -1,5 +1,5 @@
 //! ```rust
-//! use mdarray::{DTensor, tensor};
+//! use mdarray::{DArray, tensor};
 //! use mdarray_linalg::prelude::*; // Import traits anonymously
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
@@ -33,8 +33,8 @@
 //!
 //! // ----- QR Decomposition -----
 //! let (m, n) = *a.shape();
-//! let mut q = DTensor::<f64, 2>::zeros([m, m]);
-//! let mut r = DTensor::<f64, 2>::zeros([m, n]);
+//! let mut q = DArray::<f64, 2>::zeros([m, m]);
+//! let mut r = DArray::<f64, 2>::zeros([m, n]);
 //!
 //! let bd = Lapack::new();
 //! bd.qr_write(&mut a.clone(), &mut q, &mut r); //

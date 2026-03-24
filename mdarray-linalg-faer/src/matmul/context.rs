@@ -2,7 +2,7 @@ use std::num::NonZero;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
-use mdarray::{Dim, DynRank, Layout, Shape, Slice, Tensor};
+use mdarray::{Dim, DynRank, Layout, Shape, Slice, Array};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
@@ -63,14 +63,14 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, (D0, D2)> {
+    fn eval(self) -> Array<T, (D0, D2)> {
         let (ma, _) = *self.a.shape();
         let (_, nb) = *self.b.shape();
 
         let a_faer = into_faer(self.a);
         let b_faer = into_faer(self.b);
 
-        let mut c = Tensor::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
+        let mut c = Array::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
         let mut c_faer = into_faer_mut(&mut c);
 
         matmul(
@@ -122,7 +122,7 @@ where
         todo!(); // multiplication by beta not implemented in faer ?
     }
 
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Tensor<T, (D0, D2)> {
+    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
         self.eval()
     }
 }
@@ -139,7 +139,7 @@ where
         self
     }
 
-    fn eval(self) -> Tensor<T, DynRank> {
+    fn eval(self) -> Array<T, DynRank> {
         _contract(
             Faer { parallelize: true },
             self.a,
