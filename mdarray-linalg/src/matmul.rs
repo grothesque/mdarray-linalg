@@ -23,96 +23,101 @@ use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
-/// Specifies whether the left or right matrix has the special property
-pub enum Side {
-    Left,
-    Right,
-}
-
-/// Identifies the structural type of a matrix (Hermitian, symmetric, or triangular)
-pub enum Type {
-    Sym,
-    Her,
-    Tri,
-}
-
-/// Specifies whether a matrix is lower or upper triangular
-pub enum Triangle {
-    Upper,
-    Lower,
-}
-
-/// Matrix-matrix multiplication and related operations
-pub trait MatMul<T: One + MulAdd<Output = T>> {
-    fn matmul<'a, La, Lb, D0, D1, D2>(
+/// Tensor contraction and related operations
+pub trait Contract<T: One + MulAdd<Output = T>> {
+    fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         T: One,
-        La: Layout,
-        Lb: Layout,
         D0: Dim,
         D1: Dim,
-        D2: Dim;
+        D2: Dim,
+        La: Layout,
+        Lb: Layout;
 
     /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract_all<'a, La, Lb, S>(
+    fn contract_all<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+    ) -> T
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
-        Lb: Layout,
-        S: Shape;
+        Lb: Layout;
 
     /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
     /// # Example
     /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-    fn contract_n<'a, La, Lb, S>(
+    fn contract_n<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         n: usize,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
-        Lb: Layout,
-        S: Shape;
+        Lb: Layout;
 
-    /// Specifies exactly which axes to contract_all.
+    /// Contracts pairs of axes.
     /// # Example
     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
     /// with axes 3 and 4 of `b`.
-    fn contract<'a, La, Lb, S>(
+    fn contract_pairs<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
-        Lb: Layout,
-        S: Shape;
+        Lb: Layout;
+
+    /// Fully general contraction of two tensors, à la einsum.
+    ///
+    /// *New* indices in `indices_a` and `indices_b` *must* be subsequent integers starting with 0.
+    /// For example, having `[0, 1, 1, 2]` or `[0, 1, 0, 2]` for `indices_a` is OK, but `[0, 2, 2, 3]` is not.
+    /// Note that this is not limiting in any way.  Any legal einsum can be specified in this way.
+    ///
+    /// Note that this is a low-level operation.  The above restrictions allow to avoid runtime checks.
+    /// We will add a more user-friendly higher-level wrapper.
+    fn contract<'a, Sa, Sb, La, Lb>(
+        &self,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+        indices_a: &'a [u8],
+        indices_b: &'a [u8],
+        indices_c: &'a [u8],
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    where
+        T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout;
 }
 
 /// Builder interface for configuring matrix-matrix operations
-pub trait MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+pub trait MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
-    La: Layout,
-    Lb: Layout,
     T: 'a,
-    La: 'a,
-    Lb: 'a,
     D0: Dim,
     D1: Dim,
     D2: Dim,
+    La: 'a + Layout,
+    Lb: 'a + Layout,
 {
     /// Multiplies the result by a scalar factor.
     fn scale(self, factor: T) -> Self;
@@ -129,30 +134,10 @@ where
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T);
-
-    /// Computes a matrix product where the first operand is a special
-    /// matrix (symmetric, Hermitian, or triangular) and the other is
-    /// general.
-    ///
-    /// The special matrix is always treated as `A`. `lr` determines the multiplication order:
-    /// - `Side::Left`  : C := alpha * A * B
-    /// - `Side::Right` : C := alpha * B * A
-    ///
-    /// # Parameters
-    /// * `lr` - side of multiplication (left or right)
-    /// * `type_of_matrix` - special matrix type: `Sym`, `Her`, or `Tri`
-    /// * `tr` - triangle containing stored data: `Upper` or `Lower`
-    ///
-    /// Only the specified triangle needs to be stored for symmetric/Hermitian matrices;
-    /// for triangular matrices it specifies which half is used.
-    ///
-    /// # Returns
-    /// A new matrix with the result.
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Array<T, (D0, D2)>;
 }
 
 /// Builder interface for configuring tensor contraction operations
-pub trait ContractBuilder<'a, T, La, Lb>
+pub trait ContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     T: 'a,
     La: Layout,
@@ -164,8 +149,15 @@ where
     /// Returns a new owned tensor containing the result.
     fn eval(self) -> Array<T, DynRank>;
 
-    /// Overwrites the provided tensor with the result.
-    fn write(self, c: &mut Slice<T>);
+    /// Overwrites the provided slice with the result.
+    fn write<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>);
+
+    /// Adds the result to the provided slice.
+    fn add_to<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>);
+
+    /// Adds the result to the provided slice after scaling the slice by `beta`
+    /// (i.e. C := beta * C + result).
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>, beta: T);
 }
 
 pub enum Axes<'a> {
