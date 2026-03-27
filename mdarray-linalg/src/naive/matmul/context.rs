@@ -5,7 +5,7 @@ use num_traits::{MulAdd, One, Zero};
 use super::simple::naive_matmul;
 use crate::{
     Naive,
-    matmul::{_contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type},
+    matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder},
 };
 
 struct NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
@@ -33,8 +33,8 @@ where
     axes: Axes<'a>,
 }
 
-impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-    for NaiveMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for NaiveMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -73,31 +73,10 @@ where
     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
         naive_matmul(self.alpha, self.a, self.b, beta, c);
     }
-
-    /// Computes a matrix product where the first operand is a special
-    /// matrix (symmetric, Hermitian, or triangular) and the other is
-    /// general.
-    ///
-    /// The special matrix is always treated as `A`. `lr` determines the multiplication order:
-    /// - `Side::Left`  : C := alpha * A * B
-    /// - `Side::Right` : C := alpha * B * A
-    ///
-    /// # Parameters
-    /// * `lr` - side of multiplication (left or right)
-    /// * `type_of_matrix` - special matrix type: `Sym`, `Her`, or `Tri`
-    /// * `tr` - triangle containing stored data: `Upper` or `Lower`
-    ///
-    /// Only the specified triangle needs to be stored for symmetric/Hermitian matrices;
-    /// for triangular matrices it specifies which half is used.
-    ///
-    /// # Returns
-    /// A new tensor with the result.
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
-        todo!()
-    }
 }
 
-impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for NaiveContractBuilder<'a, T, La, Lb, S>
+impl<'a, T, La, Lb, S> ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    for NaiveContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -116,9 +95,20 @@ where
     fn write(self, _c: &mut Slice<T>) {
         todo!()
     }
+
+    /// Adds the result to the provided slice.
+    fn add_to<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    /// Adds the result to the provided slice after scaling the slice by `beta`
+    /// (i.e. C := beta * C + result).
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>, beta: T) {
+        todo!()
+    }
 }
 
-impl<T> MatMul<T> for Naive
+impl<T> Contract<T> for Naive
 where
     T: ComplexFloat + MulAdd<Output = T>,
 {
@@ -190,22 +180,47 @@ where
     /// with axes 3 and 4 of `b`.
     fn contract<'a, La, Lb, S>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
         La: Layout,
         Lb: Layout,
-        S: Shape,
+        Sa: Shape,
+        Sb: Shape,
     {
         NaiveContractBuilder {
             alpha: T::one(),
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+        }
+    }
+
+    fn contract_pairs<'a, Sa, Sb, La, Lb>(
+        &self,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+        axes_a: &'a [usize],
+        axes_b: &'a [usize],
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    where
+        T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
+    {
+        {
+            NaiveContractBuilder {
+                alpha: T::one(),
+                a,
+                b,
+                axes: Axes::Specific(axes_a, axes_b),
+            }
         }
     }
 }
