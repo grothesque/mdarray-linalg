@@ -72,19 +72,6 @@
 //! Naive.outer(&x, &y).scale(2.).add_to(&mut a_update);
 //! assert_eq!(a_update, tensor![[3., 21., 201.],
 //!                              [5., 41., 401.]]);
-//!
-//! // Symmetric rank-1 update: A := β·(x ⊗ xᵀ) + A (upper triangle)
-//! let x_sym = tensor![1., 2., 3.];
-//! let mut a_sym = tensor![[2., 1., 1.],
-//!                         [1., 2., 1.],
-//!                         [1., 1., 2.]];
-//! Naive.outer(&x_sym, &x_sym)
-//!      .scale(0.5)
-//!      .add_to_special(&mut a_sym, Type::Sym, Triangle::Upper);
-//! // Only upper triangle is updated
-//! assert_eq!(a_sym, tensor![[2.5, 2., 2.5],
-//!                           [1.,  4., 4. ],
-//!                           [1.,  1., 6.5]]);
 //! ```
 //!
 //! # Complex Number Support
@@ -93,7 +80,6 @@
 //! use mdarray::tensor;
 //! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg::Naive;
-//! use mdarray_linalg::matmul::{Type, Triangle};
 //! use num_complex::Complex64;
 //!
 //! // Complex outer product
@@ -103,17 +89,6 @@
 //! assert_eq!(a[[0, 0]], Complex64::new(1., 1.));
 //! assert_eq!(a[[0, 1]], Complex64::new(-1., 1.));
 //!
-//! // Hermitian rank-1 update: A := β·(x ⊗ x†) + A
-//! let x_her = tensor![Complex64::new(1., 0.5),
-//!                     Complex64::new(2., 1.0),
-//!                     Complex64::new(3., 1.5)];
-//! let mut a_her = tensor![[Complex64::new(2., 0.), Complex64::new(1., 0.5), Complex64::new(1., 0.5)],
-//!                         [Complex64::new(1., -0.5), Complex64::new(2., 0.), Complex64::new(1., 0.5)],
-//!                         [Complex64::new(1., -0.5), Complex64::new(1., -0.5), Complex64::new(2., 0.)]];
-//! Naive.outer(&x_her, &x_her)
-//!      .scale(Complex64::new(0.3, 0.))
-//!      .add_to_special(&mut a_her, Type::Her, Triangle::Upper);
-//! // Upper triangle updated with conjugate transpose
 //! ```
 //! # Finding Maximum Elements
 //!
@@ -183,10 +158,8 @@
 //! // |1+2i| + |2+3i| = (|1|+|2|) + (|2|+|3|) = 8
 //! assert_eq!(norm, 8.0);
 //! ```
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
-
-use crate::matmul::{Triangle, Type};
 
 /// Matrix-vector multiplication and transformations
 pub trait MatVec<T, D0: Dim, D1: Dim> {
@@ -316,6 +289,6 @@ where
     /// Rank-1 update: `A := α·x·yᵀ + A`
     fn add_to<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>);
 
-    /// Rank-1 update: ` A:= α·x·xᵀ (or x·x†) + A` on special matrix
-    fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle);
+    // Rank-1 update: ` A:= α·x·xᵀ (or x·x†) + A` on special matrix
+    // fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle);
 }

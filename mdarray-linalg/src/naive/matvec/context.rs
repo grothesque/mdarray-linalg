@@ -1,13 +1,12 @@
 use std::ops::{Add, Mul};
 
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
 use super::simple::naive_outer;
 use crate::{
     Naive,
-    matmul::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
     utils::unravel_index,
 };
@@ -348,7 +347,7 @@ where
         let a_shape = <(Dx, Dy) as Shape>::from_dims(&[m, n]);
         let mut a = Array::<T, (Dx, Dy)>::from_elem(a_shape, 0.into().into());
 
-        naive_outer(&mut a, self.x, self.y, self.alpha, None, None);
+        naive_outer(&mut a, self.x, self.y, self.alpha);
 
         a
     }
@@ -364,7 +363,7 @@ where
         assert!(ma == m, "Output shape must match input vector length");
         assert!(na == n, "Output shape must match input vector length");
 
-        naive_outer(a, self.x, self.y, self.alpha, None, None);
+        naive_outer(a, self.x, self.y, self.alpha);
     }
 
     /// Rank-1 update: `A := α·x·yᵀ + A`
@@ -378,18 +377,18 @@ where
         assert!(ma == m, "Output shape must match input vector length");
         assert!(na == n, "Output shape must match input vector length");
 
-        naive_outer(a, self.x, self.y, self.alpha, None, None);
+        naive_outer(a, self.x, self.y, self.alpha);
     }
 
-    /// Rank-1 update: `A := α·x·xᵀ (or x·x† ) + A` on special matrix
-    fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
-        let n = self.x.shape().dim(0);
-        let ash = *a.shape();
-        let (ma, na) = (ash.dim(0), ash.dim(1));
+    // Rank-1 update: `A := α·x·xᵀ (or x·x† ) + A` on special matrix
+    // fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
+    //     let n = self.x.shape().dim(0);
+    //     let ash = *a.shape();
+    //     let (ma, na) = (ash.dim(0), ash.dim(1));
 
-        assert!(ma == na, "Input matrix must be square");
-        assert!(na == n, "Output shape must match input vector length");
+    //     assert!(ma == na, "Input matrix must be square");
+    //     assert!(na == n, "Output shape must match input vector length");
 
-        naive_outer(a, self.x, self.y, self.alpha, Some(ty), Some(tr));
-    }
+    //     naive_outer(a, self.x, self.y, self.alpha, Some(ty), Some(tr));
+    // }
 }

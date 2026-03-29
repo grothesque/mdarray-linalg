@@ -179,12 +179,17 @@ struct ContractAxes {
 /// Resolves the axis partition for a tensor contraction, avoiding
 /// allocations when axes are already provided as slices
 /// (`Axes::Specific`).
-fn extract_axes<T, La, Lb, S>(axes: Axes, a: &Slice<T, S, La>, b: &Slice<T, S, Lb>) -> ContractAxes
+fn extract_axes<T, Sa, Sb, La, Lb>(
+    axes: Axes,
+    a: &Slice<T, Sa, La>,
+    b: &Slice<T, Sb, Lb>,
+) -> ContractAxes
 where
     T: Zero + ComplexFloat + MulAdd<Output = T>,
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     let rank_a = a.rank();
     let rank_b = b.rank();
@@ -272,10 +277,10 @@ where
 }
 
 /// Helper for implementing contraction through matrix multiplication
-pub fn _contract<T, La, Lb, S>(
-    bd: impl MatMul<T>,
-    a: &Slice<T, S, La>,
-    b: &Slice<T, S, Lb>,
+pub fn _contract<T, La, Lb, Sa, Sb>(
+    bd: impl Contract<T>,
+    a: &Slice<T, Sa, La>,
+    b: &Slice<T, Sb, Lb>,
     axes: Axes,
     alpha: T,
 ) -> Array<T, DynRank>
@@ -283,7 +288,8 @@ where
     T: Zero + ComplexFloat + MulAdd<Output = T>,
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     // Contracts tensors `a` and `b` along the specified axes via matrix multiplication.
     // Each tensor's axes are partitioned into `keep_axes` and `contract_axes` (their union

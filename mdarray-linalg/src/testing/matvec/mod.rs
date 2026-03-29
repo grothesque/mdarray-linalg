@@ -2,7 +2,6 @@ use mdarray::{DArray, tensor};
 use num_complex::Complex;
 
 use crate::{
-    matmul::{Triangle, Type},
     matvec::{Argmax, MatVec, Outer, VecOps},
     prelude::*,
 };
@@ -95,32 +94,32 @@ pub fn test_add_outer_cplx(bd: impl Outer<Complex<f64>, usize, usize>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_sym(bd: impl Outer<f64, usize, usize>) {
-    let n = 3;
+// pub fn test_add_outer_sym(bd: impl Outer<f64, usize, usize>) {
+//     let n = 3;
 
-    let x = DArray::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
-    let mut a = DArray::<f64, 2>::from_fn([n, n], |i| {
-        let (row, col) = (i[0], i[1]);
-        if row == col { 2.0 } else { 1.0 }
-    });
-    let beta = 0.5;
+//     let x = DArray::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64);
+//     let mut a = DArray::<f64, 2>::from_fn([n, n], |i| {
+//         let (row, col) = (i[0], i[1]);
+//         if row == col { 2.0 } else { 1.0 }
+//     });
+//     let beta = 0.5;
 
-    bd.outer(&x, &x)
-        .scale(beta)
-        .add_to_special(&mut a, Type::Sym, Triangle::Upper);
+//     bd.outer(&x, &x)
+//         .scale(beta)
+//         .add_to_special(&mut a, Type::Sym, Triangle::Upper);
 
-    let expected = DArray::<f64, 2>::from_fn([n, n], |i| {
-        let (row, col) = (i[0], i[1]);
-        let a_val = if row == col { 2.0 } else { 1.0 };
-        if row <= col {
-            a_val + beta * (x[[row]]) * (x[[col]])
-        } else {
-            a_val
-        }
-    });
+//     let expected = DArray::<f64, 2>::from_fn([n, n], |i| {
+//         let (row, col) = (i[0], i[1]);
+//         let a_val = if row == col { 2.0 } else { 1.0 };
+//         if row <= col {
+//             a_val + beta * (x[[row]]) * (x[[col]])
+//         } else {
+//             a_val
+//         }
+//     });
 
-    assert_eq!(a, expected);
-}
+//     assert_eq!(a, expected);
+// }
 
 pub fn test_add_outer_subview(bd: impl Outer<f64, usize, usize>) {
     let mut a = DArray::<f64, 2>::from_elem([3, 3], 1.);
@@ -141,50 +140,50 @@ pub fn test_add_outer_subview(bd: impl Outer<f64, usize, usize>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_outer_her(bd: impl Outer<Complex<f64>, usize, usize>) {
-    use num_complex::Complex64;
+// pub fn test_add_outer_her(bd: impl Outer<Complex<f64>, usize, usize>) {
+//     use num_complex::Complex64;
 
-    let n = 3;
+//     let n = 3;
 
-    let x = DArray::<Complex64, 1>::from_fn([n], |i| {
-        Complex64::new((i[0] + 1) as f64, (i[0] as f64) * 0.5)
-    });
+//     let x = DArray::<Complex64, 1>::from_fn([n], |i| {
+//         Complex64::new((i[0] + 1) as f64, (i[0] as f64) * 0.5)
+//     });
 
-    let mut a = DArray::<Complex64, 2>::from_fn([n, n], |i| {
-        let (row, col) = (i[0], i[1]);
-        if row == col {
-            Complex64::new(2.0, 0.0)
-        } else if row < col {
-            Complex64::new(1.0, 0.5)
-        } else {
-            Complex64::new(1.0, -0.5)
-        }
-    });
-    let beta = 0.3;
+//     let mut a = DArray::<Complex64, 2>::from_fn([n, n], |i| {
+//         let (row, col) = (i[0], i[1]);
+//         if row == col {
+//             Complex64::new(2.0, 0.0)
+//         } else if row < col {
+//             Complex64::new(1.0, 0.5)
+//         } else {
+//             Complex64::new(1.0, -0.5)
+//         }
+//     });
+//     let beta = 0.3;
 
-    bd.outer(&x, &x)
-        .scale(Complex64::new(beta, 0.0))
-        .add_to_special(&mut a, Type::Her, Triangle::Upper);
+//     bd.outer(&x, &x)
+//         .scale(Complex64::new(beta, 0.0))
+//         .add_to_special(&mut a, Type::Her, Triangle::Upper);
 
-    let expected = DArray::<Complex64, 2>::from_fn([n, n], |i| {
-        let (row, col) = (i[0], i[1]);
-        let a_val = if row == col {
-            Complex64::new(2.0, 0.0)
-        } else if row < col {
-            Complex64::new(1.0, 0.5)
-        } else {
-            Complex64::new(1.0, -0.5)
-        };
+//     let expected = DArray::<Complex64, 2>::from_fn([n, n], |i| {
+//         let (row, col) = (i[0], i[1]);
+//         let a_val = if row == col {
+//             Complex64::new(2.0, 0.0)
+//         } else if row < col {
+//             Complex64::new(1.0, 0.5)
+//         } else {
+//             Complex64::new(1.0, -0.5)
+//         };
 
-        if row <= col {
-            a_val + Complex64::new(beta, 0.0) * x[[row]] * x[[col]].conj()
-        } else {
-            a_val
-        }
-    });
+//         if row <= col {
+//             a_val + Complex64::new(beta, 0.0) * x[[row]] * x[[col]].conj()
+//         } else {
+//             a_val
+//         }
+//     });
 
-    assert_eq!(a, expected);
-}
+//     assert_eq!(a, expected);
+// }
 
 pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize>) {
     let n = 3;

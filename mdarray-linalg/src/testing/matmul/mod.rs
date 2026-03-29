@@ -1,8 +1,8 @@
-use mdarray::{DArray, Array, expr, expr::Expression as _};
+use mdarray::{Array, DArray, expr, expr::Expression as _};
 use num_complex::Complex64;
 
 use super::common::*;
-use crate::{matmul::MatMul, prelude::*};
+use crate::{matmul::Contract, prelude::*};
 
 pub fn create_test_matrix_f64(
     shape: [usize; 2],
@@ -19,7 +19,7 @@ pub fn create_test_matrix_complex(
     })
 }
 
-pub fn test_matmul_complex_with_scaling_impl(backend: &impl MatMul<Complex64>) {
+pub fn test_matmul_complex_with_scaling_impl(backend: &impl Contract<Complex64>) {
     let a = create_test_matrix_complex([2, 3]).eval();
     let b = create_test_matrix_complex([3, 2]).eval();
     let scale_factor = Complex64::new(2.0, 1.5);
