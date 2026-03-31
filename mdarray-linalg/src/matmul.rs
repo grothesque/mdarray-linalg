@@ -292,7 +292,60 @@ where
     }
 }
 
-/// Helper for implementing contraction through matrix multiplication
+#[macro_export]
+macro_rules! prepare_contraction {
+    ($axes:expr, $a:expr, $b:expr) => {{
+        let ContractAxes {
+            keep_size_a,
+            keep_size_b,
+            contract_size,
+            keep_shape_a,
+            keep_shape_b,
+            order_a,
+            order_b,
+            ..
+        } = extract_axes($axes, $a, $b);
+
+        let trans_a = $a.permute(order_a).to_tensor();
+        let a_2d = trans_a.reshape([keep_size_a, contract_size]).to_tensor();
+
+        let trans_b = $b.permute(order_b).to_tensor();
+        let b_2d = trans_b.reshape([contract_size, keep_size_b]).to_tensor(); // TODO remove this useless copy
+
+        (a_2d, b_2d, keep_shape_a, keep_shape_b)
+    }};
+}
+
+#[macro_export]
+macro_rules! finish_contraction {
+    ($ab:expr, $keep_shape_a:expr, $keep_shape_b:expr) => {{
+        let mut keep_shape_a = $keep_shape_a;
+        let keep_shape_b = $keep_shape_b;
+
+        if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
+            $ab.into_dyn()
+        } else if keep_shape_a.is_empty() {
+            $ab.view(0, ..)
+                .reshape(keep_shape_b)
+                .to_owned()
+                .into_dyn()
+                .into()
+        } else if keep_shape_b.is_empty() {
+            $ab.view(.., 0)
+                .reshape(keep_shape_a)
+                .to_owned()
+                .into_dyn()
+                .into()
+        } else {
+            keep_shape_a.extend(keep_shape_b);
+            $ab.reshape(keep_shape_a).to_owned().into_dyn().into()
+        }
+    }};
+}
+
+/// Helper for implementing contraction through matrix multiplication.
+/// Backends that implement `Contract` directly should call the macros
+/// `prepare_contraction!` and `finish_contraction!` themselves.
 pub fn _contract<T, La, Lb, Sa, Sb>(
     bd: impl Contract<T>,
     a: &Slice<T, Sa, La>,
@@ -307,48 +360,9 @@ where
     Sa: Shape,
     Sb: Shape,
 {
-    // Contracts tensors `a` and `b` along the specified axes via matrix multiplication.
-    // Each tensor's axes are partitioned into `keep_axes` and `contract_axes` (their union
-    // covering all axes), computed by `extract_axes` which also validates dimension compatibility.
-    // Both tensors are then permuted and reshaped into 2D matrices so that a single matmul
-    // performs the contraction, and the result is reshaped back to `[keep_shape_a | keep_shape_b]`.
-    let ContractAxes {
-        keep_size_a,
-        keep_size_b,
-        contract_size,
-        mut keep_shape_a,
-        keep_shape_b,
-        order_a,
-        order_b,
-        ..
-    } = extract_axes(axes, a, b);
+    let (a_2d, b_2d, keep_shape_a, keep_shape_b) = prepare_contraction!(axes, a, b);
 
-    let trans_a = a.permute(order_a).to_tensor();
-    let trans_b = b.permute(order_b).to_tensor();
+    let ab = bd.matmul(&a_2d, &b_2d).scale(alpha).eval();
 
-    let a_resh = trans_a.reshape([keep_size_a, contract_size]);
-    let b_resh = trans_b.reshape([contract_size, keep_size_b]);
-
-    let ab_resh = bd.matmul(&a_resh, &b_resh).scale(alpha).eval();
-
-    if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
-        ab_resh.to_owned().into_dyn()
-    } else if keep_shape_a.is_empty() {
-        ab_resh
-            .view(0, ..)
-            .reshape(keep_shape_b)
-            .to_owned()
-            .into_dyn()
-            .into()
-    } else if keep_shape_b.is_empty() {
-        ab_resh
-            .view(.., 0)
-            .reshape(keep_shape_a)
-            .to_owned()
-            .into_dyn()
-            .into()
-    } else {
-        keep_shape_a.extend(keep_shape_b);
-        ab_resh.reshape(keep_shape_a).to_owned().into_dyn().into()
-    }
+    finish_contraction!(ab, keep_shape_a, keep_shape_b)
 }
