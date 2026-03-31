@@ -19,20 +19,20 @@
 //! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra |
 //! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|
 //! | **▶︎ Basic vector/matrix operations**              ||||||
-//! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | ✅ | 🔧 | 🔧  |
-//! | [Operations on vectors](crate::matvec::VecOps)     | ✅ | ⬜ | 🔧 | 🔧 | 🔧  |
-//! | [Matrix multiplication](crate::matmul::MatMul)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
-//! | [Argmax](crate::matvec::Argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ⬜  |
+//! | [Matrix/vector multiplications](crate::matvec) | ✅ | ⬜ | ✅ | 🔧 | 🔧  |
+//! | [Operations on vectors](crate::matvec)     | ✅ | ⬜ | 🔧 | 🔧 | 🔧  |
+//! | [Matrix multiplication](crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
+//! | [Argmax](crate::matvec)                    | ✅ | ⬜ | ✅ | ⬜ | ⬜  |
 //! | **▶︎ Linear algebra**                              |||||
-//! | [Eigen decomposition](crate::eig::Eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [SVD decomposition](crate::svd::SVD)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [LU decomposition](crate::lu::LU)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Solve and inverse](crate::solve::Solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [QR decomposition](crate::qr::QR)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Cholesky decomposition](crate::lu::LU)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
-//! | [Schur decomposition](crate::eig::Eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
+//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
+//! | [LU decomposition](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Solve and inverse](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
+//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
 //! | **▶︎ Advanced**                                   ||||||
-//! | [Tensor contraction](crate::matmul::MatMul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
+//! | [Tensor contraction](crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented

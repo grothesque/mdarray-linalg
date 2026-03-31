@@ -8,17 +8,33 @@
 //!let a = tensor![[1., 2.], [3., 4.]];
 //!let b = tensor![[5., 6.], [7., 8.]];
 //!
-//!let expected_all = tensor![[70.0]].into_dyn();
-//!let result_all = Naive.contract_all(&a, &b);
-//!let result_contract_k = Naive.contract_n(&a, &b, 2).eval();
-//!assert_eq!(result_contract_k, expected_all);
+//!// Standard matrix multiplication
+//!let expected_matmul = tensor![[19., 22.], [43., 50.]];
+//!let result = Naive.matmul(&a, &b).eval();
+//!assert_eq!(result, expected_matmul);
 //!
-//!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
+//!// Matrix multiplication with scalar factor
+//!let result_scaled = Naive.matmul(&a, &b).scale(2.0).eval();
+//!assert_eq!(result_scaled, expected_matmul.map(|x| x * 2.0));
+//!
+//!// Full contraction
+//!let expected_all = 70.0;
+//!let result_all = Naive.contract_all(&a, &b);
+//!assert_eq!(result_all, expected_all);
+//!
+//!// Contract last n axes of a with first n axes of b
+//!let expected_n = tensor![[19., 22.], [43., 50.]].into_dyn();
+//!let result_contract_k = Naive.contract_n(&a, &b, 1).eval();
+//!assert_eq!(result_contract_k, expected_n);
+//!
+//!// Contract specific axes (equivalent to matmul: contract axis 1 of a with axis 0 of b)
+//!let expected_pairs = tensor![[19., 22.], [43., 50.]].into_dyn();
 //!let result_specific = Naive
 //!    .contract_pairs(&a, &b, &[1], &[0])
 //!    .eval();
-//!assert_eq!(result_specific, expected_matmul);
+//!assert_eq!(result_specific, expected_pairs);
 //!```
+
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
