@@ -44,7 +44,7 @@
 //!     [[13., 14.], [15., 16.]]
 //! ].into_dyn();
 //!
-//! let result = Blas.contract_all(&a, &b).eval();
+//! let result = Blas.contract_all(&a, &b);
 //! println!("Full contraction result (tensordot over all axes): {:?}", result);
 //! ```
 

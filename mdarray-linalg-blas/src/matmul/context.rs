@@ -1,20 +1,17 @@
 use std::mem::MaybeUninit;
 
-use cblas_sys::{CBLAS_SIDE, CBLAS_UPLO};
-use mdarray::{Array, Dense, Dim, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{
-    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
-};
+use mdarray::{Array, Dense, Dim, DynRank, Layout, Shape, Slice};
+use mdarray_linalg::matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
 use super::{
     scalar::BlasScalar,
-    simple::{gemm, gemm_uninit, hemm_uninit, symm_uninit, trmm},
+    simple::{gemm, gemm_uninit},
 };
 use crate::Blas;
 
-struct BlasMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+struct BlasMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -27,20 +24,21 @@ where
     b: &'a Slice<T, (D1, D2), Lb>,
 }
 
-struct BlasContractBuilder<'a, T, La, Lb, S>
+struct BlasContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     alpha: T,
-    a: &'a Slice<T, S, La>,
-    b: &'a Slice<T, S, Lb>,
+    a: &'a Slice<T, Sa, La>,
+    b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
 }
 
-impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-    for BlasMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for BlasMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -59,9 +57,6 @@ where
         let (_, n) = *self.b.shape();
         let c = Array::from_elem((m, n), MaybeUninit::<T>::uninit());
         gemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(self.alpha, self.a, self.b, T::zero(), c)
-        // formerly 0.into().into() instead of T::zero() but
-        // propagating the associated bounds was causing a lot of
-        // trouble
     }
 
     fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
@@ -75,81 +70,48 @@ where
     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
         gemm(self.alpha, self.a, self.b, beta, c);
     }
-
-    fn special(self, lr: Side, type_of_matrix: Type, tr: Triangle) -> Array<T, (D0, D2)> {
-        let (m, _) = *self.a.shape();
-        let (_, n) = *self.b.shape();
-        let c = Array::from_elem((m, n), MaybeUninit::<T>::uninit());
-        let cblas_side = match lr {
-            Side::Left => CBLAS_SIDE::CblasLeft,
-            Side::Right => CBLAS_SIDE::CblasRight,
-        };
-        let cblas_triangle = match tr {
-            Triangle::Lower => CBLAS_UPLO::CblasLower,
-            Triangle::Upper => CBLAS_UPLO::CblasUpper,
-        };
-        match type_of_matrix {
-            Type::Her => hemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(
-                self.alpha,
-                self.a,
-                self.b,
-                T::zero(),
-                c,
-                cblas_side,
-                cblas_triangle,
-            ),
-            Type::Sym => symm_uninit::<T, La, Lb, Dense, D0, D1, D2>(
-                self.alpha,
-                self.a,
-                self.b,
-                T::zero(),
-                c,
-                cblas_side,
-                cblas_triangle,
-            ),
-            Type::Tri => {
-                let mut b_copy = Array::<T, (D1, D2)>::from_elem(*self.b.shape(), T::zero());
-                b_copy.assign(self.b);
-                trmm(self.alpha, self.a, &mut b_copy, cblas_side, cblas_triangle);
-
-                let mut c_copy = Array::<T, (D0, D2)>::from_elem(*c.shape(), T::zero());
-                c_copy.assign(b_copy);
-                c_copy
-            }
-        }
-    }
 }
 
-impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for BlasContractBuilder<'a, T, La, Lb, S>
+impl<'a, T, Sa, Sb, La, Lb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    for BlasContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
     T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T>,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
         self
     }
 
-    fn eval(self) -> Array<T> {
+    fn eval(self) -> Array<T, DynRank> {
         _contract(Blas, self.a, self.b, self.axes, self.alpha)
     }
 
-    fn write(self, _c: &mut Slice<T>) {
+    fn write<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>, _beta: T) {
         todo!()
     }
 }
 
-impl<T> MatMul<T> for Blas
+impl<T> Contract<T> for Blas
 where
-    T: BlasScalar + ComplexFloat + MulAdd<Output = T>,
+    T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T>,
 {
-    fn matmul<'a, La, Lb, D0, D1, D2>(
+    fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -164,66 +126,91 @@ where
         }
     }
 
-    /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract_all<'a, La, Lb, S>(
+    fn contract_all<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+    ) -> T
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
-        BlasContractBuilder {
-            alpha: T::one(),
-            a,
-            b,
-            axes: Axes::All,
-        }
+        _contract(Blas, a, b, Axes::All, T::one()).into_scalar()
     }
 
-    /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
-    /// # Example
-    /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-    fn contract_n<'a, La: Layout, Lb: Layout, S>(
+    fn contract_n<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         n: usize,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
-        S: Shape,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
     {
         BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
-            axes: Axes::LastFirst { k: (n) },
+            axes: Axes::LastFirst { k: n },
         }
     }
 
-    /// Specifies exactly which axes to contract_all.
-    /// # Example
-    /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
-    /// with axes 3 and 4 of `b`.
-    fn contract<'a, La: Layout, Lb: Layout, S: Shape>(
+    fn contract_pairs<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
     {
         BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+        }
+    }
+
+    fn contract<'a, Sa, Sb, La, Lb>(
+        &self,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+        indices_a: &'a [u8],
+        indices_b: &'a [u8],
+        indices_c: &'a [u8],
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    where
+        T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
+    {
+        // TODO: _hypercontract once implemented
+        let _ = indices_c;
+        let axes_a: Vec<usize> = indices_a.iter().map(|&i| i as usize).collect();
+        let axes_b: Vec<usize> = indices_b.iter().map(|&i| i as usize).collect();
+        BlasContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::Specific(
+                Box::leak(axes_a.into_boxed_slice()),
+                Box::leak(axes_b.into_boxed_slice()),
+            ),
         }
     }
 }

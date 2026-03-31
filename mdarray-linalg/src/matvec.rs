@@ -43,7 +43,6 @@
 //! use mdarray::tensor;
 //! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg::Naive;
-//! use mdarray_linalg::matmul::{Type, Triangle};
 //!
 //! // Create two vectors
 //! let x = tensor![1., 2.];
