@@ -3,7 +3,9 @@ use std::num::NonZero;
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder};
+use mdarray_linalg::matmul::{
+    _contract, Axes, Contract, ContractAxes, ContractBuilder, MatMulBuilder, extract_axes,
+};
 use mdarray_linalg::{finish_contraction, prepare_contraction};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
@@ -35,6 +37,7 @@ where
     a: &'a Slice<T, Sa, La>,
     b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
+    par: Par,
 }
 
 impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
@@ -127,17 +130,50 @@ where
     }
 
     fn eval(self) -> Array<T, DynRank> {
-        _contract(
-            Faer { parallelize: true },
-            self.a,
-            self.b,
-            self.axes,
+        let (a_2d, b_2d, keep_shape_a, keep_shape_b) =
+            prepare_contraction!(self.axes, self.a, self.b);
+        let a_faer = into_faer(&a_2d);
+        let b_faer = into_faer(&b_2d);
+
+        let (m, _) = *a_2d.shape();
+        let (_, n) = *b_2d.shape();
+        let mut c = Array::<T, (usize, usize)>::from_elem((m, n), T::zero());
+        let mut c_faer = into_faer_mut(&mut c);
+
+        matmul(
+            &mut c_faer,
+            Accum::Replace,
+            a_faer,
+            b_faer,
             self.alpha,
-        )
+            self.par,
+        );
+
+        finish_contraction!(c, keep_shape_a, keep_shape_b)
     }
 
-    fn write<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
-        todo!()
+    fn write<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>) {
+        // TODO WRITE test because I'm not sure it works
+        let (a_2d, b_2d, keep_shape_a, keep_shape_b) =
+            prepare_contraction!(self.axes, self.a, self.b);
+
+        let a_faer = into_faer(&a_2d);
+        let b_faer = into_faer(&b_2d);
+
+        let (m, _) = *a_2d.shape();
+        let (_, n) = *b_2d.shape();
+
+        let mut c_reshaped = c.reshape_mut([m, n]);
+        let mut c_faer = into_faer_mut(&mut c_reshaped);
+
+        matmul(
+            &mut c_faer,
+            Accum::Replace,
+            a_faer,
+            b_faer,
+            self.alpha,
+            self.par,
+        );
     }
 
     fn add_to<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
@@ -219,6 +255,11 @@ where
             a,
             b,
             axes: Axes::LastFirst { k: n },
+            par: if self.parallelize {
+                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
+            } else {
+                Par::Seq
+            },
         }
     }
 
@@ -241,6 +282,11 @@ where
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+            par: if self.parallelize {
+                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
+            } else {
+                Par::Seq
+            },
         }
     }
 
@@ -271,6 +317,11 @@ where
                 Box::leak(axes_a.into_boxed_slice()),
                 Box::leak(axes_b.into_boxed_slice()),
             ),
+            par: if self.parallelize {
+                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
+            } else {
+                Par::Seq
+            },
         }
     }
 }

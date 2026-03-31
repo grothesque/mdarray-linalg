@@ -182,20 +182,20 @@ pub enum Axes<'a> {
     Specific(&'a [usize], &'a [usize]),
 }
 
-struct ContractAxes {
-    keep_size_a: usize,
-    keep_size_b: usize,
-    contract_size: usize,
-    keep_shape_a: Vec<usize>,
-    keep_shape_b: Vec<usize>,
-    order_a: Vec<usize>,
-    order_b: Vec<usize>,
+pub struct ContractAxes {
+    pub keep_size_a: usize,
+    pub keep_size_b: usize,
+    pub contract_size: usize,
+    pub keep_shape_a: Vec<usize>,
+    pub keep_shape_b: Vec<usize>,
+    pub order_a: Vec<usize>,
+    pub order_b: Vec<usize>,
 }
 
 /// Resolves the axis partition for a tensor contraction, avoiding
 /// allocations when axes are already provided as slices
 /// (`Axes::Specific`).
-fn extract_axes<T, Sa, Sb, La, Lb>(
+pub fn extract_axes<T, Sa, Sb, La, Lb>(
     axes: Axes,
     a: &Slice<T, Sa, La>,
     b: &Slice<T, Sb, Lb>,
