@@ -3,9 +3,7 @@ use std::num::NonZero;
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{
-    _contract, Axes, Contract, ContractAxes, ContractBuilder, MatMulBuilder, extract_axes,
-};
+use mdarray_linalg::matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder};
 use mdarray_linalg::{finish_contraction, prepare_contraction};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
