@@ -1,6 +1,5 @@
 use mdarray::{Array, expr::Expression, tensor};
 use mdarray_linalg::{
-    matmul::{Side, Triangle, Type},
     prelude::*,
     testing::{common::*, matmul::*},
 };
@@ -88,111 +87,111 @@ fn backend_defaults() {
     let _bd = Faer::default();
 }
 
-#[test]
-fn special_symmetric_left_lower() {
-    let a_sym = create_symmetric_matrix_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
+// #[test]
+// fn special_symmetric_left_lower() {
+//     let a_sym = create_symmetric_matrix_f64(3);
+//     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Faer::default()
-        .matmul(&a_sym, &b)
-        .special(Side::Left, Type::Sym, Triangle::Lower);
+//     let result = Faer::default()
+//         .matmul(&a_sym, &b)
+//         .special(Side::Left, Type::Sym, Triangle::Lower);
 
-    assert_eq!(*result.shape(), (3, 4));
+//     assert_eq!(*result.shape(), (3, 4));
 
-    let result_upper =
-        Faer::default()
-            .matmul(&a_sym, &b)
-            .special(Side::Left, Type::Sym, Triangle::Upper);
+//     let result_upper =
+//         Faer::default()
+//             .matmul(&a_sym, &b)
+//             .special(Side::Left, Type::Sym, Triangle::Upper);
 
-    assert_eq!(result, result_upper);
-}
+//     assert_eq!(result, result_upper);
+// }
 
-#[test]
-fn special_triangular_upper_left() {
-    let a_tri = create_upper_triangular_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
+// #[test]
+// fn special_triangular_upper_left() {
+//     let a_tri = create_upper_triangular_f64(3);
+//     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Faer::default()
-        .matmul(&a_tri, &b)
-        .special(Side::Left, Type::Tri, Triangle::Upper);
+//     let result = Faer::default()
+//         .matmul(&a_tri, &b)
+//         .special(Side::Left, Type::Tri, Triangle::Upper);
 
-    let result_std = Faer::default().matmul(&a_tri, &b).eval();
+//     let result_std = Faer::default().matmul(&a_tri, &b).eval();
 
-    assert_eq!(result, result_std);
-}
+//     assert_eq!(result, result_std);
+// }
 
-#[test]
-fn special_triangular_lower_left() {
-    let a_tri = create_lower_triangular_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
+// #[test]
+// fn special_triangular_lower_left() {
+//     let a_tri = create_lower_triangular_f64(3);
+//     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Faer::default()
-        .matmul(&a_tri, &b)
-        .special(Side::Left, Type::Tri, Triangle::Lower);
+//     let result = Faer::default()
+//         .matmul(&a_tri, &b)
+//         .special(Side::Left, Type::Tri, Triangle::Lower);
 
-    let result_std = Faer::default().matmul(&a_tri, &b).eval();
-    assert_eq!(result, result_std);
-}
+//     let result_std = Faer::default().matmul(&a_tri, &b).eval();
+//     assert_eq!(result, result_std);
+// }
 
-#[test]
-fn special_triangular_upper_right() {
-    let a = create_test_matrix_f64([3, 4]).eval();
-    let b_tri = create_upper_triangular_f64(3);
+// #[test]
+// fn special_triangular_upper_right() {
+//     let a = create_test_matrix_f64([3, 4]).eval();
+//     let b_tri = create_upper_triangular_f64(3);
 
-    let result = Faer::default()
-        .matmul(&b_tri, &a)
-        .special(Side::Left, Type::Tri, Triangle::Upper);
+//     let result = Faer::default()
+//         .matmul(&b_tri, &a)
+//         .special(Side::Left, Type::Tri, Triangle::Upper);
 
-    let result_std = Faer::default().matmul(&b_tri, &a).eval();
-    assert_eq!(result, result_std);
-}
+//     let result_std = Faer::default().matmul(&b_tri, &a).eval();
+//     assert_eq!(result, result_std);
+// }
 
-#[test]
-fn special_hermitian_left_lower() {
-    let a_her = create_hermitian_matrix_complex(3);
-    let b = create_test_matrix_complex([3, 4]).eval();
+// #[test]
+// fn special_hermitian_left_lower() {
+//     let a_her = create_hermitian_matrix_complex(3);
+//     let b = create_test_matrix_complex([3, 4]).eval();
 
-    let result = Faer::default()
-        .matmul(&a_her, &b)
-        .special(Side::Left, Type::Her, Triangle::Lower);
+//     let result = Faer::default()
+//         .matmul(&a_her, &b)
+//         .special(Side::Left, Type::Her, Triangle::Lower);
 
-    assert_eq!(*result.shape(), (3, 4));
+//     assert_eq!(*result.shape(), (3, 4));
 
-    let result_upper = Faer::default().matmul(&a_her, &b).eval();
+//     let result_upper = Faer::default().matmul(&a_her, &b).eval();
 
-    for (a, b) in result.iter().zip(result_upper.iter()) {
-        assert!((a - b).norm() < 1e-10);
-    }
-}
+//     for (a, b) in result.iter().zip(result_upper.iter()) {
+//         assert!((a - b).norm() < 1e-10);
+//     }
+// }
 
-#[test]
-fn special_with_scaling() {
-    let a_sym = create_symmetric_matrix_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
-    let scale_factor = 2.5;
+// #[test]
+// fn special_with_scaling() {
+//     let a_sym = create_symmetric_matrix_f64(3);
+//     let b = create_test_matrix_f64([3, 4]).eval();
+//     let scale_factor = 2.5;
 
-    let result = Faer::default()
-        .matmul(&a_sym, &b)
-        .scale(scale_factor)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
+//     let result = Faer::default()
+//         .matmul(&a_sym, &b)
+//         .scale(scale_factor)
+//         .special(Side::Left, Type::Sym, Triangle::Upper);
 
-    let result_std = Faer::default()
-        .matmul(&a_sym, &b)
-        .scale(scale_factor)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
+//     let result_std = Faer::default()
+//         .matmul(&a_sym, &b)
+//         .scale(scale_factor)
+//         .special(Side::Left, Type::Sym, Triangle::Upper);
 
-    assert_eq!(result, result_std);
-}
+//     assert_eq!(result, result_std);
+// }
 
-#[test]
-fn special_single_element() {
-    let a = tensor![[5.0]];
-    let b = tensor![[2.0]];
+// #[test]
+// fn special_single_element() {
+//     let a = tensor![[5.0]];
+//     let b = tensor![[2.0]];
 
-    let result = Faer::default()
-        .matmul(&a, &b)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
+//     let result = Faer::default()
+//         .matmul(&a, &b)
+//         .special(Side::Left, Type::Sym, Triangle::Upper);
 
-    assert_eq!(*result.shape(), (1, 1));
-    assert_eq!(result[[0, 0]], 10.0);
-}
+//     assert_eq!(*result.shape(), (1, 1));
+//     assert_eq!(result[[0, 0]], 10.0);
+// }

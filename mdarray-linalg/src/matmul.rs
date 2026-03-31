@@ -9,13 +9,13 @@
 //!let b = tensor![[5., 6.], [7., 8.]];
 //!
 //!let expected_all = tensor![[70.0]].into_dyn();
-//!let result_all = Naive.contract_all(&a, &b).eval();
+//!let result_all = Naive.contract_all(&a, &b);
 //!let result_contract_k = Naive.contract_n(&a, &b, 2).eval();
 //!assert_eq!(result_contract_k, expected_all);
 //!
 //!let expected_matmul = tensor![[19., 22.], [43., 50.]].into_dyn();
 //!let result_specific = Naive
-//!    .contract(&a, &b, &[1], &[0])
+//!    .contract_pairs(&a, &b, &[1], &[0])
 //!    .eval();
 //!assert_eq!(result_specific, expected_matmul);
 //!```

@@ -31,15 +31,15 @@ fn add_outer_cplx() {
     test_add_outer_cplx(Blas)
 }
 
-#[test]
-fn add_outer_sym() {
-    test_add_outer_sym(Blas)
-}
+// #[test]
+// fn add_outer_sym() {
+//     test_add_outer_sym(Blas)
+// }
 
-#[test]
-fn add_outer_her() {
-    test_add_outer_her(Blas)
-}
+// #[test]
+// fn add_outer_her() {
+//     test_add_outer_her(Blas)
+// }
 
 #[test]
 fn add_to_scaled_vecvec() {

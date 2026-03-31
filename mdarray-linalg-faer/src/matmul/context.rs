@@ -2,16 +2,14 @@ use std::num::NonZero;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
-use mdarray::{Dim, DynRank, Layout, Shape, Slice, Array};
-use mdarray_linalg::matmul::{
-    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
-};
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
+use mdarray_linalg::matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
 use crate::{Faer, into_faer, into_faer_mut};
 
-struct FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+struct FaerMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -25,38 +23,28 @@ where
     par: Par,
 }
 
-struct FaerContractBuilder<'a, T, La, Lb, S>
+struct FaerContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     alpha: T,
-    a: &'a Slice<T, S, La>,
-    b: &'a Slice<T, S, Lb>,
+    a: &'a Slice<T, Sa, La>,
+    b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
 }
 
-impl<'a, T, La, Lb, D0, D1, D2> FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for FaerMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
     D0: Dim,
     D1: Dim,
     D2: Dim,
-    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
-{
-}
-
-impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-    for FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-where
-    La: Layout,
-    Lb: Layout,
-    D0: Dim,
-    D1: Dim,
-    D2: Dim,
-    T: ComplexFloat + ComplexField + One + 'static,
+    T: ComplexFloat + ComplexField + One + Zero + 'static,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -121,18 +109,16 @@ where
         );
         todo!(); // multiplication by beta not implemented in faer ?
     }
-
-    fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
-        self.eval()
-    }
 }
 
-impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for FaerContractBuilder<'a, T, La, Lb, S>
+impl<'a, T, Sa, Sb, La, Lb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    for FaerContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + ComplexField + 'static + MulAdd<Output = T>,
-    S: Shape,
+    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T>,
+    Sa: Shape,
+    Sb: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha = self.alpha * factor;
@@ -149,20 +135,28 @@ where
         )
     }
 
-    fn write(self, _c: &mut Slice<T>) {
+    fn write<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>, _beta: T) {
         todo!()
     }
 }
 
-impl<T> MatMul<T> for Faer
+impl<T> Contract<T> for Faer
 where
-    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T>,
 {
-    fn matmul<'a, La, Lb, D0, D1, D2>(
+    fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -182,71 +176,100 @@ where
         }
     }
 
-    /// Contracts all axes of the first tensor with all axes of the second tensor.
-    fn contract_all<'a, La, Lb, S>(
+    fn contract_all<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+    ) -> T
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
-        FaerContractBuilder {
-            alpha: T::one(),
+        _contract(
+            Faer {
+                parallelize: self.parallelize,
+            },
             a,
             b,
-            axes: Axes::All,
-        }
+            Axes::All,
+            T::one(),
+        )
+        .into_scalar()
     }
 
-    /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
-    /// # Example
-    /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-    fn contract_n<'a, La, Lb, S>(
+    fn contract_n<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         n: usize,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
         FaerContractBuilder {
             alpha: T::one(),
             a,
             b,
-            axes: Axes::LastFirst { k: (n) },
+            axes: Axes::LastFirst { k: n },
         }
     }
 
-    /// Specifies exactly which axes to contract_all.
-    /// # Example
-    /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
-    /// with axes 3 and 4 of `b`.
-    fn contract<'a, La, Lb, S>(
+    fn contract_pairs<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
         FaerContractBuilder {
             alpha: T::one(),
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+        }
+    }
+
+    fn contract<'a, Sa, Sb, La, Lb>(
+        &self,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+        indices_a: &'a [u8],
+        indices_b: &'a [u8],
+        indices_c: &'a [u8],
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    where
+        T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
+    {
+        // TODO: _hypercontract once implemented
+        let _ = indices_c;
+        let axes_a: Vec<usize> = indices_a.iter().map(|&i| i as usize).collect();
+        let axes_b: Vec<usize> = indices_b.iter().map(|&i| i as usize).collect();
+        FaerContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::Specific(
+                Box::leak(axes_a.into_boxed_slice()),
+                Box::leak(axes_b.into_boxed_slice()),
+            ),
         }
     }
 }
