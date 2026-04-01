@@ -45,6 +45,24 @@ pub fn test_qr_complex_matrix(bd: &impl QR<Complex<f64>, usize, usize>) {
     pretty_print(&reconstructed);
 }
 
+pub fn test_qr_rectangular_matrix(bd: &impl QR<f64, usize, usize>) {
+    // M > N
+    {
+        let (m, n) = (5, 3);
+        let mut rng = rand::rng();
+        let a = DArray::<f64, 2>::from_fn([m, n], |_| rng.random::<f64>());
+        test_qr_reconstruction(bd, &a);
+    }
+
+    // M < N
+    {
+        let (m, n) = (3, 5);
+        let mut rng = rand::rng();
+        let a = DArray::<f64, 2>::from_fn([m, n], |_| rng.random::<f64>());
+        test_qr_reconstruction(bd, &a);
+    }
+}
+
 pub fn test_qr_reconstruction<T>(bd: &impl QR<T, usize, usize>, a: &DArray<T, 2>)
 where
     T: num_traits::float::FloatConst

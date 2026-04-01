@@ -1,3 +1,4 @@
+use crate::QRConfig;
 use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, transpose_in_place};
 use num_complex::ComplexFloat;
@@ -10,28 +11,34 @@ pub fn geqrf<
     Lr: Layout,
     D0: Dim,
     D1: Dim,
+    D2: Dim,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
 >(
     a: &mut Slice<T, (D0, D1), La>,
-    q: &mut Slice<T, (D0, D1), Lq>,
-    r: &mut Slice<T, (D0, D1), Lr>,
+    q: &mut Slice<T, (D0, D2), Lq>,
+    r: &mut Slice<T, (D2, D1), Lr>,
+    mode: QRConfig,
 ) where
     T::Real: Into<T>,
 {
     let ash = *a.shape();
     let (m, n) = (into_i32(ash.dim(0)), into_i32(ash.dim(1)));
+    let min_mn = m.min(n);
+
+    let ncols_q = match mode {
+        QRConfig::Complete => m,     // Q is M×M
+        QRConfig::Reduced => min_mn, // Q is M×K
+    };
 
     let qsh = *q.shape();
     let (mq, nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
 
-    let rsh = *q.shape();
+    let rsh = *r.shape();
     let (mr, nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
 
-    let min_mn = m.min(n);
-
-    assert_eq!(mq, nq, "Q must be square (m × m)");
-    assert_eq!(mr, min_mn, "R must have min(m,n) rows");
-    assert_eq!(nr, n, "R must have n columns");
+    // assert_eq!(mq, nq, "Q must be square (m × m)");
+    // assert_eq!(mr, min_mn, "R must have min(m,n) rows");
+    // assert_eq!(nr, n, "R must have n columns");
 
     // Allocate tau (Householder scalars)
     let mut tau = vec![T::default(); min_mn as usize];
@@ -41,14 +48,24 @@ pub fn geqrf<
     let mut info = 0;
 
     // Lapack works with column-major
-    transpose_in_place(a);
+    // transpose_in_place(a);
+
+    // let mut a_col = vec![T::default(); (m * n) as usize];
+    let a_col_size = (m as usize) * (m as usize).max(n as usize);
+    let mut a_col = vec![T::default(); a_col_size];
+
+    for i in 0..(m as usize) {
+        for j in 0..(n as usize) {
+            a_col[j * (m as usize) + i] = a[[i, j]];
+        }
+    }
 
     // Query optimal workspace size
     unsafe {
         T::lapack_geqrf(
             m,
             n,
-            a.as_mut_ptr(),
+            a_col.as_mut_ptr(),
             tau.as_mut_ptr(),
             work.as_mut_ptr() as *mut _,
             lwork,
@@ -64,7 +81,7 @@ pub fn geqrf<
         T::lapack_geqrf(
             m,
             n,
-            a.as_mut_ptr(),
+            a_col.as_mut_ptr(),
             tau.as_mut_ptr(),
             work.as_mut_ptr() as *mut _,
             lwork,
@@ -72,9 +89,11 @@ pub fn geqrf<
         );
     }
 
+    assert_eq!(info, 0, "geqrf failed with info={}", info);
+
     for i in 0_usize..(min_mn as usize) {
         for j in i..(n as usize) {
-            r[[i, j]] = a[[j, i]];
+            r[[i, j]] = a_col[j * (m as usize) + i];
         }
     }
 
@@ -85,8 +104,9 @@ pub fn geqrf<
     unsafe {
         T::lapack_orgqr(
             m,
+            ncols_q,
             min_mn,
-            a.as_mut_ptr() as *mut _,
+            a_col.as_mut_ptr() as *mut _,
             tau.as_mut_ptr() as *mut _,
             work.as_mut_ptr() as *mut _,
             lwork,
@@ -100,8 +120,9 @@ pub fn geqrf<
     unsafe {
         T::lapack_orgqr(
             m,
+            ncols_q,
             min_mn,
-            a.as_mut_ptr() as *mut _,
+            a_col.as_mut_ptr() as *mut _,
             tau.as_mut_ptr() as *mut _,
             work.as_mut_ptr() as *mut _,
             lwork,
@@ -109,9 +130,14 @@ pub fn geqrf<
         );
     }
 
-    for i in 0_usize..(m as usize) {
-        for j in 0_usize..(m as usize) {
-            q[[i, j]] = a[[j, i]];
+    assert_eq!(info, 0, "orgqr failed with info={}", info);
+
+    for i in 0..(m as usize) {
+        for j in 0..(ncols_q as usize) {
+            q[[i, j]] = a_col[j * (m as usize) + i];
         }
     }
+
+    dbg!(q.shape());
+    dbg!(a.shape());
 }

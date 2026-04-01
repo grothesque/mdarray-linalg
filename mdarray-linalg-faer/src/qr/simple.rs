@@ -9,13 +9,14 @@ pub fn qr_faer<
     T: ComplexFloat + ComplexField + Default + 'static,
     D0: Dim,
     D1: Dim,
+    D2: Dim,
     La: Layout,
     Lq: Layout,
     Lr: Layout,
 >(
     a: &Slice<T, (D0, D1), La>,
-    q_mda: Option<&mut Slice<T, (D0, D1), Lq>>,
-    r_mda: &mut Slice<T, (D0, D1), Lr>,
+    q_mda: Option<&mut Slice<T, (D0, D2), Lq>>,
+    r_mda: &mut Slice<T, (D2, D1), Lr>,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

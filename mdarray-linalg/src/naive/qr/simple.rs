@@ -4,10 +4,10 @@ use num_traits::{MulAdd, One, Zero};
 
 /// Textbook implementation of QR decomposition using Gram-Schmidt process
 /// Useful for debugging and simple tests without relying on external backend
-pub fn naive_qr<T, D0: Dim, D1: Dim, L, Lq, Lr>(
+pub fn naive_qr<T, D0: Dim, D1: Dim, D2: Dim, L, Lq, Lr>(
     a: &mut Slice<T, (D0, D1), L>,
-    q: &mut Slice<T, (D0, D1), Lq>,
-    r: &mut Slice<T, (D0, D1), Lr>,
+    q: &mut Slice<T, (D0, D2), Lq>,
+    r: &mut Slice<T, (D2, D1), Lr>,
 ) where
     T: ComplexFloat + Zero + One + MulAdd<Output = T>,
     L: Layout,

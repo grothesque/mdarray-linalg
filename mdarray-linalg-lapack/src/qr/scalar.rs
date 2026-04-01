@@ -15,7 +15,8 @@ pub trait LapackScalar {
 
     unsafe fn lapack_orgqr(
         m: i32,
-        min_mn: i32,
+        n: i32,
+        k: i32,
         a: *mut Self,
         tau: *mut Self,
         work: *mut Self,
@@ -54,7 +55,8 @@ macro_rules! impl_lapack_real {
             }
             unsafe fn lapack_orgqr(
                 m: i32,
-                min_mn: i32,
+                n: i32,
+                k: i32,
                 a: *mut Self,
                 tau: *mut Self,
                 work: *mut Self,
@@ -65,8 +67,8 @@ macro_rules! impl_lapack_real {
                     paste! {
                                 lapack_sys::[<$prefix $suffix gqr_>](
                                     &m as *const i32,
-                    &m as *const i32,
-                    &min_mn as *const i32,
+                    &n as *const i32,
+                    &k as *const i32,
                     a as *mut _,
                     &m as *const i32,
                     tau as *mut _,
@@ -120,7 +122,8 @@ macro_rules! impl_lapack_cplx {
             }
             unsafe fn lapack_orgqr(
                 m: i32,
-                min_mn: i32,
+                n: i32,
+                k: i32,
                 a: *mut Self,
                 tau: *mut Self,
                 work: *mut Self,
@@ -131,8 +134,8 @@ macro_rules! impl_lapack_cplx {
                     paste! {
                                 lapack_sys::[<$prefix $suffix gqr_>](
                                     &m as *const i32,
-                    &m as *const i32,
-                    &min_mn as *const i32,
+                    &n as *const i32,
+                    &k as *const i32,
                     a as *mut lapack_sys_cast!($prefix),
                     &m as *const i32,
                     tau as *mut lapack_sys_cast!($prefix),
