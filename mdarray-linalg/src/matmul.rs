@@ -35,7 +35,10 @@
 //!assert_eq!(result_specific, expected_pairs);
 //!```
 
-use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
+use std::iter::Sum;
+use std::ops::AddAssign;
+
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
@@ -180,6 +183,7 @@ pub enum Axes<'a> {
     All,
     LastFirst { k: usize },
     Specific(&'a [usize], &'a [usize]),
+    SpecificOwned(Vec<usize>, Vec<usize>),
 }
 
 pub struct ContractAxes {
@@ -231,6 +235,14 @@ where
             )
         }
         Axes::Specific(ax_a, ax_b) => (ax_a, ax_b),
+        Axes::SpecificOwned(ax_a, ax_b) => {
+            axes_a_storage = Some(ax_a);
+            axes_b_storage = Some(ax_b);
+            (
+                axes_a_storage.as_deref().unwrap(),
+                axes_b_storage.as_deref().unwrap(),
+            )
+        }
     };
 
     assert_eq!(
@@ -365,4 +377,280 @@ where
     let ab = bd.matmul(&a_2d, &b_2d).scale(alpha).eval();
 
     finish_contraction!(ab, keep_shape_a, keep_shape_b)
+}
+
+pub fn _hypercontract<T>(
+    bd: impl Contract<T>,
+    a: View<'_, T, DynRank>,
+    b: View<'_, T, DynRank>,
+    axes_a_in: &[usize],
+    axes_b_in: &[usize],
+) -> Array<T, DynRank>
+where
+    T: Copy + Zero + One + MulAdd<Output = T> + ComplexFloat,
+{
+    let mut a_owned: Option<Array<T, DynRank>> = None;
+    let mut b_owned: Option<Array<T, DynRank>> = None;
+
+    let mut map_a: Vec<usize> = (0..a.shape().dims().len()).collect();
+    let mut map_b: Vec<usize> = (0..b.shape().dims().len()).collect();
+
+    let mut axes_a: Vec<usize> = Vec::new();
+    let mut axes_b: Vec<usize> = Vec::new();
+
+    for (&idx_a, &idx_b) in axes_a_in.iter().zip(axes_b_in.iter()) {
+        let ax_a = {
+            let view = a_owned
+                .as_ref()
+                .map(|o| o.expr())
+                .unwrap_or_else(|| a.clone());
+            let (arr, ax) = extract_hyperdiag(view, &[idx_a], &mut map_a);
+            a_owned = Some(arr);
+            ax
+        };
+        let ax_b = {
+            let view = b_owned
+                .as_ref()
+                .map(|o| o.expr())
+                .unwrap_or_else(|| b.clone());
+            let (arr, ax) = extract_hyperdiag(view, &[idx_b], &mut map_b);
+            b_owned = Some(arr);
+            ax
+        };
+        axes_a.push(ax_a);
+        axes_b.push(ax_b);
+    }
+
+    let final_a = a_owned
+        .as_ref()
+        .map(|o| o.expr())
+        .unwrap_or_else(|| a.clone());
+    let final_b = b_owned
+        .as_ref()
+        .map(|o| o.expr())
+        .unwrap_or_else(|| b.clone());
+
+    _contract(
+        bd,
+        &final_a,
+        &final_b,
+        Axes::SpecificOwned(axes_a, axes_b),
+        T::one(),
+    )
+}
+
+/// Generalized diagonal extraction along an arbitrary set of axes (zero-copy)
+pub fn hyperdiagonal<'a, T, L: Layout>(
+    a: View<'a, T, DynRank, L>,
+    axes: &[usize],
+) -> View<'a, T, DynRank, mdarray::Strided> {
+    let axes_set: std::collections::BTreeSet<usize> = axes.iter().copied().collect(); // TODO: use vec instead
+
+    let dims = a.shape().dims();
+    let rank = dims.len();
+
+    for &ax in &axes_set {
+        assert!(ax < rank, "axis ({ax}) out of bounds for rank {rank}");
+    }
+
+    // All diagonal axes must have the same size.
+    let m = dims[*axes_set.first().unwrap()];
+    for &ax in &axes_set {
+        let n = dims[ax];
+        assert!(
+            m == n,
+            "all diagonal axes must have equal size, got {m} and {n}"
+        );
+    }
+
+    // Build output shape: drop all diagonal axes, ...
+    let mut out_dims: Vec<usize> = Vec::with_capacity(rank - axes_set.len() + 1);
+    let mut out_strides: Vec<isize> = Vec::with_capacity(rank - axes_set.len() + 1);
+
+    for (i, item) in dims.iter().enumerate() {
+        if axes_set.contains(&i) {
+            continue;
+        }
+        out_dims.push(*item);
+        out_strides.push(a.stride(i));
+    }
+
+    // ... and append the diagonal axis as the last one.
+    out_dims.push(m);
+    out_strides.push(axes_set.iter().map(|&ax| a.stride(ax)).sum());
+
+    let mapping = mdarray::StridedMapping::new(Shape::from_dims(&out_dims), &out_strides);
+
+    // SAFETY:
+    // - `a.as_ptr()` is valid and live for `'a` (inherited from input view).
+    // - Let upper = Σ_{i<r} (dims[i] - 1) * stride(i) be the maximum offset
+    //   reachable in `a`'s allocation. Any index over the output view is
+    //   (a_0, ..., a_{r-|axes|-1}, k) with a_j < dims[j] for j ∉ axes_set
+    //   and k < m = dims[ax] for all ax ∈ axes_set. The offset decomposes as:
+    //   Σ_{j ∉ axes_set} a_j * stride(j)  +  k * Σ_{ax ∈ axes_set} stride(ax)
+    //   Each term is bounded by (dims[j]-1)*stride(j), so the total ≤ upper.
+    unsafe { View::new_unchecked(a.as_ptr(), mapping) }
+}
+
+/// Sum a tensor over an arbitrary subset of its axes.
+/// Equivalent to a sequence of `np.sum(a, axis=s)` calls (with appropriate
+/// index renumbering after each removal), but performed in a single pass.
+pub fn hypersum<T, L: Layout>(a: &View<'_, T, DynRank, L>, axes: &[usize]) -> Array<T, DynRank>
+where
+    T: std::iter::Sum + Copy + Zero + std::ops::AddAssign,
+{
+    let axes_set: std::collections::BTreeSet<usize> = axes.iter().copied().collect();
+    let dims = a.shape().dims();
+    let rank = dims.len();
+
+    for &ax in &axes_set {
+        assert!(ax < rank, "axis ({ax}) out of bounds for rank {rank}");
+    }
+
+    let out_dims: Vec<usize> = (0..rank)
+        .filter(|i| !axes_set.contains(i))
+        .map(|i| dims[i])
+        .collect();
+
+    let mut out = Array::from_elem(out_dims, T::zero());
+
+    for idx in odometer(dims) {
+        let out_idx: Vec<usize> = (0..rank)
+            .filter(|i| !axes_set.contains(i))
+            .map(|i| idx[i])
+            .collect();
+        out[out_idx.as_slice()] += a[idx.as_slice()];
+    }
+
+    out
+}
+
+/// Row-major multi-index iterator over a tensor of the given shape.
+///
+/// Yields every index tuple (i₀, i₁, …, i_{r−1}) in lexicographic order
+/// (last axis varies fastest — C-contiguous order).
+fn odometer(dims: &[usize]) -> impl Iterator<Item = Vec<usize>> + '_ {
+    let total: usize = dims.iter().product();
+    let mut idx = vec![0usize; dims.len()];
+    let mut first = true;
+
+    (0..total).map(move |_| {
+        if first {
+            first = false;
+        } else {
+            for i in (0..dims.len()).rev() {
+                idx[i] += 1;
+                if idx[i] < dims[i] {
+                    break;
+                }
+                idx[i] = 0;
+            }
+        }
+        idx.clone()
+    })
+}
+
+/// A hyper-edge encodes one Kronecker delta connecting axes of A, axes of B,
+/// or both.
+///
+/// Each `Option<&[usize]>` is a list of axis indices.
+///
+///   (Some(a_axes), Some(b_axes))  — δ shared between A and B: the fused
+///                                   diagonal axis becomes a contraction pair
+///                                   in the final tensordot.
+///   (Some(a_axes), None)          — δ attached to A only: partial trace on A
+///                                   (diagonal extraction + marginal sum).
+///   (None, Some(b_axes))          — same, but on B.
+///   (None, None)                  — no-op.
+type HyperEdge<'a> = (Option<&'a [usize]>, Option<&'a [usize]>);
+
+/// Recompute the axis-position map after `hyperdiagonal` has been applied.
+fn update_axis_map(axis_map: &[usize], diag_axes: &[usize], ndim_after: usize) -> Vec<usize> {
+    let removed: Vec<usize> = {
+        let mut v = diag_axes.to_vec();
+        v.sort_unstable();
+        v
+    };
+    let new_diag_pos = ndim_after - 1;
+
+    axis_map
+        .iter()
+        .map(|&cur| {
+            if diag_axes.contains(&cur) {
+                new_diag_pos
+            } else {
+                let shift = removed.iter().filter(|&&r| r < cur).count();
+                cur - shift
+            }
+        })
+        .collect()
+}
+
+/// Process a `(Some, None)` or `(None, Some)` edge: diagonal-sum on one tensor.
+///
+/// This corresponds to a Kronecker delta that is only connected to one side of
+/// the network.
+fn apply_hypersum<T, L: Layout>(
+    view: &View<'_, T, DynRank, L>,
+    idx: &[usize],
+    axis_map: &mut Vec<usize>,
+) -> Array<T, DynRank>
+where
+    T: Copy + Zero + std::iter::Sum + std::ops::AddAssign,
+{
+    // Translate original axis indices to their current positions.
+    let cur_axes: Vec<usize> = idx.iter().map(|&a| axis_map[a]).collect();
+
+    if cur_axes.len() == 1 {
+        let ax = cur_axes[0];
+        let result = hypersum(view, &[ax]);
+        for cur in axis_map.iter_mut() {
+            if *cur > ax {
+                *cur -= 1;
+            }
+        }
+        result
+    } else {
+        let diag = hyperdiagonal(view.clone(), &cur_axes);
+
+        let diag_ax = diag.shape().dims().len() - 1;
+        *axis_map = update_axis_map(axis_map, &cur_axes, diag.shape().dims().len());
+
+        let result = hypersum(&diag.into_dyn(), &[diag_ax]);
+        for cur in axis_map.iter_mut() {
+            if *cur > diag_ax {
+                *cur -= 1;
+            }
+        }
+        result
+    }
+}
+
+/// Process a `(Some, Some)` edge: prepare the contraction axis for tensordot.
+///
+/// For a delta that bridges A and B, we do *not* contract immediately. Instead
+/// we reduce the multi-axis delta to a single axis (by extracting the
+/// generalized diagonal when needed) and return its current position so that
+/// `hypercontract` can pass it to the final tensordot.
+fn extract_hyperdiag<T, L: Layout>(
+    view: View<'_, T, DynRank, L>,
+    idx: &[usize],
+    axis_map: &mut Vec<usize>,
+) -> (Array<T, DynRank>, usize)
+where
+    T: Copy,
+{
+    // Translate original axis indices to their current positions.
+    let cur_axes: Vec<usize> = idx.iter().map(|&a| axis_map[a]).collect();
+
+    if cur_axes.len() == 1 {
+        // Single-axis edge: no diagonal to extract, axis_map is unchanged.
+        let ax = cur_axes[0];
+        (view.to_owned().into(), ax)
+    } else {
+        let diag = hyperdiagonal(view, &cur_axes);
+        let diag_ax = diag.shape().dims().len() - 1;
+        *axis_map = update_axis_map(axis_map, &cur_axes, diag.shape().dims().len());
+        (diag.to_owned().into(), diag_ax)
+    }
 }

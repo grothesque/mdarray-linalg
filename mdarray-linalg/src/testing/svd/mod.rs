@@ -76,6 +76,12 @@ pub fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64, Dyn, Dense>) {
     test_svd_reconstruction(bd, &a, true);
 }
 
+pub fn test_svd_rectangular_n_gt_n(bd: &impl SVD<f64, Dyn, Dense>) {
+    let (m, n) = (4, 3);
+    let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1]) as f64);
+    test_svd_reconstruction(bd, &a, true);
+}
+
 pub fn test_svd_big_square_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
     let n = 200;
     let a = DArray::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
