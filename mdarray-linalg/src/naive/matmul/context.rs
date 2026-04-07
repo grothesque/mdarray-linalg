@@ -5,7 +5,7 @@ use num_traits::{MulAdd, One, Zero};
 use super::simple::naive_matmul;
 use crate::{
     Naive,
-    matmul::{_contract, Axes, Contract, ContractBuilder, MatMulBuilder},
+    matmul::{_contract, _hypercontract, Axes, Contract, ContractBuilder, MatMulBuilder},
 };
 
 struct NaiveMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
@@ -32,6 +32,7 @@ where
     a: &'a Slice<T, Sa, La>,
     b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
+    einsum: bool,
 }
 
 impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
@@ -85,7 +86,11 @@ where
     }
 
     fn eval(self) -> Array<T, DynRank> {
-        _contract(Naive, self.a, self.b, self.axes, self.alpha)
+        if self.einsum {
+            _hypercontract(Naive, self.a, self.b, self.axes, self.alpha)
+        } else {
+            _contract(Naive, self.a, self.b, self.axes, self.alpha)
+        }
     }
 
     fn write<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
@@ -157,6 +162,7 @@ where
             a,
             b,
             axes: Axes::LastFirst { k: n },
+            einsum: false,
         }
     }
 
@@ -179,6 +185,7 @@ where
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+            einsum: false,
         }
     }
 
@@ -197,18 +204,28 @@ where
         La: Layout,
         Lb: Layout,
     {
-        // TODO: translate einsum indices into Axes::Specific and handle indices_c output ordering
-        let _ = indices_c;
-        let axes_a: Vec<usize> = indices_a.iter().map(|&i| i as usize).collect();
-        let axes_b: Vec<usize> = indices_b.iter().map(|&i| i as usize).collect();
+        let free: std::collections::HashSet<u8> = indices_c.iter().copied().collect();
+
+        let axes_a: Vec<usize> = indices_a
+            .iter()
+            .enumerate()
+            .filter(|(_, idx)| !free.contains(*idx))
+            .map(|(pos, _)| pos)
+            .collect();
+
+        let axes_b: Vec<usize> = indices_b
+            .iter()
+            .enumerate()
+            .filter(|(_, idx)| !free.contains(*idx))
+            .map(|(pos, _)| pos)
+            .collect();
+
         NaiveContractBuilder {
             alpha: T::one(),
             a,
             b,
-            axes: Axes::Specific(
-                Box::leak(axes_a.into_boxed_slice()),
-                Box::leak(axes_b.into_boxed_slice()),
-            ),
+            axes: Axes::SpecificOwned(axes_a, axes_b),
+            einsum: true,
         }
     }
 }
