@@ -12,6 +12,11 @@ fn test_backend_svd_rectangular_m_gt_n() {
 }
 
 #[test]
+fn test_backend_svd_rectangular_n_gt_m() {
+    test_svd_rectangular_n_gt_m(&Lapack::default());
+}
+
+#[test]
 fn test_backend_big_square_matrix() {
     test_svd_big_square_matrix(&Lapack::default().config_svd(SVDConfig::Jacobi));
 }

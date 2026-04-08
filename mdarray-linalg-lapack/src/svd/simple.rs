@@ -72,13 +72,13 @@ where
     // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer
     // This allows fallback to gesvd with the original matrix if gesdd fails
     let a_backup = if use_divide_conquer && matches!(config, SVDConfig::Auto) {
-        let mut ab = DArray::<T, 2>::from_elem([m, n], T::default());
+        let mut a2 = DArray::<T, 2>::from_elem([m, n], T::default());
         for i in 0..m {
             for j in 0..n {
-                ab[[i, j]] = a[[i, j]];
+                a2[[i, j]] = a[[i, j]];
             }
         }
-        Some(ab)
+        Some(a2)
     } else {
         None
     };
@@ -273,7 +273,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            m.min(n), // n,
+            n, // n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -297,7 +297,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            m.min(n), // n,
+            n, // n,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,

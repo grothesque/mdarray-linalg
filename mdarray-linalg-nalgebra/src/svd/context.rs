@@ -8,7 +8,7 @@
 //     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
 use std::fmt::Debug;
 
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError, SVDResult};
 
 use matamorph::ref_::MataConvertRef;
@@ -68,8 +68,8 @@ where
             }
         }
 
-        for i in 0..n {
-            for j in 0..n {
+        for i in 0..v_t.nrows() {
+            for j in 0..v_t.ncols() {
                 vt_mda[[i, j]] = v_t[(i, j)];
             }
         }
@@ -135,8 +135,8 @@ where
             }
         }
 
-        for i in 0..n {
-            for j in 0..n {
+        for i in 0..v_t.nrows() {
+            for j in 0..v_t.ncols() {
                 vt_mda[[i, j]] = v_t[(i, j)];
             }
         }
