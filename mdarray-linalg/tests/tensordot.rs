@@ -1,4 +1,4 @@
-use mdarray_linalg::{Naive, testing::tensordot::*};
+use mdarray_linalg::{Naive, testing::matmul::*, testing::tensordot::*};
 
 // --- Basic functionality ---
 
@@ -49,4 +49,44 @@ fn tensordot_mismatched_dimensions_should_panic() {
 #[test]
 fn tensordot_outer_should_match_manual_kronecker() {
     tensordot_outer_should_match_manual_kronecker_impl(&Naive);
+}
+
+#[test]
+fn contract_einsum_matrix_multiplication() {
+    contract_einsum_matrix_multiplication_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_full_contraction() {
+    contract_einsum_full_contraction_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_outer_product() {
+    contract_einsum_outer_product_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_trace_diagonal() {
+    contract_einsum_trace_diagonal_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_index_relabelling() {
+    contract_einsum_index_relabelling_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_partial_trace_then_contract() {
+    contract_einsum_partial_trace_then_contract_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_cross_diagonal() {
+    contract_einsum_cross_diagonal_impl(&Naive)
+}
+
+#[test]
+fn contract_einsum_vector_result() {
+    contract_einsum_vector_result_impl(&Naive)
 }
