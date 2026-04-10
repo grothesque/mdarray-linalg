@@ -1,11 +1,14 @@
-use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
+use std::iter::Sum;
+use std::ops::AddAssign;
+
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
 use super::simple::naive_matmul;
 use crate::{
     Naive,
-    matmul::{_contract, _hypercontract, Axes, Contract, ContractBuilder, MatMulBuilder},
+    matmul::{_contract, _hypercontract2, Axes, Contract, ContractBuilder, MatMulBuilder},
 };
 
 struct NaiveMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
@@ -76,7 +79,7 @@ impl<'a, T, Sa, Sb, La, Lb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + MulAdd<Output = T>,
+    T: ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
     Sa: Shape,
     Sb: Shape,
 {
@@ -87,7 +90,31 @@ where
 
     fn eval(self) -> Array<T, DynRank> {
         if self.einsum {
-            _hypercontract(Naive, self.a, self.b, self.axes, self.alpha)
+            let axes_a_storage: Option<Vec<usize>>;
+            let axes_b_storage: Option<Vec<usize>>;
+
+            let (ax_a, ax_b) = match self.axes {
+                Axes::SpecificOwned(ax_a, ax_b) => {
+                    axes_a_storage = Some(ax_a);
+                    axes_b_storage = Some(ax_b);
+                    (
+                        axes_a_storage.as_deref().unwrap(),
+                        axes_b_storage.as_deref().unwrap(),
+                    )
+                }
+                _ => todo!(),
+            };
+
+            let a = self.a.to_array().into_dyn();
+            let b = self.b.to_array().into_dyn();
+
+            // TODO: it is very likely that this copy is useless. It
+            // should be removed in a near future (9th april
+            // 2026). However due to tricky typing error I did not
+            // manage to give the view to _hypercontract without
+            // removing the genericity toward Layout and shape :(
+
+            _hypercontract2(Naive, a.expr(), b.expr(), ax_a, ax_b)
         } else {
             _contract(Naive, self.a, self.b, self.axes, self.alpha)
         }
@@ -108,7 +135,7 @@ where
 
 impl<T> Contract<T> for Naive
 where
-    T: ComplexFloat + Zero + One + MulAdd<Output = T>,
+    T: ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
 {
     fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
@@ -206,18 +233,30 @@ where
     {
         let free: std::collections::HashSet<u8> = indices_c.iter().copied().collect();
 
+        // let axes_a: Vec<usize> = indices_a
+        //     .iter()
+        //     .enumerate()
+        //     .filter(|(_, idx)| !free.contains(*idx))
+        //     .map(|(pos, _)| pos)
+        //     .collect();
+
         let axes_a: Vec<usize> = indices_a
             .iter()
-            .enumerate()
-            .filter(|(_, idx)| !free.contains(*idx))
-            .map(|(pos, _)| pos)
+            .filter(|idx| !free.contains(*idx))
+            .map(|&idx| idx as usize) // <-- valeur logique
             .collect();
+
+        // let axes_b: Vec<usize> = indices_b
+        //     .iter()
+        //     .enumerate()
+        //     .filter(|(_, idx)| !free.contains(*idx))
+        //     .map(|(pos, _)| pos)
+        //     .collect();
 
         let axes_b: Vec<usize> = indices_b
             .iter()
-            .enumerate()
-            .filter(|(_, idx)| !free.contains(*idx))
-            .map(|(pos, _)| pos)
+            .filter(|idx| !free.contains(*idx))
+            .map(|&idx| idx as usize) // <-- valeur logique
             .collect();
 
         NaiveContractBuilder {

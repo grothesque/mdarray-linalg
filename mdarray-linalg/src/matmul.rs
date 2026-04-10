@@ -40,7 +40,7 @@ use std::ops::AddAssign;
 
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
-use num_traits::{MulAdd, One, Zero};
+use num_traits::{FloatConst, MulAdd, One, Zero};
 
 /// Tensor contraction and related operations
 pub trait Contract<T: One + MulAdd<Output = T>> {
@@ -653,4 +653,150 @@ where
         *axis_map = update_axis_map(axis_map, &cur_axes, diag.shape().dims().len());
         (diag.to_owned().into(), diag_ax)
     }
+}
+
+pub fn _hypercontract2<T>(
+    bd: impl Contract<T>,
+    a: View<'_, T, DynRank>,
+    b: View<'_, T, DynRank>,
+    axes_a_in: &[usize],
+    axes_b_in: &[usize],
+    // edges: &[HyperEdge],
+) -> Array<T, DynRank>
+where
+    T: Copy + Zero + One + Sum + AddAssign + MulAdd<Output = T> + ComplexFloat,
+{
+    // Owned buffers for A and B. Allocated only when a transformation
+    // (diagonal extraction or summation) actually modifies the tensor
+    let mut a_owned: Option<Array<T, DynRank>> = None;
+    let mut b_owned: Option<Array<T, DynRank>> = None;
+
+    // map_x[i] = current position of original axis i in the transformed tensor.
+    // Initialised to the identity: no transformation has occurred yet.
+    let mut map_a: Vec<usize> = (0..a.shape().dims().len()).collect();
+    let mut map_b: Vec<usize> = (0..b.shape().dims().len()).collect();
+
+    let edges = &axes_to_hyperedges(axes_a_in, axes_b_in);
+
+    // Contraction axis pairs accumulated from (Some, Some) edges,
+    // consumed in one shot by the final tensordot.
+    let mut axes_a: Vec<usize> = Vec::new();
+    let mut axes_b: Vec<usize> = Vec::new();
+
+    for edge in edges {
+        let (idx_a, idx_b) = edge;
+
+        match (idx_a, idx_b) {
+            // Delta attached to A only: diagonal-sum on A, no contraction with B.
+            (Some(axes), None) => {
+                let view = a_owned
+                    .as_ref()
+                    .map(|o| o.expr())
+                    .unwrap_or_else(|| a.clone());
+                a_owned = Some(apply_hypersum(&view, axes, &mut map_a));
+            }
+            // Delta attached to B only: diagonal-sum on B, no contraction with A.
+            (None, Some(axes)) => {
+                let view = b_owned
+                    .as_ref()
+                    .map(|o| o.expr())
+                    .unwrap_or_else(|| b.clone());
+                b_owned = Some(apply_hypersum(&view, axes, &mut map_b));
+            }
+            // Delta bridges A and B: prepare one contraction axis on each side.
+            // The actual dot-product is deferred to the tensordot call below.
+            (Some(axes_a_idx), Some(axes_b_idx)) => {
+                let ax_a = {
+                    let view = a_owned
+                        .as_ref()
+                        .map(|o| o.expr())
+                        .unwrap_or_else(|| a.clone());
+                    let (arr, ax) = extract_hyperdiag(view, axes_a_idx, &mut map_a);
+                    a_owned = Some(arr);
+                    ax
+                };
+                let ax_b = {
+                    let view = b_owned
+                        .as_ref()
+                        .map(|o| o.expr())
+                        .unwrap_or_else(|| b.clone());
+                    let (arr, ax) = extract_hyperdiag(view, axes_b_idx, &mut map_b);
+                    b_owned = Some(arr);
+                    ax
+                };
+                axes_a.push(ax_a);
+                axes_b.push(ax_b);
+            }
+
+            (None, None) => {}
+        }
+    }
+
+    // Final tensordot: contracts all (Some, Some) edge axes simultaneously.
+    let final_a = a_owned
+        .as_ref()
+        .map(|o| o.expr())
+        .unwrap_or_else(|| a.clone());
+    let final_b = b_owned
+        .as_ref()
+        .map(|o| o.expr())
+        .unwrap_or_else(|| b.clone());
+
+    _contract(
+        bd,
+        &final_a,
+        &final_b,
+        Axes::SpecificOwned(axes_a, axes_b),
+        T::one(),
+    )
+}
+
+// fn axes_to_hyperedges(
+//     axes_a: &[usize],
+//     axes_b: &[usize],
+// ) -> Vec<(Option<Vec<usize>>, Option<Vec<usize>>)> {
+//     // axes_a is dense and monotone: values are 0,1,2,... in first-occurrence order.
+//     // axes_b values must have already appeared in axes_a (per the contract invariant).
+//     let mut edges: Vec<(Option<Vec<usize>>, Option<Vec<usize>>)> = Vec::new();
+
+//     for (pos, &idx) in axes_a.iter().enumerate() {
+//         if idx == edges.len() {
+//             edges.push((Some(Vec::new()), None));
+//         }
+//         edges[idx].0.as_mut().unwrap().push(pos);
+//     }
+
+//     for (pos, &idx) in axes_b.iter().enumerate() {
+//         edges[idx].1.get_or_insert_with(Vec::new).push(pos);
+//     }
+
+//     edges
+// }
+
+fn axes_to_hyperedges(
+    axes_a: &[usize],
+    axes_b: &[usize],
+) -> Vec<(Option<Vec<usize>>, Option<Vec<usize>>)> {
+    // axes_a may have gaps after free-index filtering, so we remap values to
+    // a dense 0-based sequence in first-occurrence order.
+    let mut remap: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+    let mut edges: Vec<(Option<Vec<usize>>, Option<Vec<usize>>)> = Vec::new();
+
+    for (pos, &idx) in axes_a.iter().enumerate() {
+        let dense_idx = *remap.entry(idx).or_insert_with(|| {
+            edges.push((Some(Vec::new()), None));
+            edges.len() - 1
+        });
+        edges[dense_idx].0.as_mut().unwrap().push(pos);
+    }
+
+    for (pos, &idx) in axes_b.iter().enumerate() {
+        let dense_idx = *remap.entry(idx).or_insert_with(|| {
+            edges.push((None, Some(Vec::new())));
+            edges.len() - 1
+        });
+        edges[dense_idx].1.get_or_insert_with(Vec::new).push(pos);
+    }
+
+    edges
 }

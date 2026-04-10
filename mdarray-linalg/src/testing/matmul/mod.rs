@@ -1,4 +1,4 @@
-use mdarray::{Array, DArray, expr, expr::Expression as _};
+use mdarray::{Array, DArray, array, expr, expr::Expression as _};
 use num_complex::Complex64;
 
 use super::common::*;
@@ -79,4 +79,92 @@ pub fn create_hermitian_matrix_complex(size: usize) -> DArray<Complex64, 2> {
         }
     }
     matrix
+}
+
+pub fn contract_einsum_matrix_multiplication_impl(backend: &impl Contract<f64>) {
+    // ij,jk->ik
+    let a = array![[1., 2.], [3., 4.]].into_dyn();
+    let b = array![[5., 6.], [7., 8.]].into_dyn();
+    let expected = array![[19., 22.], [43., 50.]].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1], &[1, 2], &[0, 2]).eval();
+    assert_eq!(result, expected);
+}
+
+pub fn contract_einsum_full_contraction_impl(backend: &impl Contract<f64>) {
+    // ij,ij->
+    let a = array![[1., 2.], [3., 4.]].into_dyn();
+    let b = array![[5., 6.], [7., 8.]].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1], &[0, 1], &[]).eval();
+    assert_eq!(result.into_scalar(), 70.);
+}
+
+pub fn contract_einsum_outer_product_impl(backend: &impl Contract<f64>) {
+    // i,j->ij
+    let a = array![1., 2.].into_dyn();
+    let b = array![3., 4.].into_dyn();
+    let expected = array![[3., 4.], [6., 8.]].into_dyn();
+    let result = backend.contract(&a, &b, &[0], &[1], &[0, 1]).eval();
+    assert_eq!(result, expected);
+}
+
+pub fn contract_einsum_trace_diagonal_impl(backend: &impl Contract<f64>) {
+    // ijj,ij-> = 32
+    let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
+    let b = array![[0., 1.], [2., 3.]].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1, 1], &[0, 1], &[]).eval();
+    assert_eq!(result.into_scalar(), 32.);
+}
+
+pub fn contract_einsum_index_relabelling_impl(backend: &impl Contract<f64>) {
+    // Same as above with permuted label assignments: result must be identical.
+    let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
+    let b = array![[0., 1.], [2., 3.]].into_dyn();
+    let result = backend.contract(&a, &b, &[1, 0, 0], &[1, 0], &[]).eval();
+    assert_eq!(result.into_scalar(), 32.);
+}
+
+pub fn contract_einsum_partial_trace_then_contract_impl(backend: &impl Contract<f64>) {
+    // ijj,ik->k  expected = [22, 36]
+    let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
+    let b = array![[0., 1.], [2., 3.]].into_dyn();
+    let expected = array![22., 36.].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1, 1], &[0, 2], &[2]).eval();
+    assert_eq!(result, expected);
+}
+
+pub fn contract_einsum_cross_diagonal_impl(backend: &impl Contract<f64>) {
+    // ijj,iij-> = 76
+    let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
+    let b = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1, 1], &[0, 0, 1], &[]).eval();
+    assert_eq!(result.into_scalar(), 76.);
+}
+
+pub fn contract_einsum_vector_result_impl(backend: &impl Contract<f64>) {
+    // ijjj,ijkl->l
+    let a = mdarray::DArray::<f64, 4>::from_fn([2, 2, 2, 2], |i| {
+        (i[0] * 8 + i[1] * 4 + i[2] * 2 + i[3]) as f64
+    })
+    .into_dyn();
+    let b = mdarray::DArray::<f64, 4>::from_fn([2, 2, 2, 2], |i| {
+        (i[0] * 8 + i[1] * 4 + i[2] * 2 + i[3]) as f64
+    })
+    .into_dyn();
+
+    let mut expected = [0f64; 2];
+    for l in 0..2 {
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    expected[l] +=
+                        (i * 8 + j * 4 + j * 2 + j) as f64 * (i * 8 + j * 4 + k * 2 + l) as f64;
+                }
+            }
+        }
+    }
+
+    let result = backend
+        .contract(&a, &b, &[0, 1, 1, 1], &[0, 1, 2, 3], &[3])
+        .eval();
+    assert_eq!(result, array![expected[0], expected[1]].into_dyn());
 }
