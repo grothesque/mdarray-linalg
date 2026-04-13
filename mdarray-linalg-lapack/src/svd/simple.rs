@@ -16,7 +16,7 @@ pub fn gsvd<
     Lvt: Layout,
 >(
     a: &mut Slice<T, (D, D), La>,
-    s: &mut Slice<T, (D, D), Ls>,
+    s: &mut Slice<T, (D,), Ls>,
     mut u: Option<&mut Slice<T, (D, D), Lu>>,
     mut vt: Option<&mut Slice<T, (D, D), Lvt>>,
     config: SVDConfig,
@@ -44,13 +44,13 @@ where
             let (mu, nu) = (ush.dim(0), ush.dim(1));
 
             let ssh = s.shape();
-            let (ms, ns) = (ssh.dim(0), ssh.dim(1));
+            let ms = ssh.dim(0);
 
             let vtsh = y.shape();
             let (mvt, nvt) = (vtsh.dim(0), vtsh.dim(1));
             assert_eq!(mu, nu, "U must be square (m × m)");
             assert_eq!(mvt, nvt, "VT must be square (n × n)");
-            assert_eq!(ns, ms, "s must be square (min(m,n),min(m,n))");
+            // assert_eq!(ns, ms, "s must be square (min(m,n),min(m,n))");
             assert_eq!(
                 ms, min_mn,
                 "s must have min(m, n) rows (number of singular values)"

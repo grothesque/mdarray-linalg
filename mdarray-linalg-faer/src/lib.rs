@@ -167,8 +167,8 @@ pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
 ///   with LAPACK-style storage, where singular values are typically stored in the first row.
 /// - This function is unsafe internally and assumes that `mat` contains at least `n` elements
 ///   in memory laid out consistently with the given stride.
-pub fn into_faer_diag_mut<T, D0: Dim, D1: Dim, L: Layout>(
-    mat: &mut Slice<T, (D0, D1), L>,
+pub fn into_faer_diag_mut<T, D0: Dim, L: Layout>(
+    mat: &mut Slice<T, (D0,), L>,
 ) -> faer::diag::DiagMut<'static, T> {
     let n = mat.shape().dim(0);
 
@@ -176,5 +176,5 @@ pub fn into_faer_diag_mut<T, D0: Dim, D1: Dim, L: Layout>(
     // - `mat.as_mut_ptr()` must point to a buffer with at least `n` diagonal elements.
     // - `mat.stride(1)` is used as the step between diagonal elements, assuming storage
     //   along the first row for compatibility with LAPACK convention.
-    unsafe { faer::diag::DiagMut::from_raw_parts_mut(mat.as_mut_ptr() as *mut _, n, mat.stride(1)) }
+    unsafe { faer::diag::DiagMut::from_raw_parts_mut(mat.as_mut_ptr() as *mut _, n, mat.stride(0)) }
 }

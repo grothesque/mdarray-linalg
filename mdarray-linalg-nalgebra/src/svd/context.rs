@@ -46,16 +46,16 @@ where
         let u = svd_result.u.ok_or(SVDError::BackendError(-1))?;
         let v_t = svd_result.v_t.ok_or(SVDError::BackendError(-1))?;
 
-        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
         let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
         let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
 
-        let mut s_mda = Array::<T, (D, D)>::from_elem(s_shape, T::default());
+        let mut s_mda = Array::<T, (D,)>::from_elem(s_shape, T::default());
         let mut u_mda = Array::<T, (D, D)>::from_elem(u_shape, T::default());
         let mut vt_mda = Array::<T, (D, D)>::from_elem(vt_shape, T::default());
 
         for i in 0..min_mn {
-            s_mda[[0, i]] = T::from_real(singular_values[i]);
+            s_mda[i] = T::from_real(singular_values[i]);
         }
 
         let u_cols = u.ncols();
@@ -82,7 +82,7 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -90,8 +90,8 @@ where
         let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
         let svd_result = a_nalgebra.svd(false, false);
         let singular_values = svd_result.singular_values;
-        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
-        let mut s_mda = Array::<T, (D, D)>::from_elem(s_shape, T::default());
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
+        let mut s_mda = Array::<T, (D,)>::from_elem(s_shape, T::default());
 
         for i in 0..min_mn {
             s_mda[[0, i]] = T::from_real(singular_values[i]);
@@ -104,7 +104,7 @@ where
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s_mda: &mut Slice<T, (D, D), Ls>,
+        s_mda: &mut Slice<T, (D,), Ls>,
         u_mda: &mut Slice<T, (D, D), Lu>,
         vt_mda: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
@@ -122,7 +122,7 @@ where
         let v_t = svd_result.v_t.ok_or(SVDError::BackendError(-1))?;
 
         for i in 0..min_mn {
-            s_mda[[0, i]] = T::from_real(singular_values[i]);
+            s_mda[i] = T::from_real(singular_values[i]);
         }
 
         let u_cols = u.ncols();
@@ -148,7 +148,7 @@ where
     fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s_mda: &mut Slice<T, (D, D), Ls>,
+        s_mda: &mut Slice<T, (D,), Ls>,
     ) -> Result<(), SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
@@ -161,7 +161,7 @@ where
 
         let singular_values = svd_result.singular_values;
         for i in 0..min_mn {
-            s_mda[[0, i]] = T::from_real(singular_values[i]);
+            s_mda[i] = T::from_real(singular_values[i]);
         }
 
         Ok(())
