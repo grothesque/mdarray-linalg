@@ -7,7 +7,7 @@
 //!     - V^T is n × n       (transpose of right singular vectors, orthogonal)
 //!     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order) in the first row
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dense, Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 
@@ -30,7 +30,7 @@ where
         let (m, n) = (ash.dim(0), ash.dim(1));
         let min_mn = m.min(n);
 
-        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
         let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
         let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
 
@@ -45,14 +45,14 @@ where
     }
 
     // Computes only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D, D)>, SVDError> {
+    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
         let min_mn = m.min(n);
 
         // Only allocate space for singular values
-        let s_shape = <(D, D) as Shape>::from_dims(&[min_mn, min_mn]);
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
         let mut s = Array::from_elem(s_shape, T::default());
 
         match gsvd::<T, D, L, Dense, Dense, Dense>(a, &mut s, None, None, self.svd_config) {
@@ -65,7 +65,7 @@ where
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D, D), Ls>,
+        s: &mut Slice<T, (D,), Ls>,
         u: &mut Slice<T, (D, D), Lu>,
         vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
@@ -76,7 +76,7 @@ where
     fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D, D), Ls>,
+        s: &mut Slice<T, (D,), Ls>,
     ) -> Result<(), SVDError> {
         gsvd::<T, D, L, Ls, Dense, Dense>(a, s, None, None, self.svd_config)
     }

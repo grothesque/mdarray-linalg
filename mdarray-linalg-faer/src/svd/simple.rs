@@ -15,7 +15,7 @@ pub fn svd_faer<
     Lvt: Layout,
 >(
     a: &Slice<T, (D, D), La>,
-    s_mda: &mut Slice<T, (D, D), Ls>,
+    s_mda: &mut Slice<T, (D,), Ls>,
     u_mda: Option<&mut Slice<T, (D, D), Lu>>,
     vt_mda: Option<&mut Slice<T, (D, D), Lvt>>,
 ) -> Result<(), SVDError> {
