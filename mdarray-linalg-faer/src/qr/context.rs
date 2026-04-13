@@ -8,7 +8,7 @@
 
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::{identity, into_i32, qr::QR};
+use mdarray_linalg::{into_i32, qr::QR};
 use num_complex::ComplexFloat;
 
 use super::simple::qr_faer;

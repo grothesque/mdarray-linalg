@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::{DArray, Dense, Dyn, darray};
+use mdarray::{DArray, Dense, Dyn};
 use num_complex::{Complex, ComplexFloat};
 use rand::Rng;
 

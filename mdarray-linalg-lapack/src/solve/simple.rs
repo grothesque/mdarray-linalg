@@ -34,8 +34,6 @@ where
 
     let mut b_col_major = to_col_major(b);
 
-    dbg!("ici");
-
     unsafe {
         T::lapack_gesv(
             into_i32(n),

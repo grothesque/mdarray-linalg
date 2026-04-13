@@ -26,7 +26,6 @@ where
         let ash = *a.shape();
         let m = ash.dim(0);
         let n = ash.dim(1);
-        let min_mn = m.min(n);
 
         // let mut q = Array::<T, (D0, usize)>::from_elem([m, m], T::zero());
         // let mut r = Array::<T, (usize, D1)>::from_elem([m, m], T::zero());

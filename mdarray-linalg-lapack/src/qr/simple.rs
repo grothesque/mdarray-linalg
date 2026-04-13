@@ -1,6 +1,6 @@
 use crate::QRConfig;
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::{into_i32, transpose_in_place};
+use mdarray_linalg::into_i32;
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};
@@ -31,10 +31,10 @@ pub fn geqrf<
     };
 
     let qsh = *q.shape();
-    let (mq, nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
+    let (_mq, _nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
 
     let rsh = *r.shape();
-    let (mr, nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
+    let (_mr, _nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
 
     // assert_eq!(mq, nq, "Q must be square (m × m)");
     // assert_eq!(mr, min_mn, "R must have min(m,n) rows");
@@ -137,7 +137,4 @@ pub fn geqrf<
             q[[i, j]] = a_col[j * (m as usize) + i];
         }
     }
-
-    dbg!(q.shape());
-    dbg!(a.shape());
 }
