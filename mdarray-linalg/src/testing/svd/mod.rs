@@ -5,7 +5,7 @@ use rand::Rng;
 
 use super::common::naive_matmul;
 use crate::{
-    assert_complex_matrix_eq, assert_matrix_eq, pretty_print,
+    assert_complex_matrix_eq, assert_matrix_eq, diag, pretty_print,
     svd::{SVD, SVDDecomp},
 };
 
@@ -30,7 +30,7 @@ where
         sigma[[i, i]] = s[i];
     }
 
-    // dbg!(&sigma);
+    // let mut sigma = diag(&s);
 
     if debug_print {
         println!("=== A original ===");

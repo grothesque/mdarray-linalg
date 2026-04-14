@@ -5,14 +5,13 @@
 //! exposed because they can be generally useful, but this is not meant to be
 //! a complete collection of linear algebra utilities at this time.
 
-use mdarray::{Dim, Layout, Shape, Slice, Array, tensor};
+use mdarray::{Array, Dim, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
 use num_traits::{One, Zero};
 
 /// Displays a numeric `mdarray` in a human-readable format (NumPy-style)
-pub fn pretty_print<T: ComplexFloat + std::fmt::Display, D0: Dim, D1: Dim>(
-    mat: &Array<T, (D0, D1)>,
-) where
+pub fn pretty_print<T: ComplexFloat + std::fmt::Display, D0: Dim, D1: Dim>(mat: &Array<T, (D0, D1)>)
+where
     <T as num_complex::ComplexFloat>::Real: std::fmt::Display,
 {
     let shape = mat.shape();
@@ -363,4 +362,26 @@ pub fn unravel_index<T, S: Shape, L: Layout>(x: &Slice<T, S, L>, mut flat: usize
     }
 
     coords
+}
+
+/// Creates a diagonal matrix from a 1D slice, placing its elements on the main diagonal.
+///
+/// # Examples
+/// ```
+/// use mdarray::{Const, array, view};
+/// use mdarray_linalg::diag;
+///
+/// let v = view![1., 2., 3.];
+/// let d = diag(&v);
+/// assert_eq!(d, array![[1.,0.,0.],[0.,2.,0.],[0.,0.,3.]]);
+/// ```
+pub fn diag<T: Zero + One + Clone, D: Dim>(v: &Slice<T, (D,)>) -> Array<T, (D, D)> {
+    let n = v.dim(0);
+    Array::<T, (D, D)>::from_fn(<(D, D) as Shape>::from_dims(&[n, n]), |i| {
+        if i[0] == i[1] {
+            v[i[0]].clone()
+        } else {
+            T::zero()
+        }
+    })
 }
