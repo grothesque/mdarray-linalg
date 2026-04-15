@@ -1,4 +1,4 @@
-use mdarray::{DArray, Array, expr, expr::Expression as _};
+use mdarray::{Array, DArray, expr, expr::Expression as _};
 use num_complex::Complex64;
 
 use super::common::*;
@@ -38,7 +38,7 @@ pub fn create_symmetric_matrix_f64(size: usize) -> DArray<f64, 2> {
         for j in 0..size {
             let value = ((i + 1) * (j + 1)) as f64;
             matrix[[i, j]] = value;
-            matrix[[j, i]] = value; // Assurer la symétrie
+            matrix[[j, i]] = value;
         }
     }
     matrix

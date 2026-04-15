@@ -5,7 +5,7 @@ use rand::Rng;
 
 use super::common::naive_matmul;
 use crate::{
-    assert_complex_matrix_eq, assert_matrix_eq, diag, pretty_print,
+    assert_complex_matrix_eq, assert_matrix_eq, pretty_print,
     svd::{SVD, SVDDecomp},
 };
 

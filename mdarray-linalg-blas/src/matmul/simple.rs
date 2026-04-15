@@ -3,7 +3,7 @@
 use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_DIAG, CBLAS_LAYOUT, CBLAS_SIDE, CBLAS_TRANSPOSE, CBLAS_UPLO};
-use mdarray::{Dim, Layout, Slice, Array};
+use mdarray::{Array, Dense, Dim, Layout, Slice};
 use mdarray_linalg::{dims2, dims3, into_i32, trans_stride};
 use num_complex::ComplexFloat;
 
@@ -25,6 +25,16 @@ pub fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     D2: Dim,
 {
     let (m, n, k) = dims3(*a.shape(), *b.shape(), *c.shape());
+
+    if a.stride(0) != 1 && a.stride(1) != 1 {
+        let a_owned: Array<T, (D0, D1)> = a.to_array();
+        return gemm(alpha, &a_owned, b, beta, c);
+    }
+
+    if b.stride(0) != 1 && b.stride(1) != 1 {
+        let b_owned: Array<T, (D1, D2)> = b.to_array();
+        return gemm(alpha, a, &b_owned, beta, c);
+    }
 
     let row_major = c.stride(1) == 1;
     assert!(
@@ -83,6 +93,16 @@ where
     D2: Dim,
 {
     let (m, n, k) = dims3(*a.shape(), *b.shape(), *c.shape());
+
+    if a.stride(0) != 1 && a.stride(1) != 1 {
+        let a_owned: Array<T, (D0, D1)> = a.to_array();
+        return gemm_uninit::<T, Dense, Lb, Lc, D0, D1, D2>(alpha, &a_owned, b, beta, c);
+    }
+
+    if b.stride(0) != 1 && b.stride(1) != 1 {
+        let b_owned: Array<T, (D1, D2)> = b.to_array();
+        return gemm_uninit::<T, La, Dense, Lc, D0, D1, D2>(alpha, a, &b_owned, beta, c);
+    }
 
     debug_assert!(c.stride(1) == 1);
 

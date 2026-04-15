@@ -1,4 +1,4 @@
-use mdarray::{Array, expr::Expression, tensor};
+use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
     matmul::{Side, Triangle, Type},
     prelude::*,
@@ -235,4 +235,27 @@ fn test_gemm() {
             }
         }
     }
+}
+
+#[test]
+pub fn non_contiguous_along_both_axis() {
+    let bufa: Vec<f64> = vec![1., 0., 3., 0., 2., 0., 4.];
+
+    let av: View<'_, _, (usize, usize), Strided> = unsafe {
+        let sh = <(usize, usize) as Shape>::from_dims(&[2, 2]);
+        let mapping = StridedMapping::new(sh, &[2, 4]);
+        View::new_unchecked(bufa.as_ptr(), mapping)
+    };
+
+    let bufb: Vec<f64> = vec![5., 0., 7., 0., 6., 0., 8.];
+
+    let bv: View<'_, _, (usize, usize), Strided> = unsafe {
+        let sh = <(usize, usize) as Shape>::from_dims(&[2, 2]);
+        let mapping = StridedMapping::new(sh, &[2, 4]);
+        View::new_unchecked(bufb.as_ptr(), mapping)
+    };
+
+    let c = Blas.matmul(&av, &bv).eval();
+
+    assert_eq!(c, array![[19., 22.], [43., 50.]]);
 }
