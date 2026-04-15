@@ -81,6 +81,11 @@ where
         })
     }
 
+    /// Compute thin SVD with new allocated matrices
+    fn svd_thin(&self, _a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
+        unimplemented!()
+    }
+
     /// Compute only singular values with new allocated matrix
     fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
         let ash = *a.shape();

@@ -54,7 +54,34 @@ where
         // In this context, using `MaybeUninit` adds complexity and potential for undefined behavior
         // with no real performance gain, so we stick to `T::default()`.
 
-        match svd_faer(a, &mut s_mda, Some(&mut u_mda), Some(&mut vt_mda)) {
+        match svd_faer(a, &mut s_mda, Some(&mut u_mda), Some(&mut vt_mda), true) {
+            Err(_) => Err(SVDError::BackendDidNotConverge {
+                superdiagonals: (0),
+            }),
+            Ok(_) => Ok(SVDDecomp {
+                s: s_mda,
+                u: u_mda,
+                vt: vt_mda,
+            }),
+        }
+    }
+
+    /// Compute thin SVD with new allocated matrices
+    fn svd_thin(&self, a: &mut Slice<T, (D, D), L>) -> Result<SVDDecomp<T, D>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
+        let min_mn = m.min(n);
+
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
+        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
+        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
+
+        let mut s_mda = Array::from_elem(s_shape, T::default());
+        let mut u_mda = Array::from_elem(u_shape, T::default());
+        let mut vt_mda = Array::from_elem(vt_shape, T::default());
+
+        match svd_faer(a, &mut s_mda, Some(&mut u_mda), Some(&mut vt_mda), false) {
             Err(_) => Err(SVDError::BackendDidNotConverge {
                 superdiagonals: (0),
             }),
@@ -80,7 +107,7 @@ where
         // Same rationale as in `svd`: `T::default()` is used instead of `MaybeUninit`,
         // because LLVM already optimizes default initializations effectively.
 
-        match svd_faer::<T, D, L, Dense, Dense, Dense>(a, &mut s_mda, None, None) {
+        match svd_faer::<T, D, L, Dense, Dense, Dense>(a, &mut s_mda, None, None, false) {
             Err(_) => Err(SVDError::BackendDidNotConverge {
                 superdiagonals: (0),
             }),
@@ -96,7 +123,8 @@ where
         u: &mut Slice<T, (D, D), Lu>,
         vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, D, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt))
+        let compute_svd_full_vectors = u.shape().0 == u.shape().1;
+        svd_faer::<T, D, L, Ls, Lu, Lvt>(a, s, Some(u), Some(vt), compute_svd_full_vectors)
     }
 
     /// Compute only singular values, overwriting existing matrix
@@ -105,6 +133,6 @@ where
         a: &mut Slice<T, (D, D), L>,
         s: &mut Slice<T, (D,), Ls>,
     ) -> Result<(), SVDError> {
-        svd_faer::<T, D, L, Ls, Dense, Dense>(a, s, None, None)
+        svd_faer::<T, D, L, Ls, Dense, Dense>(a, s, None, None, false)
     }
 }

@@ -1,4 +1,8 @@
 //! Singular Value Decomposition (SVD)
+/// The matrix A is decomposed as A = U * S * V^T where:
+/// - `s` contains the singular values (1D vector)
+/// - `u` contains the left singular vectors (matrix U)
+/// - `vt` contains the transposed right singular vectors (matrix V^T)
 use mdarray::{Array, Dim, Layout, Slice};
 use thiserror::Error;
 
@@ -32,14 +36,13 @@ pub trait SVD<T, D: Dim, L: Layout> {
     /// Compute full SVD with new allocated matrices
     fn svd(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D>;
 
+    /// Compute thin SVD with new allocated matrices
+    fn svd_thin(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D>;
+
     /// Compute only singular values with new allocated matrix
     fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError>;
 
-    /// Compute full SVD, overwriting existing matrices
-    /// The matrix A is decomposed as A = U * S * V^T where:
-    /// - `s` contains the singular values (diagonal matrix S)
-    /// - `u` contains the left singular vectors (matrix U)
-    /// - `vt` contains the transposed right singular vectors (matrix V^T)
+    /// Compute SVD, overwriting existing matrices
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
@@ -49,7 +52,6 @@ pub trait SVD<T, D: Dim, L: Layout> {
     ) -> Result<(), SVDError>;
 
     /// Compute only singular values, overwriting existing matrix
-    /// Computes only the diagonal elements of the S matrix from the SVD decomposition.
     fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,

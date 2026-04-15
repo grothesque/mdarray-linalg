@@ -20,6 +20,7 @@ pub fn gsvd<
     mut u: Option<&mut Slice<T, (D, D), Lu>>,
     mut vt: Option<&mut Slice<T, (D, D), Lvt>>,
     config: SVDConfig,
+    compute_full_svd_vectors: bool,
 ) -> Result<(), SVDError>
 where
     T::Real: Into<T>,
@@ -37,6 +38,8 @@ where
         SVDConfig::DivideConquer => true,
         SVDConfig::Jacobi => false,
     };
+
+    let compute_full_svd_vectors_lapack = if compute_full_svd_vectors { 'A' } else { 'S' };
 
     let job = match (&u, &vt) {
         (Some(x), Some(y)) => {
@@ -60,7 +63,7 @@ where
                 nvt, n,
                 "VT must have the same number of columns as A: VT(n, n)"
             );
-            'A'
+            compute_full_svd_vectors_lapack
         }
         (None, None) => 'N',
         _ => return Err(SVDError::InconsistentUV),

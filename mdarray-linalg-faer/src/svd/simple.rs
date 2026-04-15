@@ -18,6 +18,7 @@ pub fn svd_faer<
     s_mda: &mut Slice<T, (D,), Ls>,
     u_mda: Option<&mut Slice<T, (D, D), Lu>>,
     vt_mda: Option<&mut Slice<T, (D, D), Lvt>>,
+    full: bool,
 ) -> Result<(), SVDError> {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));
@@ -25,6 +26,12 @@ pub fn svd_faer<
     let a_faer = into_faer(a);
     let par = faer::get_global_parallelism();
     // let par = faer::Par::Seq; // Faster for small matrices
+
+    let compute_svd_vectors = if full {
+        faer::linalg::svd::ComputeSvdVectors::Full
+    } else {
+        faer::linalg::svd::ComputeSvdVectors::Thin
+    };
 
     match (u_mda, vt_mda) {
         (Some(x), Some(y)) => {
@@ -41,8 +48,8 @@ pub fn svd_faer<
                 MemStack::new(&mut MemBuffer::new(faer::linalg::svd::svd_scratch::<T>(
                     m,
                     n,
-                    faer::linalg::svd::ComputeSvdVectors::Full,
-                    faer::linalg::svd::ComputeSvdVectors::Full,
+                    compute_svd_vectors,
+                    compute_svd_vectors,
                     par,
                     faer::prelude::default(),
                 ))),

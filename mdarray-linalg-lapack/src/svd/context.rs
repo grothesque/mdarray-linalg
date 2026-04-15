@@ -38,7 +38,41 @@ where
         let mut u = Array::from_elem(u_shape, T::default());
         let mut vt = Array::from_elem(vt_shape, T::default());
 
-        match gsvd(a, &mut s, Some(&mut u), Some(&mut vt), self.svd_config) {
+        match gsvd(
+            a,
+            &mut s,
+            Some(&mut u),
+            Some(&mut vt),
+            self.svd_config,
+            true,
+        ) {
+            Ok(_) => Ok(SVDDecomp { s, u, vt }),
+            Err(e) => Err(e),
+        }
+    }
+
+    // Computes thin SVD with new allocated matrices
+    fn svd_thin(&self, a: &mut Slice<T, (D, D), L>) -> Result<SVDDecomp<T, D>, SVDError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+        let min_mn = m.min(n);
+
+        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
+        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
+        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
+
+        let mut s = Array::from_elem(s_shape, T::default());
+        let mut u = Array::from_elem(u_shape, T::default());
+        let mut vt = Array::from_elem(vt_shape, T::default());
+
+        match gsvd(
+            a,
+            &mut s,
+            Some(&mut u),
+            Some(&mut vt),
+            self.svd_config,
+            false,
+        ) {
             Ok(_) => Ok(SVDDecomp { s, u, vt }),
             Err(e) => Err(e),
         }
@@ -55,7 +89,7 @@ where
         let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
         let mut s = Array::from_elem(s_shape, T::default());
 
-        match gsvd::<T, D, L, Dense, Dense, Dense>(a, &mut s, None, None, self.svd_config) {
+        match gsvd::<T, D, L, Dense, Dense, Dense>(a, &mut s, None, None, self.svd_config, false) {
             Ok(_) => Ok(s),
             Err(err) => Err(err),
         }
@@ -69,7 +103,15 @@ where
         u: &mut Slice<T, (D, D), Lu>,
         vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
-        gsvd(a, s, Some(u), Some(vt), self.svd_config)
+        let compute_full_svd_vectors = u.shape().0 == u.shape().1;
+        gsvd(
+            a,
+            s,
+            Some(u),
+            Some(vt),
+            self.svd_config,
+            compute_full_svd_vectors,
+        )
     }
 
     // Computes only singular values, overwriting existing matrix
@@ -78,6 +120,6 @@ where
         a: &mut Slice<T, (D, D), L>,
         s: &mut Slice<T, (D,), Ls>,
     ) -> Result<(), SVDError> {
-        gsvd::<T, D, L, Ls, Dense, Dense>(a, s, None, None, self.svd_config)
+        gsvd::<T, D, L, Ls, Dense, Dense>(a, s, None, None, self.svd_config, false)
     }
 }
