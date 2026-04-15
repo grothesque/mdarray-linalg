@@ -1,5 +1,6 @@
 use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
+    matmul,
     matmul::{Side, Triangle, Type},
     prelude::*,
     testing::{common::*, matmul::*},
@@ -258,4 +259,18 @@ pub fn non_contiguous_along_both_axis() {
     let c = Blas.matmul(&av, &bv).eval();
 
     assert_eq!(c, array![[19., 22.], [43., 50.]]);
+}
+
+#[test]
+fn macro_matmul() {
+    let a = create_test_matrix_f64([3, 5]).eval();
+    let b = create_test_matrix_f64([5, 4]).eval();
+    let c = create_test_matrix_f64([4, 2]).eval();
+    let d = create_test_matrix_f64([2, 6]).eval();
+
+    let result = matmul!(Blas, &a, &b, &c, &d);
+
+    let expected = naive_matmul(&a, &naive_matmul(&b, &naive_matmul(&c, &d)));
+
+    assert_eq!(result, expected);
 }

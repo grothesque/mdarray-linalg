@@ -19,20 +19,20 @@
 //! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra |
 //! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|
 //! | **▶︎ Basic vector/matrix operations**              ||||||
-//! | [Matrix/vector multiplications](crate::matvec::MatVec) | ✅ | ⬜ | ✅ | 🔧 | 🔧  |
-//! | [Operations on vectors](crate::matvec::VecOps)     | ✅ | ⬜ | 🔧 | 🔧 | 🔧  |
-//! | [Matrix multiplication](crate::matmul::MatMul)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
-//! | [Argmax](crate::matvec::Argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ⬜  |
+//! | [Matrix/vector multiplications](crate::matvec) | ✅ | ⬜ | ✅ | 🔧 | 🔧  |
+//! | [Operations on vectors](crate::matvec)     | ✅ | ⬜ | 🔧 | 🔧 | 🔧  |
+//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
+//! | [Argmax](crate::matvec)                    | ✅ | ⬜ | ✅ | ⬜ | ⬜  |
 //! | **▶︎ Linear algebra**                              |||||
-//! | [Eigen decomposition](crate::eig::Eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [SVD decomposition](crate::svd::SVD)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [LU decomposition](crate::lu::LU)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Solve and inverse](crate::solve::Solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [QR decomposition](crate::qr::QR)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Cholesky decomposition](crate::lu::LU)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
-//! | [Schur decomposition](crate::eig::Eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
+//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
+//! | [LU decomposition](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Solve and inverse](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
+//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
 //! | **▶︎ Advanced**                                   ||||||
-//! | [Tensor contraction](crate::matmul::MatMul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
+//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented
@@ -78,20 +78,10 @@
 //!     let mut c = Naive.matmul(&a, &b).eval(); // C ← A ✕ B
 //!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
 //!     println!("A * B + B * A = {:?}", c);
+//!
+//!     let d = matmul!(Naive, &a, &b, &c); // for concise chained matrix multiplication.
 //! }
 //! ```
-//!Some notes:
-//!
-//! - **Memory usage**: Each trait provides a method returning new
-//!   matrices and an write variant using user-allocated buffers.
-//!   In that last case, output shapes must match exactly.
-//!
-//! - **Backend configuration**: Some accept parameters; for example, SVD
-//!   may choose an optimal algorithm by default, but the user can
-//!   select a specific one if desired.
-//!
-//! - **Errors**: Convergence issues return a Result; other problems
-//!   (dimension mismatch) may panic.
 //!
 //! # Troubleshooting
 //!
