@@ -10,8 +10,14 @@ categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
 build = "build.rs"
 
+[features]
+default = ["cblas-sys-backend"]
+cblas-sys-backend = ["cblas-sys"]
+cblas-inject-backend = ["cblas-inject"]
+
 [dependencies]
-cblas-sys.workspace = true
+cblas-sys = { workspace = true, optional = true }
+cblas-inject = { workspace = true, optional = true }
 mdarray-linalg.workspace = true
 mdarray.workspace = true
 num-complex.workspace = true

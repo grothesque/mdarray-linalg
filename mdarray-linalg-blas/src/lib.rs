@@ -48,6 +48,11 @@
 //! println!("Full contraction result (tensordot over all axes): {:?}", result);
 //! ```
 
+#[cfg(feature = "cblas-sys-backend")]
+extern crate cblas_sys;
+#[cfg(feature = "cblas-inject-backend")]
+extern crate cblas_inject as cblas_sys;
+
 pub mod matmul;
 pub use matmul::{gemm, gemm_uninit};
 pub mod matvec;
