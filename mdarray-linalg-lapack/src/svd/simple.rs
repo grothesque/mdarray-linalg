@@ -138,7 +138,7 @@ where
                 superdiagonals: (info),
             })
         } else {
-            if job == 'A' {
+            if job == 'A' || job == 'S' {
                 transpose_in_place(u.unwrap());
                 transpose_in_place(vt.unwrap());
             }
@@ -149,7 +149,7 @@ where
             superdiagonals: (info),
         })
     } else {
-        if job == 'A' {
+        if job == 'A' || job == 'S' {
             transpose_in_place(u.unwrap());
             transpose_in_place(vt.unwrap());
         }
@@ -187,6 +187,8 @@ where
 
     let mut rwork = vec![0.0; T::rwork_len(m, n)];
 
+    let ldvt = if job == 'A' { n } else { m.min(n) };
+
     unsafe {
         T::lapack_gesdd(
             job as i8,
@@ -198,7 +200,7 @@ where
             u_ptr.unwrap() as *mut _,
             m,
             vt_ptr.unwrap() as *mut _,
-            m.min(n), // n,
+            ldvt,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -223,7 +225,7 @@ where
             u_ptr.unwrap() as *mut _,
             m,
             vt_ptr.unwrap() as *mut _,
-            m.min(n), // n,
+            ldvt,
             work.as_mut_ptr() as *mut _,
             lwork as i32,
             rwork.as_mut_ptr() as *mut _,
@@ -263,6 +265,8 @@ where
 
     let mut rwork = vec![0.0; T::rwork_len(m, n)];
 
+    let ldvt = if job == 'A' { n } else { m.min(n) };
+
     // First call to query optimal workspace size
     unsafe {
         T::lapack_gesvd(
@@ -276,7 +280,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            n, // n,
+            ldvt,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -287,7 +291,7 @@ where
     let lwork = T::lwork_from_query(&work[0]);
     let mut work = T::allocate(lwork);
 
-    // Second call with optimal workspace
+    // Actual call
     unsafe {
         T::lapack_gesvd(
             job as i8,
@@ -300,7 +304,7 @@ where
             u_ptr.unwrap_or(null_mut()) as *mut _,
             m,
             vt_ptr.unwrap_or(null_mut()) as *mut _,
-            n, // n,
+            ldvt,
             work.as_mut_ptr() as *mut _,
             lwork,
             rwork.as_mut_ptr() as *mut _,
