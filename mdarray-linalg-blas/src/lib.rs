@@ -54,3 +54,35 @@ pub mod matvec;
 
 #[derive(Default)]
 pub struct Blas;
+
+// use mdarray_linalg::matmul as matmul_macro;
+
+// #[macro_export]
+// macro_rules! matmul {
+
+//     ($a:expr, $b:expr) => {
+//         Blas.matmul($a, $b).eval()
+//     };
+
+//     ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
+//         matmul_macro!($a, $b, $($rest),+)
+//     };
+// }
+
+/// Chains an arbitrary number of matrix multiplications using the Blas backend.
+/// Produces readable code for expressions like `A * B * C` without nested `matmul().eval()` calls.
+#[macro_export]
+macro_rules! matmul {
+    ($a:expr, $b:expr) => {
+        Blas.matmul($a, $b).eval()
+    };
+
+    ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
+        Blas
+            .matmul(
+                $a,
+                &matmul!($b, $($rest),+)
+            )
+            .eval()
+    };
+}

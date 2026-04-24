@@ -1,11 +1,10 @@
 use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
-    matmul,
     matmul::{Side, Triangle, Type},
     prelude::*,
     testing::{common::*, matmul::*},
 };
-use mdarray_linalg_blas::{Blas, gemm};
+use mdarray_linalg_blas::{Blas, gemm, matmul};
 
 #[test]
 fn matmul_complex_with_scaling() {
@@ -268,7 +267,7 @@ fn macro_matmul() {
     let c = create_test_matrix_f64([4, 2]).eval();
     let d = create_test_matrix_f64([2, 6]).eval();
 
-    let result = matmul!(Blas, &a, &b, &c, &d);
+    let result = matmul!(&a, &b, &c, &d);
 
     let expected = naive_matmul(&a, &naive_matmul(&b, &naive_matmul(&c, &d)));
 

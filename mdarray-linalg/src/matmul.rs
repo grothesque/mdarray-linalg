@@ -343,21 +343,3 @@ where
         ab_resh.reshape(keep_shape_a).to_owned().into_dyn().into()
     }
 }
-
-/// Chains an arbitrary number of matrix multiplications using the given backend.
-/// Produces readable code for expressions like `A * B * C` without nested `matmul().eval()` calls.
-#[macro_export]
-macro_rules! matmul {
-    ($backend:expr, $a:expr, $b:expr) => {
-        $backend.matmul($a, $b).eval()
-    };
-
-    ($backend:expr, $a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
-        $backend
-            .matmul(
-                $a,
-                &matmul!($backend, $b, $($rest),+)
-            )
-            .eval()
-    };
-}
