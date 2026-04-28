@@ -1,8 +1,20 @@
 //! Singular Value Decomposition (SVD)
-/// The matrix A is decomposed as A = U * S * V^T where:
-/// - `s` contains the singular values (1D vector)
-/// - `u` contains the left singular vectors (matrix U)
-/// - `vt` contains the transposed right singular vectors (matrix V^T)
+//!
+//! The matrix A is decomposed as `A = U * S * V^T` where:
+//! - `s` contains the singular values (1D vector)
+//! - `u` contains the left singular vectors (matrix U)
+//! - `vt` contains the transposed right singular vectors (matrix V^T)
+//!```rust,ignore
+//!// ----- Singular Value Decomposition (SVD) -----
+//!use mdarray_linalg::svd::SVDDecomp;
+//!use mdarray_linalg::prelude::*; // Import traits anonymously
+//!use mdarray_linalg_backend::{Backend, svd}; // Use the real backend here, Lapack, Faer, ...
+//!
+//!let bd = Backend::default();
+//!let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
+//!// Or the shorter ...
+//!let (s,u,vt) = svd!(&mut a.clone());
+//!```
 use mdarray::{Array, Dim, Layout, Slice};
 use thiserror::Error;
 

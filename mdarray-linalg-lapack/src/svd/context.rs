@@ -58,8 +58,8 @@ where
         let min_mn = m.min(n);
 
         let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
-        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
-        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
+        let u_shape = <(D, D) as Shape>::from_dims(&[m, min_mn]);
+        let vt_shape = <(D, D) as Shape>::from_dims(&[min_mn, n]);
 
         let mut s = Array::from_elem(s_shape, T::default());
         let mut u = Array::from_elem(u_shape, T::default());

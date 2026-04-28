@@ -1,11 +1,11 @@
 //! ```rust
 //! use mdarray::{DArray, tensor};
 //! use mdarray_linalg::prelude::*; // Import traits anonymously
+//! use mdarray_linalg::{Naive, matmul, diag};
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
 //!
-//! // Backends
-//! use mdarray_linalg_lapack::Lapack;
+//! use mdarray_linalg_lapack::{Lapack, svd, eig};
 //! use mdarray_linalg_lapack::SVDConfig;
 //!
 //! let a = tensor![[1., 2.], [3., 4.]];
@@ -22,14 +22,20 @@
 //! println!("Eigenvalues: {:?}", eigenvalues);
 //! if let Some(vectors) = right_eigenvectors {
 //!     println!("Right eigenvectors: {:?}", vectors);
-//! }
+//! } // Or...
+//! let (lambda, v) = eig!(&mut a.clone());
 //!
 //! // ----- Singular Value Decomposition (SVD) -----
 //! let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
 //! let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
 //! println!("Left singular vectors U: {:?}", u);
-//! println!("Right singular vectors V^T: {:?}", vt);
+//! println!("Right singular vectors V^T: {:?}", vt); // Or...
+//! let (s,u,vt) = svd!(&mut a.clone()); // Convenience macro that directly unpacks the SVD.
+//! let b = matmul!(&u, &diag(&s), &vt);
+//!
+//! assert!(((a[[0,1]] - b[[0,1]]) as f64).abs() < 10e-10_f64);
+//!
 //!
 //! // ----- QR Decomposition -----
 //! let (m, n) = *a.shape();
@@ -86,4 +92,35 @@ impl Lapack {
         self.qr_config = config;
         self
     }
+}
+
+/// Convenience macro for SVD decomposition that unwraps the result
+/// directly.  Panics if the decomposition fails.
+#[macro_export]
+macro_rules! svd {
+    ($a:expr) => {{
+        let svdr = Lapack::default().svd_thin($a).expect("SVD failed");
+        (svdr.s, svdr.u, svdr.vt)
+    }};
+    ($a:expr, full) => {{
+        let svdr = Lapack::default().svd($a).expect("SVD failed");
+        (svdr.s, svdr.u, svdr.vt)
+    }};
+}
+
+/// Convenience macro for eigenvalue decomposition.
+/// Panics if the decomposition fails.
+#[macro_export]
+macro_rules! eig {
+    ($a:expr) => {{
+        let eig = Lapack::default()
+            .eig($a)
+            .expect("Eigenvalue decomposition failed");
+
+        let vectors = eig
+            .right_eigenvectors
+            .expect("Eigenvectors were not computed");
+
+        (eig.eigenvalues, vectors)
+    }};
 }

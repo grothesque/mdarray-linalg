@@ -1,10 +1,11 @@
 //! ```rust
 //! use mdarray::{DArray, tensor};
 //! use mdarray_linalg::prelude::*; // Imports traits anonymously
+//! use mdarray_linalg::{Naive, matmul, diag};
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
 //!
-//! use mdarray_linalg_faer::Faer;
+//! use mdarray_linalg_faer::{Faer,svd, eig};
 //!
 //! // Declare two matrices
 //! let a = tensor![[1., 2.], [3., 4.]];
@@ -26,13 +27,17 @@
 //! println!("Eigenvalues: {:?}", eigenvalues);
 //! if let Some(vectors) = right_eigenvectors {
 //!     println!("Right eigenvectors: {:?}", vectors);
-//! }
+//! } // Or ...
+//! let (lambda, v) = eig!(&mut a.clone());
 //!
 //! // ----- Singular Value Decomposition (SVD) -----
 //! let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
 //! println!("Left singular vectors U: {:?}", u);
 //! println!("Right singular vectors V^T: {:?}", vt);
+//! let (s,u,vt) = svd!(&mut a.clone()); // Convenience macro that directly unpacks the SVD.
+//! let b = matmul!(&u, &diag(&s), &vt);
+//! assert!(((a[[0,1]] - b[[0,1]]) as f64).abs() < 10e-10_f64);
 //!
 //! // ----- QR Decomposition -----
 //! let (m, n) = *a.shape();
@@ -195,4 +200,35 @@ macro_rules! matmul {
             )
             .eval()
     };
+}
+
+/// Convenience macro for SVD decomposition that unwraps the result
+/// directly.  Panics if the decomposition fails.
+#[macro_export]
+macro_rules! svd {
+    ($a:expr) => {{
+        let svdr = Faer::default().svd_thin($a).expect("SVD failed");
+        (svdr.s, svdr.u, svdr.vt)
+    }};
+    ($a:expr, full) => {{
+        let svdr = Faer::default().svd($a).expect("SVD failed");
+        (svdr.s, svdr.u, svdr.vt)
+    }};
+}
+
+/// Convenience macro for eigenvalue decomposition.
+/// Panics if the decomposition fails.
+#[macro_export]
+macro_rules! eig {
+    ($a:expr) => {{
+        let eig = Faer::default()
+            .eig($a)
+            .expect("Eigenvalue decomposition failed");
+
+        let vectors = eig
+            .right_eigenvectors
+            .expect("Eigenvectors were not computed");
+
+        (eig.eigenvalues, vectors)
+    }};
 }
