@@ -80,7 +80,7 @@
 //!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
 //!     println!("A * B + B * A = {:?}", c);
 //!
-//!     let d = matmul!(Naive, &a, &b, &c); // for concise chained matrix multiplication.
+//!     let d = matmul!(&a, &b, &c); // for concise chained matrix multiplication.
 //! }
 //! ```
 //!

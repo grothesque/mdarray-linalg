@@ -178,3 +178,21 @@ pub fn into_faer_diag_mut<T, D0: Dim, L: Layout>(
     //   along the first row for compatibility with LAPACK convention.
     unsafe { faer::diag::DiagMut::from_raw_parts_mut(mat.as_mut_ptr() as *mut _, n, mat.stride(0)) }
 }
+
+/// Chains an arbitrary number of matrix multiplications using the Blas backend.
+/// Produces readable code for expressions like `A * B * C` without nested `matmul().eval()` calls.
+#[macro_export]
+macro_rules! matmul {
+    ($a:expr, $b:expr) => {
+        Faer::default().matmul($a, $b).eval()
+    };
+
+    ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
+        Faer::default()
+            .matmul(
+                $a,
+                &matmul!($b, $($rest),+)
+            )
+            .eval()
+    };
+}
