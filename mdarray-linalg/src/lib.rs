@@ -26,8 +26,8 @@
 //! | **▶︎ Linear algebra**                              |||||
 //! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [LU decomposition](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Solve and inverse](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
 //! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |

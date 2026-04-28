@@ -1,5 +1,18 @@
 //! Linear system solving utilities for equations of the form Ax = B
-use mdarray::{Dim, Layout, Slice, Array};
+//!```rust, ignore
+//!use mdarray_linalg_backend::Backend; // Use the real backend here, Lapack, Faer, ...
+//!let bd = Backend::default();
+//!use mdarray_linalg::solve::Solve;
+//!
+//!let a = darray![[2.0_f64, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
+//!let b = darray![[1.0_f64], [2.0], [1.0]];
+//!
+//!let xr = Lapack::default().solve(&mut a.clone(), &b);
+//!
+//!let SolveResult { x, .. } = xr.unwrap();
+//!let ax = Naive.matvec(&a, &x.view(.., 0)).eval(); // Ax = b
+//!```
+use mdarray::{Array, Dim, Layout, Slice};
 use thiserror::Error;
 
 /// Error types related to linear system solving

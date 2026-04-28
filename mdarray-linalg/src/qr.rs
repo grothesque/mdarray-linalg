@@ -1,4 +1,13 @@
 //! QR decomposition
+//!```rust, ignore
+//!use mdarray_linalg_backend::Backend; // Use the real backend here, Lapack, Faer, ...
+//!let bd = Backend::default();
+//!
+//!let a = darray![[2.0_f64, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
+//!
+//!let (q,r) = bd.qr(&mut a.clone()); // A = QR
+//!
+//!```
 use mdarray::{Array, Dim, Layout, Slice};
 
 /// QR decomposition for orthogonal-triangular factorization

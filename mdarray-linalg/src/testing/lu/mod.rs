@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::{DSlice, DArray, Dense, tensor};
+use mdarray::{DArray, DSlice, Dense, tensor};
 use num_complex::ComplexFloat;
 
 use super::common::{naive_matmul, random_matrix};
