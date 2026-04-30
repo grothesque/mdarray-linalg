@@ -30,8 +30,6 @@ where
     La: Layout,
     Lx: Layout,
     T: ComplexFloat,
-    // i8: Into<T::Real>,
-    T::Real: Into<T>,
     D0: Dim,
     D1: Dim,
 {
@@ -121,7 +119,6 @@ where
 impl<T, D0: Dim, D1: Dim> MatVec<T, D0, D1> for Naive
 where
     T: ComplexFloat,
-    T::Real: Into<T>,
 {
     fn matvec<'a, La, Lx>(
         &self,
@@ -288,7 +285,6 @@ impl<
 impl<T, Dx, Dy> Outer<T, Dx, Dy> for Naive
 where
     T: ComplexFloat,
-    T::Real: Into<T>,
     Dx: Dim,
     Dy: Dim,
 {
@@ -329,7 +325,6 @@ where
     Dx: Dim,
     Dy: Dim,
     T: ComplexFloat,
-    T::Real: Into<T>,
 {
     /// `α := α·α'`
     fn scale(mut self, alpha: T) -> Self {
