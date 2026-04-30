@@ -272,7 +272,7 @@ macro_rules! impl_needs_rwork {
             type Elem = $elem;
 
             fn rwork_len(m: i32, n: i32) -> usize {
-                5 * (m + n) as usize
+                2 * (m + n) as usize
             }
 
             fn lwork_from_query(query: &Self::Elem) -> i32 {
