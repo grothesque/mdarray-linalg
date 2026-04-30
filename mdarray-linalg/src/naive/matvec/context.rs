@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
@@ -30,7 +30,7 @@ where
     La: Layout,
     Lx: Layout,
     T: ComplexFloat,
-    i8: Into<T::Real>,
+    // i8: Into<T::Real>,
     T::Real: Into<T>,
     D0: Dim,
     D1: Dim,
@@ -53,10 +53,10 @@ where
         assert!(n == x_len, "Matrix columns must match vector length");
 
         let result_shape = <(D1,) as Shape>::from_dims(&[m]);
-        let mut result = Array::<T, (D1,)>::from_elem(result_shape, 0.into().into());
+        let mut result = Array::<T, (D1,)>::from_elem(result_shape, T::zero());
 
         for i in 0..m {
-            let mut sum = 0.into().into();
+            let mut sum = T::zero();
             for j in 0..n {
                 sum = sum + self.a[[i, j]] * self.x[[j]];
             }
@@ -73,7 +73,7 @@ where
         assert!(n == x_len, "Matrix columns must match vector length");
 
         for i in 0..m {
-            let mut sum = 0.into().into();
+            let mut sum = T::zero();
             for j in 0..n {
                 sum = sum + self.a[[i, j]] * self.x[[j]];
             }
@@ -121,7 +121,6 @@ where
 impl<T, D0: Dim, D1: Dim> MatVec<T, D0, D1> for Naive
 where
     T: ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
 {
     fn matvec<'a, La, Lx>(
@@ -134,7 +133,7 @@ where
         Lx: Layout,
     {
         NaiveMatVecBuilder {
-            alpha: 1.into().into(),
+            alpha: T::one(),
             a,
             x,
         }
@@ -289,7 +288,6 @@ impl<
 impl<T, Dx, Dy> Outer<T, Dx, Dy> for Naive
 where
     T: ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
     Dx: Dim,
     Dy: Dim,
@@ -304,7 +302,7 @@ where
         Ly: Layout,
     {
         NaiveOuterBuilder {
-            alpha: 1.into().into(),
+            alpha: T::one(),
             x,
             y,
         }
@@ -331,7 +329,6 @@ where
     Dx: Dim,
     Dy: Dim,
     T: ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
 {
     /// `α := α·α'`
@@ -346,7 +343,7 @@ where
         let n = self.y.shape().dim(0);
 
         let a_shape = <(Dx, Dy) as Shape>::from_dims(&[m, n]);
-        let mut a = Array::<T, (Dx, Dy)>::from_elem(a_shape, 0.into().into());
+        let mut a = Array::<T, (Dx, Dy)>::from_elem(a_shape, T::zero());
 
         naive_outer(&mut a, self.x, self.y, self.alpha, None, None);
 
