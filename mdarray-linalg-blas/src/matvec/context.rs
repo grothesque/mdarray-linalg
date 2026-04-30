@@ -1,7 +1,7 @@
 use std::ops::{Add, Mul};
 
 use cblas_sys::CBLAS_UPLO;
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
     matmul::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
@@ -34,7 +34,6 @@ where
     La: Layout,
     Lx: Layout,
     T: BlasScalar + ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
     D0: Dim,
     D1: Dim,
@@ -51,7 +50,7 @@ where
     fn eval(self) -> Array<T, (D1,)> {
         let mut y = Array::<T, (D1,)>::from_elem(
             <(D1,) as Shape>::from_dims(&[self.a.shape().dim(0)]),
-            0.into().into(),
+            T::zero(),
         );
         gemv(self.alpha, self.a, self.x, T::zero(), &mut y);
         y
