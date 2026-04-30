@@ -72,7 +72,6 @@ where
 impl<T, D0: Dim, D1: Dim> MatVec<T, D0, D1> for Blas
 where
     T: BlasScalar + ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
 {
     fn matvec<'a, La, Lx>(
@@ -231,7 +230,6 @@ where
     Lx: Layout,
     Ly: Layout,
     T: BlasScalar + ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
     Dx: Dim,
     Dy: Dim,
@@ -243,7 +241,7 @@ where
 
     fn eval(self) -> Array<T, (Dx, Dy)> {
         let shape = <(Dx, Dy) as Shape>::from_dims(&[self.x.len(), self.y.len()]);
-        let mut a = Array::<T, (Dx, Dy)>::from_elem(shape, 0.into().into());
+        let mut a = Array::<T, (Dx, Dy)>::from_elem(shape, T::zero());
         ger(self.alpha, self.x, self.y, &mut a);
         a
     }
@@ -274,7 +272,6 @@ where
 impl<T, Dx, Dy> Outer<T, Dx, Dy> for Blas
 where
     T: BlasScalar + ComplexFloat,
-    i8: Into<T::Real>,
     T::Real: Into<T>,
     Dx: Dim,
     Dy: Dim,
