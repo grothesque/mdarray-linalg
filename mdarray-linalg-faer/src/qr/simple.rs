@@ -6,7 +6,7 @@ use num_complex::ComplexFloat;
 use crate::{into_faer, into_faer_mut};
 
 pub fn qr_faer<
-    T: ComplexFloat + ComplexField + Default + 'static,
+    T: ComplexFloat + ComplexField + Default,
     D0: Dim,
     D1: Dim,
     D2: Dim,

@@ -16,7 +16,7 @@ use crate::Faer;
 
 impl<T, D0: Dim, D1: Dim> QR<T, D0, D1> for Faer
 where
-    T: ComplexFloat + ComplexField + Default + 'static,
+    T: ComplexFloat + ComplexField + Default, // + 'static,
 {
     /// Compute full QR decomposition with new allocated matrices
     fn qr<L: Layout>(

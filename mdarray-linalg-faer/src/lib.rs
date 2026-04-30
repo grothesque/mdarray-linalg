@@ -65,9 +65,9 @@ use mdarray::{Dim, Layout, Shape, Slice};
 
 /// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer<T, L: Layout, D0: Dim, D1: Dim>(
-    mat: &Slice<T, (D0, D1), L>,
-) -> faer::mat::MatRef<'static, T> {
+pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
+    mat: &'a Slice<T, (D0, D1), L>,
+) -> faer::mat::MatRef<'a, T> {
     let (nrows, ncols) = *mat.shape();
     let strides = (mat.stride(0), mat.stride(1));
 
@@ -88,9 +88,9 @@ pub fn into_faer<T, L: Layout, D0: Dim, D1: Dim>(
 
 /// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatMut<'static, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
-    mat: &mut Slice<T, (D0, D1), L>,
-) -> faer::mat::MatMut<'static, T> {
+pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
+    mat: &'a mut Slice<T, (D0, D1), L>,
+) -> faer::mat::MatMut<'a, T> {
     let (nrows, ncols) = *mat.shape();
     let strides = (mat.stride(0), mat.stride(1));
 
@@ -135,9 +135,9 @@ pub fn into_faer_mut<T, L: Layout, D0: Dim, D1: Dim>(
 /// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a
 /// `faer::MatMut<'static, T>` and transposes data.  This function
 /// **does not copy** any data.
-pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
-    mat: &mut Slice<T, (D0, D1), L>,
-) -> faer::mat::MatMut<'static, T> {
+pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
+    mat: &'a mut Slice<T, (D0, D1), L>,
+) -> faer::mat::MatMut<'a, T> {
     let matsh = *mat.shape();
     let (nrows, ncols) = (matsh.dim(0), matsh.dim(1));
     let strides = (mat.stride(0), mat.stride(1));
@@ -167,9 +167,9 @@ pub fn into_faer_mut_transpose<T, D0: Dim, D1: Dim, L: Layout>(
 ///   with LAPACK-style storage, where singular values are typically stored in the first row.
 /// - This function is unsafe internally and assumes that `mat` contains at least `n` elements
 ///   in memory laid out consistently with the given stride.
-pub fn into_faer_diag_mut<T, D0: Dim, L: Layout>(
-    mat: &mut Slice<T, (D0,), L>,
-) -> faer::diag::DiagMut<'static, T> {
+pub fn into_faer_diag_mut<'a, T, D0: Dim, L: Layout>(
+    mat: &'a mut Slice<T, (D0,), L>,
+) -> faer::diag::DiagMut<'a, T> {
     let n = mat.shape().dim(0);
 
     // SAFETY:
