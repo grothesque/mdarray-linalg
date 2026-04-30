@@ -17,10 +17,7 @@ use crate::Faer;
 
 impl<T, D, L> SVD<T, D, L> for Faer
 where
-    T: ComplexFloat
-        + ComplexField
-        + Default
-        + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
+    T: ComplexFloat + ComplexField + Default,
     D: Dim,
     L: Layout,
 {
