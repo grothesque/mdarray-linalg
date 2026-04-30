@@ -6,6 +6,26 @@ use num_complex::{Complex, ComplexFloat};
 pub trait BlasScalar: Sized + ComplexFloat {
     /// # Safety
     /// Calls must respect BLAS conventions.
+    unsafe fn cblas_dotu_or_dot(
+        n: i32,
+        x: *const Self,
+        incx: i32,
+        y: *const Self,
+        incy: i32,
+    ) -> Self;
+
+    /// # Safety
+    /// Calls must respect BLAS conventions.
+    unsafe fn cblas_dotc_or_dot(
+        n: i32,
+        x: *const Self,
+        incx: i32,
+        y: *const Self,
+        incy: i32,
+    ) -> Self;
+
+    /// # Safety
+    /// Calls must respect BLAS conventions.
     unsafe fn cblas_amax(n: i32, x: *const Self, incx: i32) -> CBLAS_INDEX
     where
         Self: Sized,
@@ -348,6 +368,26 @@ pub trait BlasScalar: Sized + ComplexFloat {
 }
 
 impl BlasScalar for f32 {
+    unsafe fn cblas_dotu_or_dot(
+        n: i32,
+        x: *const f32,
+        incx: i32,
+        y: *const f32,
+        incy: i32,
+    ) -> Self {
+        unsafe { cblas_sys::cblas_sdot(n, x, incx, y, incy) }
+    }
+
+    unsafe fn cblas_dotc_or_dot(
+        n: i32,
+        x: *const f32,
+        incx: i32,
+        y: *const f32,
+        incy: i32,
+    ) -> Self {
+        unsafe { cblas_sys::cblas_sdot(n, x, incx, y, incy) }
+    }
+
     unsafe fn cblas_amax(n: i32, x: *const f32, incx: i32) -> CBLAS_INDEX {
         unsafe { cblas_sys::cblas_isamax(n, x as *const _, incx) }
     }
@@ -614,6 +654,26 @@ impl BlasScalar for f32 {
 }
 
 impl BlasScalar for f64 {
+    unsafe fn cblas_dotu_or_dot(
+        n: i32,
+        x: *const f64,
+        incx: i32,
+        y: *const f64,
+        incy: i32,
+    ) -> Self {
+        unsafe { cblas_sys::cblas_ddot(n, x, incx, y, incy) }
+    }
+
+    unsafe fn cblas_dotc_or_dot(
+        n: i32,
+        x: *const f64,
+        incx: i32,
+        y: *const f64,
+        incy: i32,
+    ) -> Self {
+        unsafe { cblas_sys::cblas_ddot(n, x, incx, y, incy) }
+    }
+
     unsafe fn cblas_amax(n: i32, x: *const f64, incx: i32) -> CBLAS_INDEX {
         unsafe { cblas_sys::cblas_idamax(n, x as *const _, incx) }
     }
@@ -878,8 +938,50 @@ impl BlasScalar for f64 {
         }
     }
 }
-
+use num_traits::Zero;
 impl BlasScalar for Complex<f32> {
+    unsafe fn cblas_dotu_or_dot(
+        n: i32,
+        x: *const Complex<f32>,
+        incx: i32,
+        y: *const Complex<f32>,
+        incy: i32,
+    ) -> Self {
+        let mut result = Self::zero();
+        unsafe {
+            cblas_sys::cblas_cdotu_sub(
+                n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                &mut result as *mut Complex<f32> as *mut [f32; 2],
+            );
+        }
+        result
+    }
+
+    unsafe fn cblas_dotc_or_dot(
+        n: i32,
+        x: *const Complex<f32>,
+        incx: i32,
+        y: *const Complex<f32>,
+        incy: i32,
+    ) -> Self {
+        let mut result = Self::zero();
+        unsafe {
+            cblas_sys::cblas_cdotc_sub(
+                n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                &mut result as *mut Complex<f32> as *mut [f32; 2],
+            );
+        }
+        result
+    }
+
     unsafe fn cblas_amax(n: i32, x: *const Complex<f32>, incx: i32) -> CBLAS_INDEX {
         unsafe { cblas_sys::cblas_icamax(n, x as *const _, incx) }
     }
@@ -1256,6 +1358,48 @@ impl BlasScalar for Complex<f32> {
 }
 
 impl BlasScalar for Complex<f64> {
+    unsafe fn cblas_dotu_or_dot(
+        n: i32,
+        x: *const Complex<f64>,
+        incx: i32,
+        y: *const Complex<f64>,
+        incy: i32,
+    ) -> Self {
+        let mut result = Self::zero();
+        unsafe {
+            cblas_sys::cblas_zdotu_sub(
+                n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                &mut result as *mut Complex<f64> as *mut [f64; 2],
+            );
+        }
+        result
+    }
+
+    unsafe fn cblas_dotc_or_dot(
+        n: i32,
+        x: *const Complex<f64>,
+        incx: i32,
+        y: *const Complex<f64>,
+        incy: i32,
+    ) -> Self {
+        let mut result = Self::zero();
+        unsafe {
+            cblas_sys::cblas_zdotc_sub(
+                n,
+                x as *const _,
+                incx,
+                y as *const _,
+                incy,
+                &mut result as *mut Complex<f64> as *mut [f64; 2],
+            );
+        }
+        result
+    }
+
     unsafe fn cblas_amax(n: i32, x: *const Complex<f64>, incx: i32) -> CBLAS_INDEX {
         unsafe { cblas_sys::cblas_izamax(n, x as *const _, incx) }
     }

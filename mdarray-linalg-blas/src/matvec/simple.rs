@@ -1,9 +1,7 @@
-use std::any::TypeId;
-
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
 use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, trans_stride};
-use num_complex::{Complex, ComplexFloat};
+use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
 
@@ -266,67 +264,101 @@ where
     unsafe { T::cblas_nrm2(n, x.as_ptr(), incx) }
 }
 
-pub fn dotu<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
-where
-    T: BlasScalar + ComplexFloat + 'static,
-    Lx: Layout,
-    Ly: Layout,
-{
-    assert_eq!(x.len(), y.len(), "Vector lengths must match");
-
+pub fn dotu<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
+    x: &Slice<T, (D1,), Lx>,
+    y: &Slice<T, (D1,), Ly>,
+) -> T {
+    assert_eq!(x.len(), y.len());
     let n = into_i32(x.len());
-    let incx = into_i32(x.stride(0));
-    let incy = into_i32(y.stride(0));
-
-    let mut result = T::zero();
-
-    if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
-        || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
-    {
-        unsafe {
-            T::cblas_dotu_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
-        }
-    } else {
-        unsafe {
-            result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
-        }
+    unsafe {
+        T::cblas_dotu_or_dot(
+            n,
+            x.as_ptr(),
+            into_i32(x.stride(0)),
+            y.as_ptr(),
+            into_i32(y.stride(0)),
+        )
     }
-
-    result
 }
 
-pub fn dotc<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
-where
-    T: BlasScalar + ComplexFloat + 'static,
-    Lx: Layout,
-    Ly: Layout,
-{
-    assert_eq!(x.len(), y.len(), "Vector lengths must match");
+// pub fn dotu<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
+// where
+//     T: BlasScalar + ComplexFloat + 'static,
+//     Lx: Layout,
+//     Ly: Layout,
+// {
+//     assert_eq!(x.len(), y.len(), "Vector lengths must match");
 
+//     let n = into_i32(x.len());
+//     let incx = into_i32(x.stride(0));
+//     let incy = into_i32(y.stride(0));
+
+//     let mut result = T::zero();
+
+//     if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
+//         || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
+//     {
+//         unsafe {
+//             T::cblas_dotu_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
+//         }
+//     } else {
+//         unsafe {
+//             result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
+//         }
+//     }
+
+//     result
+// }
+
+// pub fn dotc<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
+// where
+//     T: BlasScalar + ComplexFloat,
+//     Lx: Layout,
+//     Ly: Layout,
+// {
+//     assert_eq!(x.len(), y.len(), "Vector lengths must match");
+
+//     let n = into_i32(x.len());
+//     let incx = into_i32(x.stride(0));
+//     let incy = into_i32(y.stride(0));
+
+//     let mut result = T::zero();
+
+//     if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
+//         || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
+//     {
+//         unsafe {
+//             T::cblas_dotc_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
+//         }
+//     } else {
+//         unsafe {
+//             result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
+//         }
+//     }
+
+//     result
+// }
+
+pub fn dotc<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
+    x: &Slice<T, (D1,), Lx>,
+    y: &Slice<T, (D1,), Ly>,
+) -> T {
+    assert_eq!(x.len(), y.len());
     let n = into_i32(x.len());
-    let incx = into_i32(x.stride(0));
-    let incy = into_i32(y.stride(0));
-
-    let mut result = T::zero();
-
-    if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
-        || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
-    {
-        unsafe {
-            T::cblas_dotc_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
-        }
-    } else {
-        unsafe {
-            result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
-        }
+    unsafe {
+        T::cblas_dotc_or_dot(
+            n,
+            x.as_ptr(),
+            into_i32(x.stride(0)),
+            y.as_ptr(),
+            into_i32(y.stride(0)),
+        )
     }
-
-    result
 }
 
 pub fn amax<T, S, L>(x: &Slice<T, S, L>) -> usize
 where
-    T: BlasScalar + ComplexFloat + 'static,
+    T: BlasScalar + ComplexFloat,
     S: Shape,
     L: Layout,
 {

@@ -2,7 +2,7 @@ use std::num::NonZero;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
-use mdarray::{Dim, DynRank, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::matmul::{
     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
 };
@@ -59,7 +59,7 @@ where
     T: ComplexFloat + ComplexField + One + 'static,
 {
     fn scale(mut self, factor: T) -> Self {
-        self.alpha = self.alpha * factor;
+        self.alpha *= factor;
         self
     }
 
@@ -135,7 +135,7 @@ where
     S: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
-        self.alpha = self.alpha * factor;
+        self.alpha *= factor;
         self
     }
 
