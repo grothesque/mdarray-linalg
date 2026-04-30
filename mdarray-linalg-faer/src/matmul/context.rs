@@ -44,7 +44,7 @@ where
     D0: Dim,
     D1: Dim,
     D2: Dim,
-    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + ComplexField + One + MulAdd<Output = T>,
 {
 }
 
@@ -56,7 +56,7 @@ where
     D0: Dim,
     D1: Dim,
     D2: Dim,
-    T: ComplexFloat + ComplexField + One + 'static,
+    T: ComplexFloat + ComplexField + One,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha *= factor;
@@ -131,7 +131,7 @@ impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for FaerContractBuilder<'a
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + ComplexField + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + Zero + One + ComplexField + MulAdd<Output = T>,
     S: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
@@ -156,7 +156,7 @@ where
 
 impl<T> MatMul<T> for Faer
 where
-    T: ComplexFloat + ComplexField + One + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + ComplexField + One + MulAdd<Output = T>,
 {
     fn matmul<'a, La, Lb, D0, D1, D2>(
         &self,

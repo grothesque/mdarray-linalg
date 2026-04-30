@@ -7,7 +7,7 @@ use num_complex::ComplexFloat;
 use crate::{into_faer, into_faer_diag_mut, into_faer_mut, into_faer_mut_transpose};
 
 pub fn svd_faer<
-    T: 'static + ComplexField + Default + ComplexFloat,
+    T: ComplexField + Default + ComplexFloat,
     D: Dim,
     La: Layout,
     Ls: Layout,

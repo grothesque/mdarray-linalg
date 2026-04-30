@@ -281,64 +281,6 @@ pub fn dotu<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     }
 }
 
-// pub fn dotu<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
-// where
-//     T: BlasScalar + ComplexFloat + 'static,
-//     Lx: Layout,
-//     Ly: Layout,
-// {
-//     assert_eq!(x.len(), y.len(), "Vector lengths must match");
-
-//     let n = into_i32(x.len());
-//     let incx = into_i32(x.stride(0));
-//     let incy = into_i32(y.stride(0));
-
-//     let mut result = T::zero();
-
-//     if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
-//         || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
-//     {
-//         unsafe {
-//             T::cblas_dotu_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
-//         }
-//     } else {
-//         unsafe {
-//             result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
-//         }
-//     }
-
-//     result
-// }
-
-// pub fn dotc<T, D1: Dim, Lx, Ly>(x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T
-// where
-//     T: BlasScalar + ComplexFloat,
-//     Lx: Layout,
-//     Ly: Layout,
-// {
-//     assert_eq!(x.len(), y.len(), "Vector lengths must match");
-
-//     let n = into_i32(x.len());
-//     let incx = into_i32(x.stride(0));
-//     let incy = into_i32(y.stride(0));
-
-//     let mut result = T::zero();
-
-//     if TypeId::of::<T>() == TypeId::of::<Complex<f32>>()
-//         || TypeId::of::<T>() == TypeId::of::<Complex<f64>>()
-//     {
-//         unsafe {
-//             T::cblas_dotc_sub(n, x.as_ptr(), incx, y.as_ptr(), incy, &mut result);
-//         }
-//     } else {
-//         unsafe {
-//             result = T::cblas_dot(n, x.as_ptr(), incx, y.as_ptr(), incy);
-//         }
-//     }
-
-//     result
-// }
-
 pub fn dotc<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     x: &Slice<T, (D1,), Lx>,
     y: &Slice<T, (D1,), Ly>,

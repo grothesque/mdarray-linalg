@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub fn svd_nalgebra<
-    T: ComplexFloat + ComplexField + Default + 'static,
+    T: ComplexFloat + ComplexField + Default,
     D: Dim,
     La: Layout,
     Ls: Layout,

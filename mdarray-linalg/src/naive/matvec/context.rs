@@ -137,8 +137,8 @@ where
     }
 }
 
-impl<T: ComplexFloat + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim>
-    VecOps<T, D> for Naive
+impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> VecOps<T, D>
+    for Naive
 {
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
@@ -199,9 +199,8 @@ impl<T: ComplexFloat + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy
     }
 }
 
-impl<
-    T: ComplexFloat<Real = T> + 'static + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy,
-> Argmax<T> for Naive
+impl<T: ComplexFloat<Real = T> + PartialOrd + Add<Output = T> + Mul<Output = T> + Zero + Copy>
+    Argmax<T> for Naive
 {
     fn argmax_write<Lx: Layout, S: Shape>(
         &self,

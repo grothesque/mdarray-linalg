@@ -63,7 +63,7 @@ impl Default for Faer {
 
 use mdarray::{Dim, Layout, Shape, Slice};
 
-/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatRef<'static, T>`.
+/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatRef<'a, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a Slice<T, (D0, D1), L>,
@@ -86,7 +86,7 @@ pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
     }
 }
 
-/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatMut<'static, T>`.
+/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatMut<'a, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a mut Slice<T, (D0, D1), L>,
@@ -133,7 +133,7 @@ pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
 // }
 
 /// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a
-/// `faer::MatMut<'static, T>` and transposes data.  This function
+/// `faer::MatMut<'a, T>` and transposes data.  This function
 /// **does not copy** any data.
 pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
     mat: &'a mut Slice<T, (D0, D1), L>,
@@ -157,7 +157,7 @@ pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
     }
 }
 
-/// Converts a mutable `Slice<T, (D0, D1), L>` (from `mdarray`) into a `faer::diag::DiagMut<'static, T>`,
+/// Converts a mutable `Slice<T, (D0, D1), L>` (from `mdarray`) into a `faer::diag::DiagMut<'a, T>`,
 /// which is a mutable view over the diagonal elements of a matrix in Faer.
 ///
 /// # Important Notes for Users:

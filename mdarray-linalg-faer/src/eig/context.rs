@@ -39,8 +39,7 @@ where
     T: ComplexFloat
         + ComplexField
         + Default
-        + std::convert::From<<T as num_complex::ComplexFloat>::Real>
-        + 'static,
+        + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
 {
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
     /// The matrix `A` satisfies: `A * v = λ * v` where v are the right eigenvectors

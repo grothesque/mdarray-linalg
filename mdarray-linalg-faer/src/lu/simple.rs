@@ -6,7 +6,7 @@ use num_complex::ComplexFloat;
 use crate::into_faer_mut;
 
 pub fn lu_faer<
-    T: ComplexFloat + ComplexField + Default + 'static,
+    T: ComplexFloat + ComplexField + Default,
     D0: Dim,
     D1: Dim,
     La: Layout,

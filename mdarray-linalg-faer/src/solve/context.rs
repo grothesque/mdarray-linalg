@@ -15,7 +15,7 @@
 
 use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
     identity,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
@@ -29,8 +29,7 @@ where
     T: ComplexFloat
         + ComplexField
         + Default
-        + std::convert::From<<T as num_complex::ComplexFloat>::Real>
-        + 'static,
+        + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
 {
     /// Solves linear system AX = B with new allocated solution matrix
     /// A is modified (overwritten with LU decomposition)

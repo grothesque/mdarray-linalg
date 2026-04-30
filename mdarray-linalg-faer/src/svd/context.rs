@@ -20,8 +20,7 @@ where
     T: ComplexFloat
         + ComplexField
         + Default
-        + std::convert::From<<T as num_complex::ComplexFloat>::Real>
-        + 'static,
+        + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
     D: Dim,
     L: Layout,
 {

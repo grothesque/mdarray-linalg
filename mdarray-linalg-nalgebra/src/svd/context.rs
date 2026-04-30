@@ -20,8 +20,7 @@ where
     T: Default
         + num_complex::ComplexFloat
         + Debug
-        + nalgebra::ComplexField<RealField = <T as num_complex::ComplexFloat>::Real>
-        + 'static,
+        + nalgebra::ComplexField<RealField = <T as num_complex::ComplexFloat>::Real>,
     <T as num_complex::ComplexFloat>::Real: nalgebra::RealField + Default + Copy,
     D: Dim,
     L: Layout,

@@ -91,10 +91,8 @@ where
     }
 }
 
-impl<
-    T: ComplexFloat + BlasScalar + 'static + Add<Output = T> + Mul<Output = T> + Zero + Copy,
-    D1: Dim,
-> VecOps<T, D1> for Blas
+impl<T: ComplexFloat + BlasScalar + Add<Output = T> + Mul<Output = T> + Zero + Copy, D1: Dim>
+    VecOps<T, D1> for Blas
 {
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
@@ -141,7 +139,6 @@ impl<
     T: ComplexFloat
         + std::cmp::PartialOrd
         + BlasScalar
-        + 'static
         + Add<Output = T>
         + Mul<Output = T>
         + Zero

@@ -8,7 +8,7 @@
 
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::lu::{InvError, InvResult, LU};
 use num_complex::ComplexFloat;
 
@@ -20,18 +20,13 @@ where
     T: ComplexFloat
         + ComplexField
         + Default
-        + std::convert::From<<T as num_complex::ComplexFloat>::Real>
-        + 'static,
+        + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
 {
     /// Computes LU decomposition with new allocated matrices: L, U, P (permutation matrix)
     fn lu<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-    ) -> (
-        Array<T, (D0, D0)>,
-        Array<T, (D0, D1)>,
-        Array<T, (D0, D0)>,
-    ) {
+    ) -> (Array<T, (D0, D0)>, Array<T, (D0, D1)>, Array<T, (D0, D0)>) {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
