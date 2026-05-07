@@ -26,8 +26,8 @@
 //! | **▶︎ Linear algebra**                              |||||
 //! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [LU decomposition](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Solve and inverse](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
 //! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
@@ -80,7 +80,7 @@
 //!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
 //!     println!("A * B + B * A = {:?}", c);
 //!
-//!     let d = matmul!(Naive, &a, &b, &c); // for concise chained matrix multiplication.
+//!     let d = matmul!(&a, &b, &c); // for concise chained matrix multiplication.
 //! }
 //! ```
 //!

@@ -1,5 +1,22 @@
 //! Eigenvalue, eigenvector, and Schur decomposition utilities for general and Hermitian matrices
-use mdarray::{Dense, Dim, Layout, Slice, Array};
+//!
+//!```rust,ignore
+//!// ----- Eigenvalue decomposition -----
+//!use mdarray_linalg::prelude::*; // Import traits anonymously
+//!use mdarray_linalg_backend::{Backend, eig}; // Use the real backend here, Lapack, Faer, ...
+//!// Note: we must clone `a` here because decomposition routines destroy the input.
+//!let bd = Backend::default();
+//!let EigDecomp {
+//!    eigenvalues,
+//!    right_eigenvectors,
+//!    ..
+//!} = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//!
+//!// Or...
+//!let (lambda, v) = eig!(&mut a.clone());
+//!```
+
+use mdarray::{Array, Dense, Dim, Layout, Slice};
 use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;
 

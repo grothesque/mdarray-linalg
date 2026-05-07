@@ -10,8 +10,8 @@
 //!let b = tensor![[5., 6.], [7., 8.]];
 //!
 //!let c = Naive.matmul(&a, &b).eval(); // A x B, or:
-//!let c = matmul!(Naive, &a, &b); // A x B
-//!let d = matmul!(Naive, &a, &b, &c); // A x B x C
+//!let c = matmul!(&a, &b); // A x B
+//!let d = matmul!(&a, &b, &c); // A x B x C
 //!
 //!let expected_all = tensor![[70.0]].into_dyn();
 //!let result_all = Naive.contract_all(&a, &b).eval();
@@ -342,22 +342,4 @@ where
         keep_shape_a.extend(keep_shape_b);
         ab_resh.reshape(keep_shape_a).to_owned().into_dyn().into()
     }
-}
-
-/// Chains an arbitrary number of matrix multiplications using the given backend.
-/// Produces readable code for expressions like `A * B * C` without nested `matmul().eval()` calls.
-#[macro_export]
-macro_rules! matmul {
-    ($backend:expr, $a:expr, $b:expr) => {
-        $backend.matmul($a, $b).eval()
-    };
-
-    ($backend:expr, $a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
-        $backend
-            .matmul(
-                $a,
-                &matmul!($backend, $b, $($rest),+)
-            )
-            .eval()
-    };
 }
