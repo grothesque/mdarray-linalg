@@ -1,27 +1,30 @@
 //! LU, Cholesky, matrix inversion, and determinant computation utilities
 //!
-//!```rust,ignore
-//!// ----- LU decomposition and inverse -----
-//!use mdarray_linalg::prelude::*; // Import traits anonymously
-//!use mdarray_linalg_backend::{Backend, eig}; // Use the real backend here, Lapack, Faer, ...
-//!// Note: we must clone `a` here because decomposition routines destroy the input.
-//!let bd = Backend::default();
+//! ```rust,ignore
+//! use mdarray_linalg::prelude::*;
+//! use mdarray_linalg_backend::Backend;
 //!
-//!let a = Array::from_fn([3, 3], |i| {
-//!    (i[0] + 1) as f64 + 2. * (i[1] + 1) as f64 + if i[0] == i[1] { 3. } else { 0. }
-//!}); // invertible matrix
+//! let bd = Backend::default();
 //!
+//! let a = Array::from_fn([3, 3], |i| {
+//!     (i[0] + 1) as f64 + 2. * (i[1] + 1) as f64 + if i[0] == i[1] { 3. } else { 0. }
+//! }); // invertible matrix
 //!
-//!let (l, u, p) = bd.lu(&mut a.clone());
-//!// LU decomposition, don't forget to take into accounts P the permutation matrix: LU = PA
+//! // ----- LU decomposition -----
+//! // P * A = L * U  where P is a permutation matrix.
+//! let (l, u, p) = bd.lu(&mut a.clone());
 //!
+//! // ----- Determinant and inverse -----
+//! let d = bd.det(&mut a.clone());
+//! let a_inv = bd.inv(&mut a.clone()).expect("Can't compute inverse");
 //!
-//!let d = bd.det(&mut a.clone()); // determinant
-//!let a_inv = bd.inv(&mut a.clone()).expect("Can't compute inverse");
-//!
-//!let s = a.clone() + a.permute([1, 0]); // Create a symmetric matrix
-//!let l = bd.choleski(&mut s).unwrap();
-//!```
+//! // ----- Cholesky decomposition -----
+//! // For a symmetric positive-definite matrix: A = L * L^T
+//! let s = a.clone() + a.permute([1, 0]); // symmetric matrix
+//! let l = bd.choleski(&mut s).unwrap();
+//! // Reconstruct: A ≈ L * L^T
+//! let a_reconstructed = l.dot(&l.transpose());
+//! ```
 
 use mdarray::{Array, Dim, Layout, Slice};
 use thiserror::Error;

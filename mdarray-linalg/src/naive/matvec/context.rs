@@ -188,14 +188,31 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
 
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
-        _x: &mut Slice<T, (D,), Lx>,
-        _y: &mut Slice<T, (D,), Ly>,
-        _c: T::Real,
-        _s: T,
+        x: &mut Slice<T, (D,), Lx>,
+        y: &mut Slice<T, (D,), Ly>,
+        c: T::Real,
+        s: T,
     ) where
         T: ComplexFloat,
     {
-        todo!()
+        // Apply a Givens rotation to vectors x and y in-place:
+        //   x[i] =  c * x[i] + s  * y[i]
+        //   y[i] = -s* * x[i] + c * y[i]
+        // where c is real, s is (possibly complex), and c² + |s|² = 1.
+        //
+        // For real types, s* == s and this reduces to the standard real Givens rotation.
+        // This matches the BLAS `drot`/`zrot` convention.
+        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+            // Store original x before overwriting it
+            let old_x = *elem_x;
+            let old_y = *elem_y;
+
+            // c is T::Real, so we need to cast it to T for arithmetic with s
+            let c_as_t = T::from(c).unwrap();
+
+            *elem_x = c_as_t * old_x + s * old_y;
+            *elem_y = c_as_t * old_y - s.conj() * old_x;
+        }
     }
 }
 

@@ -1,20 +1,29 @@
 //! Eigenvalue, eigenvector, and Schur decomposition utilities for general and Hermitian matrices
 //!
-//!```rust,ignore
-//!// ----- Eigenvalue decomposition -----
-//!use mdarray_linalg::prelude::*; // Import traits anonymously
-//!use mdarray_linalg_backend::{Backend, eig}; // Use the real backend here, Lapack, Faer, ...
-//!// Note: we must clone `a` here because decomposition routines destroy the input.
-//!let bd = Backend::default();
-//!let EigDecomp {
-//!    eigenvalues,
-//!    right_eigenvectors,
-//!    ..
-//!} = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//! ```rust,ignore
+//! use mdarray_linalg::prelude::*;
+//! use mdarray_linalg_backend::{Backend, eig};
 //!
-//!// Or...
-//!let (lambda, v) = eig!(&mut a.clone());
-//!```
+//! // ----- Eigenvalue decomposition -----
+//! // Note: we must clone `a` here because decomposition routines destroy the input.
+//! let bd = Backend::default();
+//! let EigDecomp { eigenvalues, right_eigenvectors, .. } = bd
+//!     .eig(&mut a.clone())
+//!     .expect("Eigenvalue decomposition failed");
+//!
+//! // Or...
+//! let (lambda, v) = eig!(&mut a.clone());
+//!
+//! // ----- Schur decomposition -----
+//! // A = Z * T * Z^T  where T is quasi-upper-triangular and Z is orthogonal.
+//! let SchurDecomp { t, z } = bd
+//!     .schur(&mut a.clone())
+//!     .expect("Schur decomposition failed");
+//!
+//! // Reconstruct A from the decomposition:
+//! // A ≈ Z * T * Z^T
+//! let a_reconstructed = z.dot(&t).dot(&z.transpose());
+//! ```
 
 use mdarray::{Array, Dense, Dim, Layout, Slice};
 use num_complex::{Complex, ComplexFloat};

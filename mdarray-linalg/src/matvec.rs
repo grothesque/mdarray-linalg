@@ -115,7 +115,7 @@
 //!      .add_to_special(&mut a_her, Type::Her, Triangle::Upper);
 //! // Upper triangle updated with conjugate transpose
 //! ```
-//! # Finding Maximum Elements
+//! # Argmax
 //!
 //! ```rust
 //! use mdarray::tensor;
@@ -183,7 +183,7 @@
 //! // |1+2i| + |2+3i| = (|1|+|2|) + (|2|+|3|) = 8
 //! assert_eq!(norm, 8.0);
 //! ```
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
 use crate::matmul::{Triangle, Type};
