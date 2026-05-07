@@ -3,7 +3,7 @@ use faer_traits::ComplexField;
 use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use crate::{into_faer, into_faer_mut};
+use crate::{into_faer, into_faer_mut, QRConfig};
 
 pub fn qr_faer<
     T: ComplexFloat + ComplexField + Default,
@@ -17,13 +17,12 @@ pub fn qr_faer<
     a: &Slice<T, (D0, D1), La>,
     q_mda: Option<&mut Slice<T, (D0, D2), Lq>>,
     r_mda: &mut Slice<T, (D2, D1), Lr>,
+        config: QRConfig,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));
-
-    let rank = Ord::min(m, n);
+    let rank = m.min(n);
     let par = faer::get_global_parallelism();
-
     let block_size = faer::linalg::qr::no_pivoting::factor::recommended_block_size::<T>(m, n);
 
     let mut qr_mat = into_faer(a).to_owned();
@@ -45,47 +44,41 @@ pub fn qr_faer<
         faer::prelude::default(),
     );
 
+    let r_rows = r_mda.shape().dim(0); 
     let mut r_faer = into_faer_mut(r_mda);
-    for i in 0..rank {
-        for j in i..n {
-            r_faer[(i, j)] = qr_mat[(i, j)];
-        }
-        for j in 0..i {
-            r_faer[(i, j)] = T::zero();
-        }
-    }
-    for i in rank..m {
+    for i in 0..r_rows {
         for j in 0..n {
-            r_faer[(i, j)] = T::zero();
+            r_faer[(i, j)] = if i < rank && j >= i {
+                qr_mat[(i, j)]
+            } else {
+                T::zero()
+            };
         }
     }
 
     if let Some(q) = q_mda {
+        let q_cols = q.shape().dim(1); 
         let mut q_faer = into_faer_mut(q);
-        // TODO: check why this is necessary
+
         for i in 0..m {
-            for j in 0..m {
-                if i == j {
-                    q_faer[(i, j)] = T::one();
-                } else {
-                    q_faer[(i, j)] = T::zero();
-                }
+            for j in 0..q_cols {
+                q_faer[(i, j)] = if i == j { T::one() } else { T::zero() };
             }
         }
 
         faer::linalg::householder::apply_block_householder_sequence_on_the_left_in_place_with_conj(
-                    qr_mat.as_ref(),
-                    h_factor.as_ref(),
-                    faer::Conj::No,
-                    q_faer,
-                    par,
-                    MemStack::new(&mut MemBuffer::new(
-                        faer::linalg::householder::apply_block_householder_sequence_on_the_left_in_place_scratch::<T>(
-                            m,
-                            block_size,
-                            m,
-                        )
-                    )),
-                );
+            qr_mat.as_ref(),
+            h_factor.as_ref(),
+            faer::Conj::No,
+            q_faer,
+            par,
+            MemStack::new(&mut MemBuffer::new(
+                faer::linalg::householder::apply_block_householder_sequence_on_the_left_in_place_scratch::<T>(
+                    m,
+                    block_size,
+                    q_cols,  
+                ),
+            )),
+        );
     }
 }

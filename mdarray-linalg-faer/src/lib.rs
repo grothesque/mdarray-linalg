@@ -43,7 +43,6 @@
 //! println!("Q: {:?}", q);
 //! println!("R: {:?}", r);
 //! ```
-
 pub mod eig;
 pub mod lu;
 pub mod matmul;
@@ -51,13 +50,24 @@ pub mod qr;
 pub mod solve;
 pub mod svd;
 
+#[derive(Default, Debug, Clone, Copy)]
+pub enum QRConfig {
+    #[default]
+    Reduced, // Q: M×K, R: K×N
+    Complete, // Q: M×M, R: M×N
+}
+
 pub struct Faer {
     parallelize: bool,
+    qr_config: QRConfig,
 }
 
 impl Default for Faer {
     fn default() -> Self {
-        Self { parallelize: true }
+        Self {
+            parallelize: true,
+            qr_config: QRConfig::Reduced,
+        }
     }
 }
 

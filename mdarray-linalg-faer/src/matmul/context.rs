@@ -9,7 +9,7 @@ use mdarray_linalg::matmul::{
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
-use crate::{Faer, into_faer, into_faer_mut};
+use crate::{Faer, QRConfig, into_faer, into_faer_mut};
 
 struct FaerMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
@@ -141,7 +141,10 @@ where
 
     fn eval(self) -> Array<T, DynRank> {
         _contract(
-            Faer { parallelize: true },
+            Faer {
+                parallelize: true,
+                qr_config: QRConfig::Reduced,
+            },
             self.a,
             self.b,
             self.axes,
