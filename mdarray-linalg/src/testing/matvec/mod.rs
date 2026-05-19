@@ -20,6 +20,19 @@ pub fn test_eval_and_write(bd: impl MatVec<f64, usize, usize>) {
     assert_eq!(y_overwritten, y);
 }
 
+pub fn test_eval_and_write_rectangular(bd: impl MatVec<f64, usize, usize>) {
+    let m = 2;
+    let n = 3;
+    let x = DArray::<f64, 1>::from_elem([n], 1.);
+    let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * n + i[1] + 1) as f64);
+    let y = bd.matvec(&a, &x).scale(2.).eval();
+    assert_eq!(y, tensor![12., 30.]);
+
+    let mut y_overwritten = DArray::<f64, 1>::from_elem([m], 0.);
+    bd.matvec(&a, &x).scale(2.).write(&mut y_overwritten);
+    assert_eq!(y_overwritten, tensor![12., 30.]);
+}
+
 pub fn test_add_to_scaled(bd: impl MatVec<f64, usize, usize>) {
     let n = 3;
     let x = DArray::<f64, 1>::from_elem(n, 1.);

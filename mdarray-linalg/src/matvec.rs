@@ -215,16 +215,16 @@ where
     fn scale(self, alpha: T) -> Self;
 
     /// Returns `α·A·x`
-    fn eval(self) -> Array<T, (D1,)>;
+    fn eval(self) -> Array<T, (D0,)>;
 
     /// `y := α·A·x`
-    fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>);
+    fn write<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>);
 
     /// `y := α·A·x + y`
-    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>);
+    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>);
 
     /// `y := α·A·x + β·y`
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>, beta: T);
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>, beta: T);
 }
 
 /// Vector operations and basic linear algebra utilities

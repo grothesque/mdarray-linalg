@@ -10,7 +10,7 @@ pub fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     a: &Slice<T, (D0, D1), La>,
     x: &Slice<T, (D1,), Lx>,
     beta: T,
-    y: &mut Slice<T, (D1,), Ly>,
+    y: &mut Slice<T, (D0,), Ly>,
 ) where
     T: BlasScalar + ComplexFloat,
     La: Layout,

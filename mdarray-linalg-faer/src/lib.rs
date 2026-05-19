@@ -51,6 +51,7 @@
 pub mod eig;
 pub mod lu;
 pub mod matmul;
+pub mod matvec;
 pub mod qr;
 pub mod solve;
 pub mod svd;
@@ -170,6 +171,45 @@ pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
             strides.0,
         )
     }
+}
+
+/// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::ColRef<'a, T>`.
+/// This function **does not copy** any data.
+pub fn into_faer_col<'a, T, D0: Dim, L: Layout>(
+    vec: &'a Slice<T, (D0,), L>,
+) -> faer::col::ColRef<'a, T> {
+    let n = vec.shape().dim(0);
+
+    // SAFETY:
+    // - `vec.as_ptr()` points to a valid vector with `n` elements.
+    // - `vec.stride(0)` describes the spacing between consecutive elements.
+    unsafe { faer::col::ColRef::from_raw_parts(vec.as_ptr(), n, vec.stride(0)) }
+}
+
+/// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::ColMut<'a, T>`.
+/// This function **does not copy** any data.
+pub fn into_faer_col_mut<'a, T, D0: Dim, L: Layout>(
+    vec: &'a mut Slice<T, (D0,), L>,
+) -> faer::col::ColMut<'a, T> {
+    let n = vec.shape().dim(0);
+
+    // SAFETY:
+    // - `vec.as_mut_ptr()` points to a valid mutable vector with `n` elements.
+    // - `vec.stride(0)` describes the spacing between consecutive elements.
+    unsafe { faer::col::ColMut::from_raw_parts_mut(vec.as_mut_ptr() as *mut _, n, vec.stride(0)) }
+}
+
+/// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::RowRef<'a, T>`.
+/// This function **does not copy** any data.
+pub fn into_faer_row<'a, T, D0: Dim, L: Layout>(
+    vec: &'a Slice<T, (D0,), L>,
+) -> faer::row::RowRef<'a, T> {
+    let n = vec.shape().dim(0);
+
+    // SAFETY:
+    // - `vec.as_ptr()` points to a valid vector with `n` elements.
+    // - `vec.stride(0)` describes the spacing between consecutive elements.
+    unsafe { faer::row::RowRef::from_raw_parts(vec.as_ptr(), n, vec.stride(0)) }
 }
 
 /// Converts a mutable `Slice<T, (D0, D1), L>` (from `mdarray`) into a `faer::diag::DiagMut<'a, T>`,

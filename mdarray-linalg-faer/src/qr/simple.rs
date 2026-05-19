@@ -17,7 +17,7 @@ pub fn qr_faer<
     a: &Slice<T, (D0, D1), La>,
     q_mda: Option<&mut Slice<T, (D0, D2), Lq>>,
     r_mda: &mut Slice<T, (D2, D1), Lr>,
-        config: QRConfig,
+    _config: QRConfig,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

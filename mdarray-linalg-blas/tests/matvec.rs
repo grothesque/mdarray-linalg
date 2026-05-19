@@ -7,6 +7,11 @@ fn eval_and_write() {
 }
 
 #[test]
+fn eval_and_write_rectangular() {
+    test_eval_and_write_rectangular(Blas)
+}
+
+#[test]
 fn add_to_scaled() {
     test_add_to_scaled(Blas)
 }

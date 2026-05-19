@@ -43,15 +43,15 @@ where
         self
     }
 
-    fn eval(self) -> Array<T, (D1,)> {
+    fn eval(self) -> Array<T, (D0,)> {
         let ash = *self.a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         let x_len = self.x.shape().dim(0);
 
         assert!(n == x_len, "Matrix columns must match vector length");
 
-        let result_shape = <(D1,) as Shape>::from_dims(&[m]);
-        let mut result = Array::<T, (D1,)>::from_elem(result_shape, T::zero());
+        let result_shape = <(D0,) as Shape>::from_dims(&[m]);
+        let mut result = Array::<T, (D0,)>::from_elem(result_shape, T::zero());
 
         for i in 0..m {
             let mut sum = T::zero();
@@ -63,12 +63,14 @@ where
         result
     }
 
-    fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
+    fn write<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>) {
         let ash = *self.a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         let x_len = self.x.shape().dim(0);
+        let y_len = y.shape().dim(0);
 
         assert!(n == x_len, "Matrix columns must match vector length");
+        assert!(m == y_len, "Matrix rows must match y vector length");
 
         for i in 0..m {
             let mut sum = T::zero();
@@ -79,7 +81,7 @@ where
         }
     }
 
-    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
+    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>) {
         let ash = *self.a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         let x_len = self.x.shape().dim(0);
@@ -90,12 +92,12 @@ where
 
         for i in 0..m {
             for j in 0..n {
-                y[[i]] = y[[i]] + self.a[[i, j]] * self.x[[j]];
+                y[[i]] = y[[i]] + self.alpha * self.a[[i, j]] * self.x[[j]];
             }
         }
     }
 
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>, beta: T) {
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>, beta: T) {
         let ash = *self.a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         let x_len = self.x.shape().dim(0);
@@ -110,7 +112,7 @@ where
 
         for i in 0..m {
             for j in 0..n {
-                y[[i]] = y[[i]] + self.a[[i, j]] * self.x[[j]];
+                y[[i]] = y[[i]] + self.alpha * self.a[[i, j]] * self.x[[j]];
             }
         }
     }

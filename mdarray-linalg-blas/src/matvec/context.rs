@@ -47,24 +47,24 @@ where
         self
     }
 
-    fn eval(self) -> Array<T, (D1,)> {
-        let mut y = Array::<T, (D1,)>::from_elem(
-            <(D1,) as Shape>::from_dims(&[self.a.shape().dim(0)]),
+    fn eval(self) -> Array<T, (D0,)> {
+        let mut y = Array::<T, (D0,)>::from_elem(
+            <(D0,) as Shape>::from_dims(&[self.a.shape().dim(0)]),
             T::zero(),
         );
         gemv(self.alpha, self.a, self.x, T::zero(), &mut y);
         y
     }
 
-    fn write<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
+    fn write<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>) {
         gemv(self.alpha, self.a, self.x, T::zero(), y);
     }
 
-    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>) {
+    fn add_to_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>) {
         gemv(self.alpha, self.a, self.x, T::one(), y);
     }
 
-    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D1,), Ly>, beta: T) {
+    fn add_to_scaled_vec<Ly: Layout>(self, y: &mut Slice<T, (D0,), Ly>, beta: T) {
         gemv(self.alpha, self.a, self.x, beta, y);
     }
 }
