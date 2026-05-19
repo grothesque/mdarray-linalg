@@ -47,22 +47,22 @@ fn determinant_dummy() {
     test_determinant_dummy(&Faer::default());
 }
 
-// #[test]
-// fn cholesky_decomposition() {
-//     test_cholesky_decomposition(&Faer::default());
-// }
+#[test]
+fn cholesky_decomposition() {
+    test_cholesky_decomposition(&Faer::default());
+}
 
-// #[test]
-// fn cholesky_write() {
-//     test_cholesky_write(&Faer::default());
-// }
+#[test]
+fn cholesky_write() {
+    test_cholesky_write(&Faer::default());
+}
 
-// #[test]
-// fn cholesky_not_positive_definite() {
-//     test_cholesky_not_positive_definite(&Faer::default());
-// }
+#[test]
+fn cholesky_not_positive_definite() {
+    test_cholesky_not_positive_definite(&Faer::default());
+}
 
-// #[test]
-// fn cholesky_identity_matrix() {
-//     test_cholesky_identity_matrix(&Faer::default());
-// }
+#[test]
+fn cholesky_identity_matrix() {
+    test_cholesky_identity_matrix(&Faer::default());
+}

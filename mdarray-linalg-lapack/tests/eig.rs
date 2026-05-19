@@ -33,6 +33,26 @@ fn eigh_complex_hermitian() {
 }
 
 #[test]
+fn eig_full() {
+    test_eig_full(&Lapack::default());
+}
+
+#[test]
+fn eig_full_complex() {
+    test_eig_full_complex(&Lapack::default());
+}
+
+#[test]
+fn eig_full_real_complex_pair() {
+    test_eig_full_real_complex_pair(&Lapack::default());
+}
+
+#[test]
+fn eig_full_complex_singleton() {
+    test_eig_full_complex_singleton(&Lapack::default());
+}
+
+#[test]
 #[should_panic]
 fn eig_full_non_square() {
     test_eig_full_non_square(&Lapack::default());

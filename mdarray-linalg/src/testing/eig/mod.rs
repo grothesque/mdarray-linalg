@@ -90,68 +90,90 @@ pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>, usize, usize>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-// #[test]
-// fn eig_full() {
-//     test_eig_full(&Lapack::default());
-//     test_eig_full(&Faer);
-// }
+pub fn test_eig_full(bd: &impl Eig<f64, usize, usize>) {
+    let n = 4;
+    let a = random_matrix(n, n);
 
-// fn test_eig_full(bd: &impl Eig<f64>) {
-//     let n = 3;
-//     let a = random_matrix(n, n);
+    let EigDecomp {
+        eigenvalues,
+        left_eigenvectors,
+        right_eigenvectors,
+    } = bd
+        .eig_full(&mut a.clone())
+        .expect("Full eigenvalue decomposition failed");
 
-//     let EigDecomp {
-//         eigenvalues,
-//         left_eigenvectors,
-//         right_eigenvectors,
-//     } = bd
-//         .eig_full(&mut a.clone())
-//         .expect("Full eigenvalue decomposition failed");
+    let left_eigenvectors = left_eigenvectors.expect("Left eigenvectors were not computed");
+    let right_eigenvectors = right_eigenvectors.expect("Right eigenvectors were not computed");
 
-//     // Test right eigenvectors
-//     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
+    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors);
+    test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
+}
 
-//     // Verify left eigenvectors are computed
-//     assert!(left_eigenvectors.is_some());
-// }
+pub fn test_eig_full_complex(bd: &impl Eig<Complex<f64>, usize, usize>) {
+    let n = 4;
+    let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
+        Complex::new((i[0] + i[1]) as f64, (i[0] * i[1] + 1) as f64)
+    });
 
-// #[test]
-// TODO
-// fn test_eig_full_reconstruction() {
-//     test_eig_full_reconstruction_impl(&Lapack::default());
-//     // test_eig_full_reconstruction_impl(&Faer);
-// }
+    let EigDecomp {
+        eigenvalues,
+        left_eigenvectors,
+        right_eigenvectors,
+    } = bd
+        .eig_full(&mut a.clone())
+        .expect("Full eigen decomposition failed");
 
-// fn test_eig_full_reconstruction_impl(bd: &impl Eig<Complex<f64>>) {
-//     let n = 4;
-//     // let mut a = random_matrix(n, n);
-//     // let mut b = random_matrix(n, n);
-//     let mut a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
-//         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
-//     });
+    let left_eigenvectors = left_eigenvectors.expect("Left eigenvectors were not computed");
+    let right_eigenvectors = right_eigenvectors.expect("Right eigenvectors were not computed");
 
-//     let EigDecomp {
-//         eigenvalues,
-//         left_eigenvectors,
-//         right_eigenvectors,
-//     } = bd
-//         .eig_full(&mut a.clone())
-//         .expect("Full eigen decomposition failed");
+    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors);
+    test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
+}
 
-//     pretty_print(&right_eigenvectors.clone().unwrap());
-//     pretty_print(&left_eigenvectors.clone().unwrap());
+pub fn test_eig_full_real_complex_pair(bd: &impl Eig<f64, usize, usize>) {
+    let a = DArray::<f64, 2>::from_fn([3, 3], |i| match (i[0], i[1]) {
+        (0, 1) => -1.0,
+        (1, 0) => 1.0,
+        (2, 2) => 2.0,
+        _ => 0.0,
+    });
 
-//     test_eigen_reconstruction_full(
-//         &a,
-//         &eigenvalues,
-//         &left_eigenvectors.unwrap(),
-//         &right_eigenvectors.unwrap(),
-//     );
-// }
+    let EigDecomp {
+        eigenvalues,
+        left_eigenvectors,
+        right_eigenvectors,
+    } = bd
+        .eig_full(&mut a.clone())
+        .expect("Full eigenvalue decomposition failed on real complex-pair case");
 
-pub fn test_eigen_reconstruction_full<T>(
+    let left_eigenvectors = left_eigenvectors.expect("Left eigenvectors were not computed");
+    let right_eigenvectors = right_eigenvectors.expect("Right eigenvectors were not computed");
+
+    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors);
+    test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
+}
+
+pub fn test_eig_full_complex_singleton(bd: &impl Eig<Complex<f64>, usize, usize>) {
+    let a = DArray::<Complex<f64>, 2>::from_fn([1, 1], |_| Complex::new(2.0, -3.0));
+
+    let EigDecomp {
+        eigenvalues,
+        left_eigenvectors,
+        right_eigenvectors,
+    } = bd
+        .eig_full(&mut a.clone())
+        .expect("Full eigenvalue decomposition failed on 1x1 complex case");
+
+    let left_eigenvectors = left_eigenvectors.expect("Left eigenvectors were not computed");
+    let right_eigenvectors = right_eigenvectors.expect("Right eigenvectors were not computed");
+
+    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors);
+    test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
+}
+
+pub fn test_eigen_reconstruction_full_values<T>(
     a: &DArray<T, 2>,
-    eigenvalues: &DArray<Complex<T::Real>, 2>,
+    eigenvalues: &DArray<Complex<T::Real>, 1>,
     left_eigenvectors: &DArray<Complex<T::Real>, 2>,
     right_eigenvectors: &DArray<Complex<T::Real>, 2>,
 ) where
@@ -161,7 +183,7 @@ pub fn test_eigen_reconstruction_full<T>(
     let x = T::default();
 
     for i in 0..n {
-        let λ = eigenvalues[[0, i]];
+        let λ = eigenvalues[i];
         let vr = right_eigenvectors.view(.., i).to_owned();
         let vl = left_eigenvectors.view(.., i).to_owned();
 
@@ -171,7 +193,6 @@ pub fn test_eigen_reconstruction_full<T>(
         assert!(norm_r > 1e-12, "Null right eigenvector found");
         assert!(norm_l > 1e-12, "Null left eigenvector found");
 
-        // A * vr = λ * vr
         for row in 0..n {
             let mut sum = Complex::new(x.re(), x.re());
             for col in 0..n {
@@ -182,7 +203,6 @@ pub fn test_eigen_reconstruction_full<T>(
             assert_relative_eq!(diff.im(), 0.0, epsilon = 1e-10);
         }
 
-        //  vl^H * A = λ * vl^H
         for col in 0..n {
             let mut sum = Complex::new(x.re(), x.re());
             for row in 0..n {

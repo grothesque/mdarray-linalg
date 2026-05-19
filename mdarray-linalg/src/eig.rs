@@ -14,6 +14,13 @@
 //! // Or...
 //! let (lambda, v) = eig!(&mut a.clone());
 //!
+//! // Full decomposition with left and right eigenvectors.
+//! let EigDecomp { eigenvalues, left_eigenvectors, right_eigenvectors } = bd
+//!     .eig_full(&mut a.clone())
+//!     .expect("Full eigenvalue decomposition failed");
+//! let left = left_eigenvectors.expect("Left eigenvectors were not computed");
+//! let right = right_eigenvectors.expect("Right eigenvectors were not computed");
+//!
 //! // ----- Schur decomposition -----
 //! // A = Z * T * Z^T  where T is quasi-upper-triangular and Z is orthogonal.
 //! let SchurDecomp { t, z } = bd

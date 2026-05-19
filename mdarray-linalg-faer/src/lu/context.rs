@@ -15,6 +15,16 @@ use num_complex::ComplexFloat;
 use super::simple::lu_faer;
 use crate::{Faer, into_faer_mut};
 
+fn map_cholesky_error(err: faer::linalg::cholesky::llt::factor::LltError) -> InvError {
+    match err {
+        faer::linalg::cholesky::llt::factor::LltError::NonPositivePivot { index } => {
+            InvError::NotPositiveDefinite {
+                lpm: index as i32 + 1,
+            }
+        }
+    }
+}
+
 impl<T, D0: Dim, D1: Dim> LU<T, D0, D1> for Faer
 where
     T: ComplexFloat
@@ -194,12 +204,63 @@ where
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
-        todo!("choleski will be implemented later")
+    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
+        if m != n {
+            return Err(InvError::NotSquare {
+                rows: m as i32,
+                cols: n as i32,
+            });
+        }
+
+        let mut l = a.to_tensor();
+        self.choleski_write(&mut l)?;
+        Ok(l)
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, _a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
-        todo!("choleski_write will be implemented later")
+    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+        let ash = *a.shape();
+        let (m, n) = (ash.dim(0), ash.dim(1));
+
+        if m != n {
+            return Err(InvError::NotSquare {
+                rows: m as i32,
+                cols: n as i32,
+            });
+        }
+
+        let par = faer::get_global_parallelism();
+
+        let result = {
+            let mut a_faer = into_faer_mut(a);
+            faer::linalg::cholesky::llt::factor::cholesky_in_place(
+                a_faer.as_mut(),
+                Default::default(),
+                par,
+                MemStack::new(&mut MemBuffer::new(
+                    faer::linalg::cholesky::llt::factor::cholesky_in_place_scratch::<T>(
+                        n,
+                        par,
+                        faer::prelude::default(),
+                    ),
+                )),
+                faer::prelude::default(),
+            )
+        };
+
+        match result {
+            Ok(_) => {
+                for i in 0..n {
+                    for j in i + 1..n {
+                        a[[i, j]] = T::zero();
+                    }
+                }
+                Ok(())
+            }
+            Err(err) => Err(map_cholesky_error(err)),
+        }
     }
 }

@@ -29,8 +29,8 @@
 //! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | 🔧 |🔧 |
-//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | 🔧 | 🔧  |
+//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |🔧 |
+//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | **▶︎ Advanced**                                   ||||||
 //! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
 //!

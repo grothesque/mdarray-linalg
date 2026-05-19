@@ -33,6 +33,26 @@ fn eigh_complex_hermitian() {
 }
 
 #[test]
+fn eig_full() {
+    test_eig_full(&Faer::default());
+}
+
+#[test]
+fn eig_full_complex() {
+    test_eig_full_complex(&Faer::default());
+}
+
+#[test]
+fn eig_full_real_complex_pair() {
+    test_eig_full_real_complex_pair(&Faer::default());
+}
+
+#[test]
+fn eig_full_complex_singleton() {
+    test_eig_full_complex_singleton(&Faer::default());
+}
+
+#[test]
 #[should_panic]
 fn eig_full_non_square() {
     test_eig_full_non_square(&Faer::default());
@@ -44,12 +64,12 @@ fn eig_values_non_square() {
     test_eig_values_non_square(&Faer::default());
 }
 
-// #[test]
-// fn schur_decomp() {
-//     test_schur(&Faer::default());
-// }
+#[test]
+fn schur_decomp() {
+    test_schur(&Faer::default());
+}
 
-// #[test]
-// fn schur_decomp_cplx() {
-//     test_schur_cplx(&Faer::default());
-// }
+#[test]
+fn schur_decomp_cplx() {
+    test_schur_cplx(&Faer::default());
+}
