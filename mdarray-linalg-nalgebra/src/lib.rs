@@ -28,6 +28,7 @@ use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::{Complex, ComplexFloat};
 
 pub mod eig;
+pub mod lu;
 pub mod matmul;
 pub mod matvec;
 pub mod qr;
