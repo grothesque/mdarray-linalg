@@ -10,29 +10,30 @@
 //! - [`Lapack`](https://docs.rs/mdarray-linalg-lapack): bindings to [LAPACK](https://www.netlib.org/lapack/)
 //! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [faer](https://faer.veganb.tw/)
 //! - [`Nalgebra`](https://docs.rs/mdarray-linalg-nalgebra): bindings to [nalgebra](https://nalgebra.rs/)
+//! - [`Tblis`](https://docs.rs/mdarray-linalg-tblis): bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
 //! - `Naive`: simple demo backend, integrated into this crate
 //! > **Note:** Not all backends support all functionalities.
 //!
 // ! <details>
 // ! <summary>Click to expand the feature support table</summary>
 //!
-//! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra |
-//! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|
-//! | **▶︎ Basic vector/matrix operations**              ||||||
-//! | [Matrix-vector multiplications](crate::matvec#matrix-vector-operations) | ✅ | ⬜ | ✅ | ✅ | ✅  |
-//! | [Operations on vectors](crate::matvec#vector-operations)     | ✅ | ⬜ | ✅ | ✅ | ✅  |
-//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | ✅  |
-//! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ✅  |
-//! | **▶︎ Linear algebra**                              |||||
-//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ✅ | ✅ | ✅  |
-//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |✅ |
-//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | ✅  |
-//! | **▶︎ Advanced**                                   ||||||
-//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | ✅  |
+//! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra | TBLIS |
+//! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|:-----:|
+//! | **▶︎ Basic vector/matrix operations**              |||||||
+//! | [Matrix-vector multiplications](crate::matvec#matrix-vector-operations) | ✅ | ⬜ | ✅ | ✅ | ✅ | ⬜ |
+//! | [Operations on vectors](crate::matvec#vector-operations)     | ✅ | ⬜ | ✅ | ✅ | ✅ | ⬜ |
+//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
+//! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ✅ | ⬜ |
+//! | **▶︎ Linear algebra**                              |||||||
+//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
+//! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
+//! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
+//! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
+//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ✅ | ✅ | ✅ | ⬜ |
+//! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |✅ | ⬜ |
+//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
+//! | **▶︎ Advanced**                                   |||||||
+//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented

@@ -5,6 +5,7 @@ members = [
   "mdarray-linalg-lapack",
   "mdarray-linalg-faer",
   "mdarray-linalg-nalgebra",
+  "mdarray-linalg-tblis",
 ]
 resolver = "3"
 
@@ -30,3 +31,5 @@ openblas-src = { version = "0.10.11", features = ["system"] }
 paste = "1.0.15"
 rand = "0.9.2"
 thiserror = "2.0.12"
+tblis = "0.2.6"
+tblis-src = "0.2.6"
