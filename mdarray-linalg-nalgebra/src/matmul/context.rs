@@ -154,7 +154,7 @@ where
     }
 
     fn eval(self) -> Array<T> {
-        _contract(Nalgebra, self.a, self.b, self.axes, self.alpha)
+        _contract(Nalgebra::default(), self.a, self.b, self.axes, self.alpha)
     }
 
     fn write(self, _c: &mut Slice<T>) {

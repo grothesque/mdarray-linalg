@@ -28,7 +28,7 @@
 //! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
-//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |🔧 |
 //! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | **▶︎ Advanced**                                   ||||||

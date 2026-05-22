@@ -14,7 +14,7 @@
 //!
 //!
 //! // ----- Singular Value Decomposition (SVD) -----
-//! let bd = Nalgebra;
+//! let bd = Nalgebra::default();
 //! let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
 //! println!("Left singular vectors U: {:?}", u);
@@ -30,10 +30,34 @@ use num_complex::{Complex, ComplexFloat};
 pub mod eig;
 pub mod matmul;
 pub mod matvec;
+pub mod qr;
 pub mod svd;
 
-#[derive(Default)]
-pub struct Nalgebra;
+#[derive(Default, Debug, Clone, Copy)]
+pub enum QRConfig {
+    #[default]
+    Reduced, // Q: M×K, R: K×N
+    Complete, // Q: M×M, R: M×N
+}
+
+pub struct Nalgebra {
+    qr_config: QRConfig,
+}
+
+impl Default for Nalgebra {
+    fn default() -> Self {
+        Self {
+            qr_config: QRConfig::Reduced,
+        }
+    }
+}
+
+impl Nalgebra {
+    pub fn config_qr(mut self, config: QRConfig) -> Self {
+        self.qr_config = config;
+        self
+    }
+}
 
 /// Copy an mdarray matrix into a dense nalgebra matrix.
 pub(crate) fn to_dmatrix<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> nalgebra::DMatrix<T>
@@ -164,11 +188,11 @@ pub(crate) fn write_complex_dvector<R, D1, L>(
 #[macro_export]
 macro_rules! matmul {
     ($a:expr, $b:expr) => {
-        $crate::Nalgebra.matmul($a, $b).eval()
+        $crate::Nalgebra::default().matmul($a, $b).eval()
     };
 
     ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
-        $crate::Nalgebra
+        $crate::Nalgebra::default()
             .matmul(
                 $a,
                 &$crate::matmul!($b, $($rest),+)

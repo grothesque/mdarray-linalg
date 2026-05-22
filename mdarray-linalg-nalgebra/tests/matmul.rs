@@ -8,7 +8,7 @@ use mdarray_linalg_nalgebra::{Nalgebra, matmul};
 
 #[test]
 fn matmul_complex_with_scaling() {
-    test_matmul_complex_with_scaling_impl(&Nalgebra);
+    test_matmul_complex_with_scaling_impl(&Nalgebra::default());
 }
 
 #[test]
@@ -17,7 +17,7 @@ fn dimension_mismatch_panic() {
     let a = create_test_matrix_f64([2, 3]).eval();
     let b = create_test_matrix_f64([4, 2]).eval();
 
-    let _ = Nalgebra.matmul(&a, &b).eval();
+    let _ = Nalgebra::default().matmul(&a, &b).eval();
 }
 
 #[test]
@@ -25,7 +25,7 @@ fn empty_matrix_multiplication() {
     let a = Array::from_elem([0, 3], 0.0f64);
     let b = Array::from_elem([3, 0], 0.0f64);
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+    let result = Nalgebra::default().matmul(&a, &b).eval();
     assert_eq!(result, naive_matmul(&a, &b));
 }
 
@@ -34,7 +34,7 @@ fn single_element_matrices() {
     let a = tensor![[3.0]];
     let b = tensor![[4.0]];
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+    let result = Nalgebra::default().matmul(&a, &b).eval();
     assert_eq!(result, naive_matmul(&a, &b));
 }
 
@@ -43,7 +43,7 @@ fn rectangular_matrices() {
     let a = create_test_matrix_f64([3, 5]).eval();
     let b = create_test_matrix_f64([5, 4]).eval();
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+    let result = Nalgebra::default().matmul(&a, &b).eval();
     assert_eq!(result, naive_matmul(&a, &b));
 }
 
@@ -52,7 +52,7 @@ fn zero_matrices() {
     let a = Array::from_elem([2, 3], 0.0f64);
     let b = Array::from_elem([3, 2], 5.0f64);
 
-    let result = Nalgebra.matmul(&a, &b).eval();
+    let result = Nalgebra::default().matmul(&a, &b).eval();
 
     assert_eq!(*result.shape(), (2, 2));
     assert!(result.iter().all(|&x| x == 0.0));
@@ -64,7 +64,7 @@ fn chained_operations() {
     let b = create_test_matrix_f64([3, 2]).eval();
     let mut c = create_test_matrix_f64([2, 2]).eval();
 
-    Nalgebra.matmul(&a, &b).scale(2.0).write(&mut c);
+    Nalgebra::default().matmul(&a, &b).scale(2.0).write(&mut c);
 
     let expected = naive_matmul(&a, &b);
     for (cij, eij) in std::iter::zip(c, expected) {
@@ -82,10 +82,10 @@ fn special_symmetric_left_lower() {
     let a_sym = create_symmetric_matrix_f64(3);
     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a_sym, &b)
         .special(Side::Left, Type::Sym, Triangle::Lower);
-    let result_upper = Nalgebra
+    let result_upper = Nalgebra::default()
         .matmul(&a_sym, &b)
         .special(Side::Left, Type::Sym, Triangle::Upper);
 
@@ -98,10 +98,10 @@ fn special_triangular_upper_left() {
     let a_tri = create_upper_triangular_f64(3);
     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a_tri, &b)
         .special(Side::Left, Type::Tri, Triangle::Upper);
-    let result_std = Nalgebra.matmul(&a_tri, &b).eval();
+    let result_std = Nalgebra::default().matmul(&a_tri, &b).eval();
 
     assert_eq!(result, result_std);
 }
@@ -111,10 +111,10 @@ fn special_triangular_lower_left() {
     let a_tri = create_lower_triangular_f64(3);
     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a_tri, &b)
         .special(Side::Left, Type::Tri, Triangle::Lower);
-    let result_std = Nalgebra.matmul(&a_tri, &b).eval();
+    let result_std = Nalgebra::default().matmul(&a_tri, &b).eval();
 
     assert_eq!(result, result_std);
 }
@@ -124,10 +124,10 @@ fn special_hermitian_left_lower() {
     let a_her = create_hermitian_matrix_complex(3);
     let b = create_test_matrix_complex([3, 4]).eval();
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a_her, &b)
         .special(Side::Left, Type::Her, Triangle::Lower);
-    let result_std = Nalgebra.matmul(&a_her, &b).eval();
+    let result_std = Nalgebra::default().matmul(&a_her, &b).eval();
 
     assert_eq!(*result.shape(), (3, 4));
     for (lhs, rhs) in result.iter().zip(result_std.iter()) {
@@ -140,11 +140,11 @@ fn special_with_scaling() {
     let a_sym = create_symmetric_matrix_f64(3);
     let b = create_test_matrix_f64([3, 4]).eval();
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a_sym, &b)
         .scale(2.5)
         .special(Side::Left, Type::Sym, Triangle::Upper);
-    let result_std = Nalgebra
+    let result_std = Nalgebra::default()
         .matmul(&a_sym, &b)
         .scale(2.5)
         .special(Side::Left, Type::Sym, Triangle::Upper);
@@ -157,7 +157,7 @@ fn special_single_element() {
     let a = tensor![[5.0]];
     let b = tensor![[2.0]];
 
-    let result = Nalgebra
+    let result = Nalgebra::default()
         .matmul(&a, &b)
         .special(Side::Left, Type::Sym, Triangle::Upper);
 
@@ -181,7 +181,7 @@ pub fn non_contiguous_along_both_axis() {
         View::new_unchecked(bufb.as_ptr(), mapping)
     };
 
-    let c = Nalgebra.matmul(&av, &bv).eval();
+    let c = Nalgebra::default().matmul(&av, &bv).eval();
     assert_eq!(c, array![[19., 22.], [43., 50.]]);
 }
 
