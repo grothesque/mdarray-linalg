@@ -324,7 +324,7 @@ where
         );
     }
 
-    fn add_to_special(self, _a: &mut Slice<T, (Dx, Dy)>, _ty: Type, _tr: Triangle) {
+    fn add_to_special<La: Layout>(self, _a: &mut Slice<T, (Dx, Dy), La>, _ty: Type, _tr: Triangle) {
         unimplemented!();
     }
 }

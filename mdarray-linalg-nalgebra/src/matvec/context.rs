@@ -247,7 +247,7 @@ where
         ger(self.alpha, self.x, self.y, T::one(), a);
     }
 
-    fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
+    fn add_to_special<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>, ty: Type, tr: Triangle) {
         match ty {
             Type::Tri => self.add_to(a),
             Type::Sym | Type::Her => {

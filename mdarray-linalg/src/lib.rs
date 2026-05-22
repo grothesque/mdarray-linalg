@@ -60,6 +60,7 @@
 //! // Backends are provided in partner crates (e.g. mdarray-linalg-blas or mdarray-linalg-faer),
 //! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
+//! use mdarray_linalg::matmul;
 //!
 //! fn main() {
 //!     // Declare two vectors

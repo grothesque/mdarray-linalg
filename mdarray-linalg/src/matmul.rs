@@ -43,6 +43,25 @@ use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice, View};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
+/// Specifies whether the left or right matrix has the special property.
+pub enum Side {
+    Left,
+    Right,
+}
+
+/// Identifies the structural type of a matrix.
+pub enum Type {
+    Sym,
+    Her,
+    Tri,
+}
+
+/// Specifies whether a structured matrix stores its upper or lower triangle.
+pub enum Triangle {
+    Upper,
+    Lower,
+}
+
 /// Tensor contraction and related operations
 pub trait Contract<T: One + MulAdd<Output = T>> {
     /// Matrix multiplication.
@@ -176,6 +195,14 @@ where
     /// Adds the result to the provided slice after scaling the slice by `beta`
     /// (i.e. C := beta * C + result).
     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T);
+
+    /// Structured matrix product for symmetric, Hermitian, or triangular inputs.
+    fn special(self, _lr: Side, _ty: Type, _tr: Triangle) -> Array<T, (D0, D2)>
+    where
+        Self: Sized,
+    {
+        unimplemented!("special matrix products are not implemented for this backend")
+    }
 }
 
 /// Builder interface for configuring tensor contraction operations

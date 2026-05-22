@@ -10,7 +10,7 @@ use mdarray_linalg::{finish_contraction, prepare_contraction};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
-use crate::{Faer, QRConfig, into_faer, into_faer_mut};
+use crate::{Faer, into_faer, into_faer_mut};
 
 struct FaerMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where

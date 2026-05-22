@@ -1,6 +1,6 @@
-use mdarray::{Array, Dim, Layout, Shape, Slice};
+use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::matmul::{
-    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
+    _contract, Axes, Contract, ContractBuilder, MatMulBuilder, Side, Triangle, Type,
 };
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
@@ -65,19 +65,20 @@ where
     b: &'a Slice<T, (D1, D2), Lb>,
 }
 
-struct NalgebraContractBuilder<'a, T, La, Lb, S>
+struct NalgebraContractBuilder<'a, T, La, Lb, Sa, Sb>
 where
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     alpha: T,
-    a: &'a Slice<T, S, La>,
-    b: &'a Slice<T, S, Lb>,
+    a: &'a Slice<T, Sa, La>,
+    b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
 }
 
-impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     for NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     T: nalgebra::Scalar + ComplexFloat + Zero + One + ClosedAddAssign + ClosedMulAssign + Copy,
@@ -134,7 +135,8 @@ where
     }
 }
 
-impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for NalgebraContractBuilder<'a, T, La, Lb, S>
+impl<'a, T, La, Lb, Sa, Sb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    for NalgebraContractBuilder<'a, T, La, Lb, Sa, Sb>
 where
     T: nalgebra::Scalar
         + ComplexFloat
@@ -146,23 +148,32 @@ where
         + MulAdd<Output = T>,
     La: Layout,
     Lb: Layout,
-    S: Shape,
+    Sa: Shape,
+    Sb: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
         self.alpha *= factor;
         self
     }
 
-    fn eval(self) -> Array<T> {
+    fn eval(self) -> Array<T, DynRank> {
         _contract(Nalgebra::default(), self.a, self.b, self.axes, self.alpha)
     }
 
-    fn write(self, _c: &mut Slice<T>) {
+    fn write<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
+        todo!()
+    }
+
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>, _beta: T) {
         todo!()
     }
 }
 
-impl<T> MatMul<T> for Nalgebra
+impl<T> Contract<T> for Nalgebra
 where
     T: nalgebra::Scalar
         + ComplexFloat
@@ -173,11 +184,11 @@ where
         + Copy
         + MulAdd<Output = T>,
 {
-    fn matmul<'a, La, Lb, D0, D1, D2>(
+    fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -192,36 +203,33 @@ where
         }
     }
 
-    fn contract_all<'a, La, Lb, S>(
+    fn contract_all<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+    ) -> T
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
-        NalgebraContractBuilder {
-            alpha: T::one(),
-            a,
-            b,
-            axes: Axes::All,
-        }
+        _contract(Nalgebra::default(), a, b, Axes::All, T::one()).into_scalar()
     }
 
-    fn contract_n<'a, La, Lb, S>(
+    fn contract_n<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         n: usize,
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
         NalgebraContractBuilder {
             alpha: T::one(),
@@ -231,24 +239,51 @@ where
         }
     }
 
-    fn contract<'a, La, Lb, S>(
+    fn contract_pairs<'a, Sa, Sb, La, Lb>(
         &self,
-        a: &'a Slice<T, S, La>,
-        b: &'a Slice<T, S, Lb>,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
         axes_a: &'a [usize],
         axes_b: &'a [usize],
-    ) -> impl ContractBuilder<'a, T, La, Lb>
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
     where
         T: 'a,
+        Sa: Shape,
+        Sb: Shape,
         La: Layout,
         Lb: Layout,
-        S: Shape,
     {
         NalgebraContractBuilder {
             alpha: T::one(),
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
+        }
+    }
+
+    fn contract<'a, Sa, Sb, La, Lb>(
+        &self,
+        a: &'a Slice<T, Sa, La>,
+        b: &'a Slice<T, Sb, Lb>,
+        indices_a: &'a [u8],
+        indices_b: &'a [u8],
+        indices_c: &'a [u8],
+    ) -> impl ContractBuilder<'a, T, Sa, Sb, La, Lb>
+    where
+        T: 'a,
+        Sa: Shape,
+        Sb: Shape,
+        La: Layout,
+        Lb: Layout,
+    {
+        let _ = indices_c;
+        let axes_a: Vec<usize> = indices_a.iter().map(|&i| i as usize).collect();
+        let axes_b: Vec<usize> = indices_b.iter().map(|&i| i as usize).collect();
+        NalgebraContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::SpecificOwned(axes_a, axes_b),
         }
     }
 }
