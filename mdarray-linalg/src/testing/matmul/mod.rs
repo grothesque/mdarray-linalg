@@ -98,6 +98,15 @@ pub fn contract_einsum_full_contraction_impl(backend: &impl Contract<f64>) {
     assert_eq!(result.into_scalar(), 70.);
 }
 
+pub fn contract_einsum_output_permutation_impl(backend: &impl Contract<f64>) {
+    // ij,jk->ki
+    let a = array![[1., 2.], [3., 4.]].into_dyn();
+    let b = array![[5., 6.], [7., 8.]].into_dyn();
+    let expected = array![[19., 43.], [22., 50.]].into_dyn();
+    let result = backend.contract(&a, &b, &[0, 1], &[1, 2], &[2, 0]).eval();
+    assert_eq!(result, expected);
+}
+
 pub fn contract_einsum_outer_product_impl(backend: &impl Contract<f64>) {
     // i,j->ij
     let a = array![1., 2.].into_dyn();

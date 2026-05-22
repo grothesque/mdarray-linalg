@@ -62,6 +62,11 @@ fn contract_einsum_full_contraction() {
 }
 
 #[test]
+fn contract_einsum_output_permutation() {
+    contract_einsum_output_permutation_impl(&Naive)
+}
+
+#[test]
 fn contract_einsum_outer_product() {
     contract_einsum_outer_product_impl(&Naive)
 }
