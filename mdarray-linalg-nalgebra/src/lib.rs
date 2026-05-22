@@ -32,6 +32,7 @@ pub mod lu;
 pub mod matmul;
 pub mod matvec;
 pub mod qr;
+pub mod solve;
 pub mod svd;
 
 #[derive(Default, Debug, Clone, Copy)]
