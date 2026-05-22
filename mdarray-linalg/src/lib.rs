@@ -24,13 +24,13 @@
 //! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | ✅  |
 //! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ✅  |
 //! | **▶︎ Linear algebra**                              |||||
-//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | [LU decomposition and inverse](crate::lu)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Solve](crate::solve)           | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [QR decomposition](crate::qr)                  | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |🔧 |
-//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
+//! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | ✅  |
 //! | **▶︎ Advanced**                                   ||||||
 //! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | ✅  |
 //!

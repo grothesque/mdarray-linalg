@@ -25,7 +25,9 @@
 //! ```
 
 use mdarray::{Dim, Layout, Shape, Slice};
+use num_complex::{Complex, ComplexFloat};
 
+pub mod eig;
 pub mod matmul;
 pub mod matvec;
 pub mod svd;
@@ -73,6 +75,31 @@ where
     }
 }
 
+/// Copy an mdarray matrix into a dense complex nalgebra matrix.
+pub(crate) fn to_complex_dmatrix<T, D0, D1, L>(
+    a: &Slice<T, (D0, D1), L>,
+) -> nalgebra::DMatrix<Complex<T::Real>>
+where
+    T: ComplexFloat,
+    T::Real: nalgebra::RealField + Copy,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    let rows = a.shape().dim(0);
+    let cols = a.shape().dim(1);
+    let mut data = Vec::with_capacity(rows * cols);
+
+    // nalgebra stores dense matrices in column-major order.
+    for j in 0..cols {
+        for i in 0..rows {
+            data.push(Complex::new(a[[i, j]].re(), a[[i, j]].im()));
+        }
+    }
+
+    nalgebra::DMatrix::from_vec(rows, cols, data)
+}
+
 /// Copy an mdarray slice into a dense nalgebra vector using logical iteration order.
 pub(crate) fn to_dvector<T, S, L>(x: &Slice<T, S, L>) -> nalgebra::DVector<T>
 where
@@ -87,6 +114,42 @@ where
 pub(crate) fn write_dvector<T, D1, L>(src: &nalgebra::DVector<T>, dst: &mut Slice<T, (D1,), L>)
 where
     T: nalgebra::Scalar + Copy,
+    D1: Dim,
+    L: Layout,
+{
+    assert_eq!(src.len(), dst.len());
+
+    for (dsti, srci) in dst.iter_mut().zip(src.iter()) {
+        *dsti = *srci;
+    }
+}
+
+/// Copy a dense complex nalgebra matrix back into an mdarray slice.
+pub(crate) fn write_complex_dmatrix<R, D0, D1, L>(
+    src: &nalgebra::DMatrix<Complex<R>>,
+    dst: &mut Slice<Complex<R>, (D0, D1), L>,
+) where
+    R: nalgebra::RealField + Copy,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    assert_eq!(src.nrows(), dst.shape().dim(0));
+    assert_eq!(src.ncols(), dst.shape().dim(1));
+
+    for i in 0..src.nrows() {
+        for j in 0..src.ncols() {
+            dst[[i, j]] = src[(i, j)];
+        }
+    }
+}
+
+/// Copy a dense complex nalgebra vector back into an mdarray slice.
+pub(crate) fn write_complex_dvector<R, D1, L>(
+    src: &nalgebra::DVector<Complex<R>>,
+    dst: &mut Slice<Complex<R>, (D1,), L>,
+) where
+    R: nalgebra::RealField + Copy,
     D1: Dim,
     L: Layout,
 {
@@ -125,5 +188,21 @@ macro_rules! svd {
     ($a:expr, full) => {{
         let svdr = $crate::Nalgebra::default().svd($a).expect("SVD failed");
         (svdr.s, svdr.u, svdr.vt)
+    }};
+}
+
+/// Convenience macro for eigenvalue decomposition.
+#[macro_export]
+macro_rules! eig {
+    ($a:expr) => {{
+        let eig = $crate::Nalgebra::default()
+            .eig($a)
+            .expect("Eigenvalue decomposition failed");
+
+        let vectors = eig
+            .right_eigenvectors
+            .expect("Eigenvectors were not computed");
+
+        (eig.eigenvalues, vectors)
     }};
 }
