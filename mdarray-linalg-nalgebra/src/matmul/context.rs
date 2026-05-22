@@ -1,306 +1,254 @@
-// use std::fmt::Debug;
-// use std::ops::{AddAssign, MulAssign};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
+use mdarray_linalg::matmul::{
+    _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
+};
+use num_complex::ComplexFloat;
+use num_traits::{MulAdd, One, Zero};
+use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 
-// use mdarray::{Dim, DynRank, Layout, Slice, Array};
-// use mdarray_linalg::matmul::{
-//     _contract, Axes, ContractBuilder, MatMul, MatMulBuilder, Side, Triangle, Type,
-// };
-// use num_complex::ComplexFloat;
-// use num_traits::{MulAdd, One, Zero};
+use super::simple::gemm;
+use crate::{Nalgebra, to_dmatrix, write_dmatrix};
 
-// use crate::Nalgebra;
-// use matamorph::mut_::MataConvertMut;
-// use matamorph::own::MataConvertOwn;
-// use matamorph::ref_::MataConvertRef;
+/// Rebuild the missing half of a structured matrix before dispatching to nalgebra.
+fn copy_special_matrix<T, D0, D1, L>(
+    a: &Slice<T, (D0, D1), L>,
+    ty: &Type,
+    tr: &Triangle,
+) -> nalgebra::DMatrix<T>
+where
+    T: nalgebra::Scalar + ComplexFloat + Zero + Copy,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    let rows = a.shape().dim(0);
+    let cols = a.shape().dim(1);
+    assert_eq!(
+        rows, cols,
+        "special matrix operations require a square matrix"
+    );
 
-// struct NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-// where
-//     La: Layout,
-//     Lb: Layout,
-//     D0: Dim,
-//     D1: Dim,
-//     D2: Dim,
-// {
-//     alpha: T,
-//     a: &'a Slice<T, (D0, D1), La>,
-//     b: &'a Slice<T, (D1, D2), Lb>,
-// }
+    let mut out = nalgebra::DMatrix::from_element(rows, cols, T::zero());
 
-// struct NalgebraContractBuilder<'a, T, La, Lb>
-// where
-//     La: Layout,
-//     Lb: Layout,
-// {
-//     alpha: T,
-//     a: &'a Slice<T, DynRank, La>,
-//     b: &'a Slice<T, DynRank, Lb>,
-//     axes: Axes,
-// }
+    for i in 0..rows {
+        for j in 0..cols {
+            let stored = match tr {
+                Triangle::Upper => i <= j,
+                Triangle::Lower => i >= j,
+            };
 
-// impl<'a, T, La, Lb, D0, D1, D2> NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-// where
-//     La: Layout,
-//     Lb: Layout,
-//     D0: Dim,
-//     D1: Dim,
-//     D2: Dim,
-//     T: Debug + ComplexFloat + One + 'static + MulAdd<Output = T>,
-// {
-//     #[allow(dead_code)]
-//     pub fn parallelize(mut self) -> Self {
-//         self
-//     }
-// }
+            out[(i, j)] = if stored {
+                a[[i, j]]
+            } else {
+                match ty {
+                    Type::Sym => a[[j, i]],
+                    Type::Her => a[[j, i]].conj(),
+                    Type::Tri => T::zero(),
+                }
+            };
+        }
+    }
 
-// // pub fn into_nalgebra<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim>(
-// //     mat: &mut Array<T, (D0, D1)>,
-// // ) -> nalgebra::DMatrix<T> {
-// //     let (rows, cols) = mat.shape();
-// //     let m = rows.size();
-// //     let n = cols.size();
+    out
+}
 
-// //     let vec = unsafe { Vec::from_raw_parts(mat.as_mut_ptr(), m * n, m * n) };
+struct NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+where
+    La: Layout,
+    Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
+{
+    alpha: T,
+    a: &'a Slice<T, (D0, D1), La>,
+    b: &'a Slice<T, (D1, D2), Lb>,
+}
 
-// //     nalgebra::DMatrix::from_fn(m, n, |i, j| vec[i * n + j].clone())
-// // }
+struct NalgebraContractBuilder<'a, T, La, Lb, S>
+where
+    La: Layout,
+    Lb: Layout,
+    S: Shape,
+{
+    alpha: T,
+    a: &'a Slice<T, S, La>,
+    b: &'a Slice<T, S, Lb>,
+    axes: Axes<'a>,
+}
 
-// pub fn into_nalgebra<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim>(
-//     mat: &Array<T, (D0, D1)>,
-// ) -> nalgebra::DMatrix<T> {
-//     let (rows, cols) = mat.shape();
-//     let m = rows.size();
-//     let n = cols.size();
+impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    for NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+where
+    T: nalgebra::Scalar + ComplexFloat + Zero + One + ClosedAddAssign + ClosedMulAssign + Copy,
+    La: Layout,
+    Lb: Layout,
+    D0: Dim,
+    D1: Dim,
+    D2: Dim,
+{
+    fn scale(mut self, factor: T) -> Self {
+        self.alpha *= factor;
+        self
+    }
 
-//     nalgebra::DMatrix::from_fn(m, n, |i, j| mat[[i, j]].clone())
-// }
+    fn eval(self) -> Array<T, (D0, D2)> {
+        let (m, _) = *self.a.shape();
+        let (_, n) = *self.b.shape();
+        let mut c = Array::<T, (D0, D2)>::from_elem((m, n), T::zero());
+        gemm(self.alpha, self.a, self.b, T::zero(), &mut c);
+        c
+    }
 
-// pub fn into_nalgebra_ref<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim, L: Layout>(
-//     mat: &Slice<T, (D0, D1), L>,
-// ) -> nalgebra::DMatrixView<'_, T> {
-//     let (rows, cols) = mat.shape();
-//     let m = rows.size();
-//     let n = cols.size();
+    fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
+        gemm(self.alpha, self.a, self.b, T::zero(), c);
+    }
 
-//     let row_stride = mat.stride(1) as usize;
-//     let col_stride = mat.stride(0) as usize;
+    fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
+        gemm(self.alpha, self.a, self.b, T::one(), c);
+    }
 
-//     let required_size = if m > 0 && n > 0 {
-//         (m - 1) * col_stride + (n - 1) * row_stride + 1
-//     } else {
-//         0
-//     };
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
+        gemm(self.alpha, self.a, self.b, beta, c);
+    }
 
-//     let s = unsafe { core::slice::from_raw_parts(mat.as_ptr(), required_size) };
+    fn special(self, lr: Side, ty: Type, tr: Triangle) -> Array<T, (D0, D2)> {
+        let (m, _) = *self.a.shape();
+        let (_, n) = *self.b.shape();
+        let mut c_nalgebra = nalgebra::DMatrix::from_element(m.size(), n.size(), T::zero());
 
-//     nalgebra::base::DMatrixView::from_slice_with_strides_generic(
-//         s,
-//         nalgebra::Dim::from_usize(m),
-//         nalgebra::Dim::from_usize(n),
-//         nalgebra::Dim::from_usize(row_stride),
-//         nalgebra::Dim::from_usize(col_stride),
-//     )
-// }
-// pub fn into_nalgebra_mut<T: Clone + nalgebra::Scalar, D0: Dim, D1: Dim, L: Layout>(
-//     mat: &mut Slice<T, (D0, D1), L>,
-// ) -> nalgebra::DMatrixViewMut<'_, T> {
-//     let (rows, cols) = mat.shape();
-//     let m = rows.size();
-//     let n = cols.size();
+        let a_nalgebra = match lr {
+            Side::Left => copy_special_matrix(self.a, &ty, &tr),
+            Side::Right => to_dmatrix(self.a),
+        };
+        let b_nalgebra = match lr {
+            Side::Left => to_dmatrix(self.b),
+            Side::Right => copy_special_matrix(self.b, &ty, &tr),
+        };
 
-//     let row_stride = mat.stride(1) as usize;
-//     let col_stride = mat.stride(0) as usize;
+        c_nalgebra.gemm(self.alpha, &a_nalgebra, &b_nalgebra, T::zero());
 
-//     let required_size = if m > 0 && n > 0 {
-//         (m - 1) * col_stride + (n - 1) * row_stride + 1
-//     } else {
-//         0
-//     };
+        let mut c = Array::<T, (D0, D2)>::from_elem((m, n), T::zero());
+        write_dmatrix(&c_nalgebra, &mut c);
+        c
+    }
+}
 
-//     let s = unsafe { core::slice::from_raw_parts_mut(mat.as_mut_ptr(), required_size) };
+impl<'a, T, La, Lb, S> ContractBuilder<'a, T, La, Lb> for NalgebraContractBuilder<'a, T, La, Lb, S>
+where
+    T: nalgebra::Scalar
+        + ComplexFloat
+        + Zero
+        + One
+        + ClosedAddAssign
+        + ClosedMulAssign
+        + Copy
+        + MulAdd<Output = T>,
+    La: Layout,
+    Lb: Layout,
+    S: Shape,
+{
+    fn scale(mut self, factor: T) -> Self {
+        self.alpha *= factor;
+        self
+    }
 
-//     nalgebra::base::DMatrixViewMut::from_slice_with_strides_generic(
-//         s,
-//         nalgebra::Dim::from_usize(m),
-//         nalgebra::Dim::from_usize(n),
-//         nalgebra::Dim::from_usize(row_stride),
-//         nalgebra::Dim::from_usize(col_stride),
-//     )
-// }
-// impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-//     for NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-// where
-//     La: Layout,
-//     Lb: Layout,
-//     D0: Dim,
-//     D1: Dim,
-//     D2: Dim,
-//     T: ComplexFloat + One + Debug + AddAssign + MulAssign + 'static,
-//     // mdarray::View<'a, T, (D0, D1), La>: MataConvertRef<'a, T>,
-//     // mdarray::View<'a, T, (D1, D2), Lb>: MataConvertRef<'a, T>,
-//     // Array<T, (D0, D2)>: MataConvertRef<'a, T>,
-// {
-//     fn parallelize(mut self) -> Self {
-//         self
-//     }
+    fn eval(self) -> Array<T> {
+        _contract(Nalgebra, self.a, self.b, self.axes, self.alpha)
+    }
 
-//     fn scale(mut self, factor: T) -> Self {
-//         self.alpha = self.alpha * factor;
-//         self
-//     }
+    fn write(self, _c: &mut Slice<T>) {
+        todo!()
+    }
+}
 
-//     fn eval(self) -> Array<T, (D0, D2)> {
-//         let (ma, _) = *self.a.shape();
-//         let (_, nb) = *self.b.shape();
+impl<T> MatMul<T> for Nalgebra
+where
+    T: nalgebra::Scalar
+        + ComplexFloat
+        + Zero
+        + One
+        + ClosedAddAssign
+        + ClosedMulAssign
+        + Copy
+        + MulAdd<Output = T>,
+{
+    fn matmul<'a, La, Lb, D0, D1, D2>(
+        &self,
+        a: &'a Slice<T, (D0, D1), La>,
+        b: &'a Slice<T, (D1, D2), Lb>,
+    ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+    where
+        La: Layout,
+        Lb: Layout,
+        D0: Dim,
+        D1: Dim,
+        D2: Dim,
+    {
+        NalgebraMatMulBuilder {
+            alpha: T::one(),
+            a,
+            b,
+        }
+    }
 
-//         // let a_nalgebra = self.a.view(.., ..).to_nalgebra();
-//         // let b_nalgebra = self.b.view(.., ..).to_nalgebra();
+    fn contract_all<'a, La, Lb, S>(
+        &self,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
+    ) -> impl ContractBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+        S: Shape,
+    {
+        NalgebraContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::All,
+        }
+    }
 
-//         // let mut a_tensor = self.a.to_tensor();
-//         // let mut b_tensor = self.b.to_tensor();
+    fn contract_n<'a, La, Lb, S>(
+        &self,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
+        n: usize,
+    ) -> impl ContractBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+        S: Shape,
+    {
+        NalgebraContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::LastFirst { k: n },
+        }
+    }
 
-//         let a_nalgebra = into_nalgebra_ref(self.a);
-//         let b_nalgebra = into_nalgebra_ref(self.b);
-
-//         let mut c = Array::<T, (D0, D2)>::from_elem((ma, nb), T::zero());
-//         let mut c_nalgebra = into_nalgebra_mut(&mut c);
-
-//         dbg!(a_nalgebra);
-//         dbg!(b_nalgebra);
-
-//         c_nalgebra.gemm(self.alpha, &a_nalgebra, &b_nalgebra, T::zero());
-
-//         // c_nalgebra.transpose_mut();
-
-//         c
-//     }
-
-//     fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
-//         let a_nalgebra = into_nalgebra_ref(self.a);
-//         let b_nalgebra = into_nalgebra_ref(self.b);
-
-//         let mut c_nalgebra = into_nalgebra_mut(c);
-
-//         c_nalgebra.gemm(self.alpha, &a_nalgebra, &b_nalgebra, T::zero());
-//     }
-
-//     fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
-//         todo!()
-//     }
-
-//     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, _beta: T) {
-//         todo!()
-//     }
-
-//     fn special(self, _lr: Side, _type_of_matrix: Type, _tr: Triangle) -> Array<T, (D0, D2)> {
-//         self.eval()
-//     }
-// }
-
-// impl<'a, T, La, Lb> ContractBuilder<'a, T, La, Lb> for NalgebraContractBuilder<'a, T, La, Lb>
-// where
-//     La: Layout,
-//     Lb: Layout,
-//     T: ComplexFloat + Zero + One + MulAdd<Output = T> + Debug + AddAssign + MulAssign + 'static,
-// {
-//     fn scale(mut self, factor: T) -> Self {
-//         self.alpha = self.alpha * factor;
-//         self
-//     }
-
-//     fn eval(self) -> Array<T, DynRank> {
-//         _contract(Nalgebra, self.a, self.b, self.axes, self.alpha)
-//     }
-
-//     fn write(self, _c: &mut Slice<T>) {
-//         todo!()
-//     }
-// }
-
-// impl<T> MatMul<T> for Nalgebra
-// where
-//     T: ComplexFloat + One + MulAdd<Output = T> + Debug + AddAssign + MulAssign + 'static,
-// {
-//     fn matmul<'a, La, Lb, D0, D1, D2>(
-//         &self,
-//         a: &'a Slice<T, (D0, D1), La>,
-//         b: &'a Slice<T, (D1, D2), Lb>,
-//     ) -> impl MatMulBuilder<'a, T, La, Lb, D0, D1, D2>
-//     where
-//         La: Layout,
-//         Lb: Layout,
-//         D0: Dim,
-//         D1: Dim,
-//         D2: Dim,
-//     {
-//         NalgebraMatMulBuilder {
-//             alpha: T::one(),
-//             a,
-//             b,
-//         }
-//     }
-
-//     /// Contracts all axes of the first tensor with all axes of the second tensor.
-//     fn contract_all<'a, La, Lb>(
-//         &self,
-//         a: &'a Slice<T, DynRank, La>,
-//         b: &'a Slice<T, DynRank, Lb>,
-//     ) -> impl ContractBuilder<'a, T, La, Lb>
-//     where
-//         T: 'a,
-//         La: Layout,
-//         Lb: Layout,
-//     {
-//         NalgebraContractBuilder {
-//             alpha: T::one(),
-//             a,
-//             b,
-//             axes: Axes::All,
-//         }
-//     }
-
-//     /// Contracts the last `n` axes of the first tensor with the first `n` axes of the second tensor.
-//     /// # Example
-//     /// For two matrices (2D tensors), `contract_n(1)` performs standard matrix multiplication.
-//     fn contract_n<'a, La, Lb>(
-//         &self,
-//         a: &'a Slice<T, DynRank, La>,
-//         b: &'a Slice<T, DynRank, Lb>,
-//         n: usize,
-//     ) -> impl ContractBuilder<'a, T, La, Lb>
-//     where
-//         T: 'a,
-//         La: Layout,
-//         Lb: Layout,
-//     {
-//         NalgebraContractBuilder {
-//             alpha: T::one(),
-//             a,
-//             b,
-//             axes: Axes::LastFirst { k: (n) },
-//         }
-//     }
-
-//     /// Specifies exactly which axes to contract_all.
-//     /// # Example
-//     /// `specific([1, 2], [3, 4])` contracts axis 1 and 2 of `a`
-//     /// with axes 3 and 4 of `b`.
-//     fn contract<'a, La, Lb>(
-//         &self,
-//         a: &'a Slice<T, DynRank, La>,
-//         b: &'a Slice<T, DynRank, Lb>,
-//         axes_a: impl Into<Box<[usize]>>,
-//         axes_b: impl Into<Box<[usize]>>,
-//     ) -> impl ContractBuilder<'a, T, La, Lb>
-//     where
-//         T: 'a,
-//         La: Layout,
-//         Lb: Layout,
-//     {
-//         NalgebraContractBuilder {
-//             alpha: T::one(),
-//             a,
-//             b,
-//             axes: Axes::Specific(axes_a.into(), axes_b.into()),
-//         }
-//     }
-// }
+    fn contract<'a, La, Lb, S>(
+        &self,
+        a: &'a Slice<T, S, La>,
+        b: &'a Slice<T, S, Lb>,
+        axes_a: &'a [usize],
+        axes_b: &'a [usize],
+    ) -> impl ContractBuilder<'a, T, La, Lb>
+    where
+        T: 'a,
+        La: Layout,
+        Lb: Layout,
+        S: Shape,
+    {
+        NalgebraContractBuilder {
+            alpha: T::one(),
+            a,
+            b,
+            axes: Axes::Specific(axes_a, axes_b),
+        }
+    }
+}

@@ -1,173 +1,139 @@
-// Singular Value Decomposition (SVD):
-//     A = U * Σ * V^T
-// where:
-//     - A is m × n         (input matrix)
-//     - U is m × m        (left singular vectors, orthogonal)
-//     - Σ is µ × µ         (diagonal matrix with singular values on the diagonal, µ = min(m,n))
-//     - V^T is n × n      (transpose of right singular vectors, orthogonal)
-//     - s (Σ) contains min(m, n) singular values (non-negative, sorted in descending order)
-use std::fmt::Debug;
-
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError, SVDResult};
+use num_complex::ComplexFloat;
+use num_traits::Zero;
 
-use matamorph::ref_::MataConvertRef;
+use crate::{Nalgebra, to_dmatrix};
 
-use crate::Nalgebra;
+/// Copy nalgebra singular values into an mdarray vector.
+fn write_singular_values<T, D, L>(
+    singular_values: &nalgebra::DVector<T::Real>,
+    s: &mut Slice<T, (D,), L>,
+) where
+    T: ComplexFloat + nalgebra::ComplexField<RealField = T::Real>,
+    T::Real: nalgebra::RealField + Copy,
+    D: Dim,
+    L: Layout,
+{
+    assert_eq!(s.len(), singular_values.len());
+
+    for (dst, src) in s.iter_mut().zip(singular_values.iter()) {
+        *dst = <T as nalgebra::ComplexField>::from_real(*src);
+    }
+}
+
+fn svd_values_impl<T, D, L, Ls>(
+    a: &Slice<T, (D, D), L>,
+    s: &mut Slice<T, (D,), Ls>,
+) -> Result<(), SVDError>
+where
+    T: ComplexFloat + Copy + Zero + nalgebra::ComplexField<RealField = T::Real>,
+    T::Real: nalgebra::RealField + Copy,
+    D: Dim,
+    L: Layout,
+    Ls: Layout,
+{
+    let svd = to_dmatrix(a).svd(false, false);
+    write_singular_values::<T, D, Ls>(&svd.singular_values, s);
+    Ok(())
+}
+
+/// Copy a possibly thin nalgebra factor into a larger mdarray output.
+fn write_dmatrix_padded<T, D0, D1, L>(src: &nalgebra::DMatrix<T>, dst: &mut Slice<T, (D0, D1), L>)
+where
+    T: nalgebra::Scalar + Zero + Copy,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    assert!(src.nrows() <= dst.shape().dim(0));
+    assert!(src.ncols() <= dst.shape().dim(1));
+
+    dst.fill(T::zero());
+    for i in 0..src.nrows() {
+        for j in 0..src.ncols() {
+            dst[[i, j]] = src[(i, j)];
+        }
+    }
+}
+
+fn svd_full_impl<T, D, L, Ls, Lu, Lvt>(
+    a: &Slice<T, (D, D), L>,
+    s: &mut Slice<T, (D,), Ls>,
+    u: &mut Slice<T, (D, D), Lu>,
+    vt: &mut Slice<T, (D, D), Lvt>,
+) -> Result<(), SVDError>
+where
+    T: ComplexFloat + Copy + Zero + nalgebra::ComplexField<RealField = T::Real>,
+    T::Real: nalgebra::RealField + Copy,
+    D: Dim,
+    L: Layout,
+    Ls: Layout,
+    Lu: Layout,
+    Lvt: Layout,
+{
+    let svd = to_dmatrix(a).svd(true, true);
+    write_singular_values::<T, D, Ls>(&svd.singular_values, s);
+
+    let u_nalgebra = svd.u.ok_or(SVDError::BackendError(-1))?;
+    let vt_nalgebra = svd.v_t.ok_or(SVDError::BackendError(-1))?;
+
+    write_dmatrix_padded(&u_nalgebra, u);
+    write_dmatrix_padded(&vt_nalgebra, vt);
+    Ok(())
+}
 
 impl<T, D, L> SVD<T, D, L> for Nalgebra
 where
-    T: Default
-        + num_complex::ComplexFloat
-        + Debug
-        + nalgebra::ComplexField<RealField = <T as num_complex::ComplexFloat>::Real>,
-    <T as num_complex::ComplexFloat>::Real: nalgebra::RealField + Default + Copy,
+    T: ComplexFloat + Copy + Zero + nalgebra::ComplexField<RealField = T::Real>,
+    T::Real: nalgebra::RealField + Copy,
     D: Dim,
     L: Layout,
-    for<'a> mdarray::View<'a, T, (D, D), L>: MataConvertRef<'a, T>,
 {
-    /// Compute full SVD with new allocated matrices
     fn svd(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
-
+        let shape = *a.shape();
+        let m = shape.dim(0);
+        let n = shape.dim(1);
         let min_mn = m.min(n);
 
-        let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
-        // Here we do a dumb copy of the matrix. This copy takes time
-        // and memory but the nalgebra backend is intended to be used
-        // with small matrices and the gain of using nalgebra/SVD in
-        // the case of small matrices exceeds the time of copy.
+        let mut s = Array::<T, (D,)>::from_elem(<(D,) as Shape>::from_dims(&[min_mn]), T::zero());
+        let mut u = Array::<T, (D, D)>::from_elem(<(D, D) as Shape>::from_dims(&[m, m]), T::zero());
+        let mut vt =
+            Array::<T, (D, D)>::from_elem(<(D, D) as Shape>::from_dims(&[n, n]), T::zero());
 
-        let svd_result = a_nalgebra.svd(true, true);
+        svd_full_impl(a, &mut s, &mut u, &mut vt)?;
 
-        let singular_values = svd_result.singular_values;
-        let u = svd_result.u.ok_or(SVDError::BackendError(-1))?;
-        let v_t = svd_result.v_t.ok_or(SVDError::BackendError(-1))?;
-
-        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
-        let u_shape = <(D, D) as Shape>::from_dims(&[m, m]);
-        let vt_shape = <(D, D) as Shape>::from_dims(&[n, n]);
-
-        let mut s_mda = Array::<T, (D,)>::from_elem(s_shape, T::default());
-        let mut u_mda = Array::<T, (D, D)>::from_elem(u_shape, T::default());
-        let mut vt_mda = Array::<T, (D, D)>::from_elem(vt_shape, T::default());
-
-        for i in 0..min_mn {
-            s_mda[i] = T::from_real(singular_values[i]);
-        }
-
-        let u_cols = u.ncols();
-        for i in 0..m {
-            for j in 0..u_cols {
-                u_mda[[i, j]] = u[(i, j)];
-            }
-            for j in u_cols..m {
-                u_mda[[i, j]] = T::zero();
-            }
-        }
-
-        for i in 0..v_t.nrows() {
-            for j in 0..v_t.ncols() {
-                vt_mda[[i, j]] = v_t[(i, j)];
-            }
-        }
-
-        Ok(SVDDecomp {
-            s: s_mda,
-            u: u_mda,
-            vt: vt_mda,
-        })
+        Ok(SVDDecomp { s, u, vt })
     }
 
-    /// Compute thin SVD with new allocated matrices
     fn svd_thin(&self, _a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
         unimplemented!()
     }
 
-    /// Compute only singular values with new allocated matrix
     fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
+        let shape = *a.shape();
+        let min_mn = shape.dim(0).min(shape.dim(1));
+        let mut s = Array::<T, (D,)>::from_elem(<(D,) as Shape>::from_dims(&[min_mn]), T::zero());
 
-        let min_mn = m.min(n);
-        let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
-        let svd_result = a_nalgebra.svd(false, false);
-        let singular_values = svd_result.singular_values;
-        let s_shape = <(D,) as Shape>::from_dims(&[min_mn]);
-        let mut s_mda = Array::<T, (D,)>::from_elem(s_shape, T::default());
-
-        for i in 0..min_mn {
-            s_mda[[0, i]] = T::from_real(singular_values[i]);
-        }
-
-        Ok(s_mda)
+        svd_values_impl(a, &mut s)?;
+        Ok(s)
     }
 
-    /// Compute full SVD, overwriting existing matrices
     fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s_mda: &mut Slice<T, (D,), Ls>,
-        u_mda: &mut Slice<T, (D, D), Lu>,
-        vt_mda: &mut Slice<T, (D, D), Lvt>,
+        s: &mut Slice<T, (D,), Ls>,
+        u: &mut Slice<T, (D, D), Lu>,
+        vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
-
-        let min_mn = m.min(n);
-
-        let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
-
-        let svd_result = a_nalgebra.svd(true, true);
-
-        let singular_values = svd_result.singular_values;
-        let u = svd_result.u.ok_or(SVDError::BackendError(-1))?;
-        let v_t = svd_result.v_t.ok_or(SVDError::BackendError(-1))?;
-
-        for i in 0..min_mn {
-            s_mda[i] = T::from_real(singular_values[i]);
-        }
-
-        let u_cols = u.ncols();
-        for i in 0..m {
-            for j in 0..u_cols {
-                u_mda[[i, j]] = u[(i, j)];
-            }
-            for j in u_cols..m {
-                u_mda[[i, j]] = T::zero();
-            }
-        }
-
-        for i in 0..v_t.nrows() {
-            for j in 0..v_t.ncols() {
-                vt_mda[[i, j]] = v_t[(i, j)];
-            }
-        }
-
-        Ok(())
+        svd_full_impl(a, s, u, vt)
     }
 
-    /// Compute only singular values, overwriting existing matrix
     fn svd_write_s<Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s_mda: &mut Slice<T, (D,), Ls>,
+        s: &mut Slice<T, (D,), Ls>,
     ) -> Result<(), SVDError> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
-
-        let min_mn = m.min(n);
-
-        let a_nalgebra = nalgebra::DMatrix::<T>::from_fn(m, n, |i, j| a[[i, j]]);
-
-        let svd_result = a_nalgebra.svd(false, false);
-
-        let singular_values = svd_result.singular_values;
-        for i in 0..min_mn {
-            s_mda[i] = T::from_real(singular_values[i]);
-        }
-
-        Ok(())
+        svd_values_impl(a, s)
     }
 }

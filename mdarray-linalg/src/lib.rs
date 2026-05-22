@@ -19,10 +19,10 @@
 //! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra |
 //! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|
 //! | **▶︎ Basic vector/matrix operations**              ||||||
-//! | [Matrix-vector multiplications](crate::matvec#matrix-vector-operations) | ✅ | ⬜ | ✅ | ✅ | 🔧  |
-//! | [Operations on vectors](crate::matvec#vector-operations)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
-//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | 🔧  |
-//! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ⬜  |
+//! | [Matrix-vector multiplications](crate::matvec#matrix-vector-operations) | ✅ | ⬜ | ✅ | ✅ | ✅  |
+//! | [Operations on vectors](crate::matvec#vector-operations)     | ✅ | ⬜ | ✅ | ✅ | ✅  |
+//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | ✅  |
+//! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ✅  |
 //! | **▶︎ Linear algebra**                              |||||
 //! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | [SVD decomposition](crate::svd)               | ⬜ | ✅ | ⬜ | ✅ | ✅  |
@@ -32,7 +32,7 @@
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |🔧 |
 //! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | 🔧  |
 //! | **▶︎ Advanced**                                   ||||||
-//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | 🔧  |
+//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | ✅  |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented
