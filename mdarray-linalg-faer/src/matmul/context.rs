@@ -1,10 +1,13 @@
+use std::iter::Sum;
 use std::num::NonZero;
+use std::ops::AddAssign;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::matmul::{
-    _contract, Axes, Contract, ContractAxes, ContractBuilder, MatMulBuilder, extract_axes,
+    _contract, _hypercontract, einsum_to_contract_axes, extract_axes, Axes, Contract,
+    ContractAxes, ContractBuilder, MatMulBuilder,
 };
 use mdarray_linalg::{finish_contraction, prepare_contraction};
 use num_complex::ComplexFloat;
@@ -38,6 +41,11 @@ where
     b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
     par: Par,
+    einsum: bool,
+    einsum_axes_a: Option<Vec<usize>>,
+    einsum_axes_b: Option<Vec<usize>>,
+    current_output_labels: Option<Vec<u8>>,
+    requested_output_labels: Option<Vec<u8>>,
 }
 
 impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
@@ -120,7 +128,7 @@ impl<'a, T, Sa, Sb, La, Lb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T> + AddAssign + Sum,
     Sa: Shape,
     Sb: Shape,
 {
@@ -130,64 +138,98 @@ where
     }
 
     fn eval(self) -> Array<T, DynRank> {
-        let (a_2d, b_2d, keep_shape_a, keep_shape_b) =
-            prepare_contraction!(self.axes, self.a, self.b);
-        let a_faer = into_faer(&a_2d);
-        let b_faer = into_faer(&b_2d);
+        if self.einsum {
+            let a = self.a.to_array().into_dyn();
+            let b = self.b.to_array().into_dyn();
 
-        let (m, _) = *a_2d.shape();
-        let (_, n) = *b_2d.shape();
-        let mut c = Array::<T, (usize, usize)>::from_elem((m, n), T::zero());
-        let mut c_faer = into_faer_mut(&mut c);
+            let axes_a = self
+                .einsum_axes_a
+                .as_deref()
+                .expect("missing einsum axis labels for A");
+            let axes_b = self
+                .einsum_axes_b
+                .as_deref()
+                .expect("missing einsum axis labels for B");
 
-        matmul(
-            &mut c_faer,
-            Accum::Replace,
-            a_faer,
-            b_faer,
-            self.alpha,
-            self.par,
-        );
+            let mut result = _hypercontract(Faer::default(), a.expr(), b.expr(), axes_a, axes_b);
 
-        finish_contraction!(c, keep_shape_a, keep_shape_b)
+            if let (Some(current), Some(requested)) = (
+                self.current_output_labels.as_deref(),
+                self.requested_output_labels.as_deref(),
+            ) {
+                if current != requested {
+                    let perm: Vec<usize> = requested
+                        .iter()
+                        .map(|label| {
+                            current
+                                .iter()
+                                .position(|cur| cur == label)
+                                .expect("output label not present in contraction result")
+                        })
+                        .collect();
+                    result = result.permute(perm).to_tensor().into_dyn();
+                }
+            }
+
+            if self.alpha != T::one() {
+                result = result.map(|x| x * self.alpha).into_dyn();
+            }
+
+            result
+        } else {
+            let (a_2d, b_2d, keep_shape_a, keep_shape_b) =
+                prepare_contraction!(self.axes, self.a, self.b);
+            let a_faer = into_faer(&a_2d);
+            let b_faer = into_faer(&b_2d);
+
+            let (m, _) = *a_2d.shape();
+            let (_, n) = *b_2d.shape();
+            let mut c = Array::<T, (usize, usize)>::from_elem((m, n), T::zero());
+            let mut c_faer = into_faer_mut(&mut c);
+
+            matmul(
+                &mut c_faer,
+                Accum::Replace,
+                a_faer,
+                b_faer,
+                self.alpha,
+                self.par,
+            );
+
+            finish_contraction!(c, keep_shape_a, keep_shape_b)
+        }
     }
 
     fn write<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>) {
-        // TODO WRITE test because I'm not sure it works
-        let (a_2d, b_2d, _keep_shape_a, _keep_shape_b) =
-            prepare_contraction!(self.axes, self.a, self.b);
-
-        let a_faer = into_faer(&a_2d);
-        let b_faer = into_faer(&b_2d);
-
-        let (m, _) = *a_2d.shape();
-        let (_, n) = *b_2d.shape();
-
-        let mut c_reshaped = c.reshape_mut([m, n]);
-        let mut c_faer = into_faer_mut(&mut c_reshaped);
-
-        matmul(
-            &mut c_faer,
-            Accum::Replace,
-            a_faer,
-            b_faer,
-            self.alpha,
-            self.par,
-        );
+        let result = self.eval();
+        assert_eq!(c.rank(), result.rank(), "output rank mismatch");
+        for i in 0..c.rank() {
+            assert_eq!(c.dim(i), result.dim(i), "output shape mismatch on axis {i}");
+        }
+        for (dst, src) in c.iter_mut().zip(result.iter()) {
+            *dst = *src;
+        }
     }
 
-    fn add_to<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>) {
-        todo!()
+    fn add_to<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>) {
+        self.add_to_scaled(c, T::one())
     }
 
-    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, _c: &mut Slice<T, Sc, Lc>, _beta: T) {
-        todo!()
+    fn add_to_scaled<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>, beta: T) {
+        let result = self.eval();
+        assert_eq!(c.rank(), result.rank(), "output rank mismatch");
+        for i in 0..c.rank() {
+            assert_eq!(c.dim(i), result.dim(i), "output shape mismatch on axis {i}");
+        }
+        for (dst, src) in c.iter_mut().zip(result.iter()) {
+            *dst = beta * *dst + *src;
+        }
     }
 }
 
 impl<T> Contract<T> for Faer
 where
-    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T>,
+    T: ComplexFloat + ComplexField + Zero + One + 'static + MulAdd<Output = T> + AddAssign + Sum,
 {
     fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
@@ -261,6 +303,11 @@ where
             } else {
                 Par::Seq
             },
+            einsum: false,
+            einsum_axes_a: None,
+            einsum_axes_b: None,
+            current_output_labels: None,
+            requested_output_labels: None,
         }
     }
 
@@ -288,6 +335,11 @@ where
             } else {
                 Par::Seq
             },
+            einsum: false,
+            einsum_axes_a: None,
+            einsum_axes_b: None,
+            current_output_labels: None,
+            requested_output_labels: None,
         }
     }
 
@@ -306,23 +358,34 @@ where
         La: Layout,
         Lb: Layout,
     {
-        // TODO: _hypercontract once implemented
-        let _ = indices_c;
-        let axes_a: Vec<usize> = indices_a.iter().map(|&i| i as usize).collect();
-        let axes_b: Vec<usize> = indices_b.iter().map(|&i| i as usize).collect();
+        assert_eq!(indices_a.len(), a.rank(), "einsum indices_a length must match A rank");
+        assert_eq!(indices_b.len(), b.rank(), "einsum indices_b length must match B rank");
+
+        let free: std::collections::HashSet<u8> = indices_c.iter().copied().collect();
+        let current_output_labels: Vec<u8> = indices_a
+            .iter()
+            .chain(indices_b.iter())
+            .copied()
+            .filter(|label| free.contains(label))
+            .collect();
+        let (einsum_axes_a, einsum_axes_b) =
+            einsum_to_contract_axes(indices_a, indices_b, indices_c);
+
         FaerContractBuilder {
             alpha: T::one(),
             a,
             b,
-            axes: Axes::Specific(
-                Box::leak(axes_a.into_boxed_slice()),
-                Box::leak(axes_b.into_boxed_slice()),
-            ),
+            axes: Axes::SpecificOwned(Vec::new(), Vec::new()),
             par: if self.parallelize {
                 Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
             } else {
                 Par::Seq
             },
+            einsum: true,
+            einsum_axes_a: Some(einsum_axes_a),
+            einsum_axes_b: Some(einsum_axes_b),
+            current_output_labels: Some(current_output_labels),
+            requested_output_labels: Some(indices_c.to_vec()),
         }
     }
 }
