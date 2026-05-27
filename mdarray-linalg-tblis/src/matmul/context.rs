@@ -117,6 +117,12 @@ where
                     build_structured_subscripts(self.a, self.b, axes);
                 let mut c = Array::from_elem(shape_c, T::zero());
                 self.run_structured_into(&indices_a, &indices_b, &indices_c, &mut c, T::zero());
+                // When all axes are contracted, TBLIS returns a scalar but the
+                // API expects a 1×1 tensor (like numpy's np.tensordot).
+                if c.rank() == 0 {
+                    let scalar = c.iter().next().copied().unwrap_or(T::zero());
+                    c = Array::from_elem([1, 1], scalar).into_dyn();
+                }
                 c
             }
             ContractMode::Einsum {
@@ -258,7 +264,14 @@ where
         La: Layout,
         Lb: Layout,
     {
-        self.contract_n(a, b, a.rank()).eval().into_scalar()
+        // contract_n returns a 1×1 tensor when all axes are contracted;
+        // extract the scalar from it.
+        self.contract_n(a, b, a.rank())
+            .eval()
+            .iter()
+            .next()
+            .copied()
+            .unwrap_or(T::zero())
     }
 
     fn contract_n<'a, Sa, Sb, La, Lb>(
