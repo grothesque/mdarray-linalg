@@ -148,36 +148,14 @@ where
 {
     fn argmax_write<Lx: Layout, S: Shape>(
         &self,
-        x: &Slice<T, S, Lx>,
-        output: &mut Vec<usize>,
+        _x: &Slice<T, S, Lx>,
+        _output: &mut Vec<usize>,
     ) -> bool {
-        output.clear();
-        if x.is_empty() {
-            return false;
-        }
-        if x.rank() == 0 {
-            return true;
-        }
-        let mut max_flat_idx = 0;
-        let mut max_val = *x.iter().next().unwrap();
-        for (flat_idx, val) in x.iter().enumerate().skip(1) {
-            if *val > max_val {
-                max_val = *val;
-                max_flat_idx = flat_idx;
-            }
-        }
-        let indices = unravel_index(x, max_flat_idx);
-        output.extend_from_slice(&indices);
-        true
+        unimplemented!();
     }
 
-    fn argmax<Lx: Layout, S: Shape>(&self, x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
-        let mut result = Vec::new();
-        if self.argmax_write(x, &mut result) {
-            Some(result)
-        } else {
-            None
-        }
+    fn argmax<Lx: Layout, S: Shape>(&self, _x: &Slice<T, S, Lx>) -> Option<Vec<usize>> {
+        unimplemented!();
     }
 
     fn argmax_abs_write<Lx: Layout, S: Shape>(

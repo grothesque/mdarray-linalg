@@ -136,6 +136,61 @@ where
     nalgebra::DVector::from_iterator(x.len(), x.iter().copied())
 }
 
+/// Create a borrowed nalgebra vector view from an mdarray slice without copying.
+///
+/// # Panics
+///
+/// Panics if the slice has rank > 1 and is not contiguous, or if rank == 1 and
+/// the stride is non-positive.
+pub(crate) fn to_dvector_view<T, S, L>(
+    x: &Slice<T, S, L>,
+) -> nalgebra::DVectorView<'_, T, nalgebra::Dyn, nalgebra::Dyn>
+where
+    T: nalgebra::Scalar + Copy,
+    S: Shape,
+    L: Layout,
+{
+    let len = x.len();
+
+    if len == 0 {
+        let data: &[T] = &[];
+        return nalgebra::MatrixView::from_slice_with_strides_generic(
+            data,
+            nalgebra::Dyn(0),
+            nalgebra::Const::<1>,
+            nalgebra::Dyn(1),
+            nalgebra::Dyn(0),
+        );
+    }
+
+    let rstride = if x.rank() == 1 {
+        let stride = x.stride(0);
+        assert!(stride > 0, "to_dvector_view: negative strides not supported");
+        stride as usize
+    } else {
+        assert!(
+            x.is_contiguous(),
+            "to_dvector_view: non-contiguous multi-dimensional slices not supported"
+        );
+        1
+    };
+
+    let data_len = (len - 1) * rstride + 1;
+    // SAFETY: x.as_ptr() points to the first element in logical order.
+    // For rank-1, stride gives the spacing between consecutive logical elements,
+    // so the accessed range spans data_len elements from the base pointer.
+    // For rank>1 contiguous, the logical order matches memory order with stride 1.
+    let data = unsafe { std::slice::from_raw_parts(x.as_ptr(), data_len) };
+
+    nalgebra::MatrixView::from_slice_with_strides_generic(
+        data,
+        nalgebra::Dyn(len),
+        nalgebra::Const::<1>,
+        nalgebra::Dyn(rstride),
+        nalgebra::Dyn(len),
+    )
+}
+
 /// Copy a dense nalgebra vector back into an mdarray vector slice.
 pub(crate) fn write_dvector<T, D1, L>(src: &nalgebra::DVector<T>, dst: &mut Slice<T, (D1,), L>)
 where

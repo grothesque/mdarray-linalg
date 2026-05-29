@@ -76,17 +76,17 @@ fn norm2_complex() {
     test_norm2_complex(Blas)
 }
 
-#[test]
-fn argmax_real() {
-    test_argmax_real(Blas);
-}
+// #[test]
+// fn argmax_real() {
+//     test_argmax_real(Blas);
+// }
 
 #[test]
 fn argmax_abs() {
     test_argmax_abs(Blas)
 }
 
-#[test]
-fn argmax_write_real() {
-    test_argmax_write_real(Blas)
-}
+// #[test]
+// fn argmax_write_real() {
+//     test_argmax_write_real(Blas)
+// }

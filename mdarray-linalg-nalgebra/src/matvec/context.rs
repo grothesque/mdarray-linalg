@@ -11,7 +11,7 @@ use num_traits::{One, Signed, Zero};
 use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 
 use super::simple::{axpy, gemv, ger};
-use crate::{Nalgebra, to_dvector};
+use crate::{Nalgebra, to_dvector, to_dvector_view};
 
 struct NalgebraMatVecBuilder<'a, T, D0, D1, La, Lx>
 where
@@ -171,7 +171,7 @@ where
             return true;
         }
 
-        let flat_idx = to_dvector(x).argmax().0;
+        let flat_idx = to_dvector_view(x).argmax().0;
         output.extend_from_slice(&unravel_index(x, flat_idx));
         true
     }
@@ -190,7 +190,7 @@ where
             return true;
         }
 
-        let flat_idx = to_dvector(x).iamax();
+        let flat_idx = to_dvector_view(x).iamax();
         output.extend_from_slice(&unravel_index(x, flat_idx));
         true
     }
