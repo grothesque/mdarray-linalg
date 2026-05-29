@@ -11,7 +11,7 @@ use num_traits::{One, Signed, Zero};
 use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 
 use super::simple::{axpy, gemv, ger};
-use crate::{Nalgebra, to_dvector, to_dvector_view};
+use crate::{Nalgebra, to_dvector_view};
 
 struct NalgebraMatVecBuilder<'a, T, D0, D1, La, Lx>
 where
@@ -111,8 +111,8 @@ where
     }
 
     fn dot<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T {
-        let x_nalgebra = to_dvector(x);
-        let y_nalgebra = to_dvector(y);
+        let x_nalgebra = to_dvector_view(x);
+        let y_nalgebra = to_dvector_view(y);
         x_nalgebra.dot(&y_nalgebra)
     }
 
