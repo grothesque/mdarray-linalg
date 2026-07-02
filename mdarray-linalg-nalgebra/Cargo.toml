@@ -5,7 +5,7 @@ edition = "2024"
 repository = "https://github.com/grothesque/mdarray-linalg"
 license = "MIT AND Apache-2.0"
 keywords = ["mdarray", "linear-algebra", "math", "matrix", "nalgebra"]
-description = "Faer backend for mdarray-linalg"
+description = "Nalgebra backend for mdarray-linalg"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
 

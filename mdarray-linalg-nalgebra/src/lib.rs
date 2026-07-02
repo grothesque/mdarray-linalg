@@ -7,10 +7,8 @@
 //!
 //! use mdarray_linalg_nalgebra::Nalgebra;
 //!
-//! // Declare two matrices
+//! // Declare a matrix
 //! let a = tensor![[1., 2.], [3., 4.]];
-//! let b = tensor![[5., 6.], [7., 8.]];
-//!
 //!
 //! // ----- Singular Value Decomposition (SVD) -----
 //! let bd = Nalgebra::default();

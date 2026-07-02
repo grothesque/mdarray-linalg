@@ -3,7 +3,7 @@ use mdarray_linalg::{
     prelude::*,
     testing::{common::*, matmul::*},
 };
-use mdarray_linalg_faer::{Faer, matmul};
+use mdarray_linalg_faer::Faer;
 
 #[test]
 fn matmul_complex_with_scaling() {

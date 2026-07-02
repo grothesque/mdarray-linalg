@@ -3,7 +3,7 @@ use mdarray_linalg::{
     prelude::*,
     testing::{common::*, matmul::*},
 };
-use mdarray_linalg_tblis::{Tblis, matmul};
+use mdarray_linalg_tblis::Tblis;
 
 #[test]
 fn matmul_complex_with_scaling() {

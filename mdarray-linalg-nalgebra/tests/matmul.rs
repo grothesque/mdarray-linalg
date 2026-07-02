@@ -4,7 +4,7 @@ use mdarray_linalg::{
     prelude::*,
     testing::{common::*, matmul::*},
 };
-use mdarray_linalg_nalgebra::{Nalgebra, matmul};
+use mdarray_linalg_nalgebra::Nalgebra;
 
 #[test]
 fn matmul_complex_with_scaling() {

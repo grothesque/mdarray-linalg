@@ -214,18 +214,19 @@ pub trait VecOps<T: ComplexFloat, D1: Dim> {
     /// Dot product: `∑xᵢyᵢ`
     fn dot<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T;
 
-    /// Conjugated dot product: `∑(xᵢ * conj(yᵢ))`
+    /// Conjugated dot product: `∑conj(xᵢ) * yᵢ` (BLAS convention)
     fn dotc<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T;
 
     /// L2 norm: `√(∑|xᵢ|²)`
     fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real;
 
-    /// L1 norm: `∑|xᵢ|`
+    /// L1 norm (Manhattan) for complex numbers: `∑(|re(xᵢ)| + |im(xᵢ)|)`.
+    /// For real numbers this reduces to `∑|xᵢ|`.
     fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
     where
         T: ComplexFloat;
 
-    /// Givens rotation (**TODO**)
+    /// Givens rotation
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
         x: &mut Slice<T, (D1,), Lx>,
