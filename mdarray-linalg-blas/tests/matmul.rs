@@ -265,7 +265,9 @@ fn macro_matmul() {
     let c = create_test_matrix_f64([4, 2]).eval();
     let d = create_test_matrix_f64([2, 6]).eval();
 
-    let result = matmul!(&a, &b, &c, &d);
+    let cd = Blas.matmul(&c, &d).eval();
+    let bcd = Blas.matmul(&b, &cd).eval();
+    let result = Blas.matmul(&a, &bcd).eval();
 
     let expected = naive_matmul(&a, &naive_matmul(&b, &naive_matmul(&c, &d)));
 

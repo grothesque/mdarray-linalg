@@ -8,12 +8,12 @@
 //!// ----- Singular Value Decomposition (SVD) -----
 //!use mdarray_linalg::svd::SVDDecomp;
 //!use mdarray_linalg::prelude::*; // Import traits anonymously
-//!use mdarray_linalg_backend::{Backend, svd}; // Use the real backend here, Lapack, Faer, ...
+//!use mdarray_linalg_backend::Backend; // Use the real backend here, Lapack, Faer, ...
 //!
 //!let bd = Backend::default();
 //!let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //!// Or the shorter ...
-//!let (s,u,vt) = svd!(&mut a.clone());
+//!let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
 //!```
 use mdarray::{Array, Dim, Layout, Slice};
 use thiserror::Error;

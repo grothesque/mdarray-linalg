@@ -329,21 +329,3 @@ where
         }
     }
 }
-
-/// Chains an arbitrary number of matrix multiplications using the given backend.
-/// Produces readable code for expressions like `A * B * C` without nested `matmul().eval()` calls.
-#[macro_export]
-macro_rules! matmul {
-    ($a:expr, $b:expr) => {
-        Naive.matmul($a, $b).eval()
-    };
-
-    ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
-        Naive
-            .matmul(
-                $a,
-                &matmul!($b, $($rest),+)
-            )
-            .eval()
-    };
-}

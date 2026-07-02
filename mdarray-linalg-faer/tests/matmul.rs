@@ -226,7 +226,9 @@ fn macro_matmul() {
     let c = create_test_matrix_f64([4, 2]).eval();
     let d = create_test_matrix_f64([2, 6]).eval();
 
-    let result = matmul!(&a, &b, &c, &d);
+    let cd = Faer::default().matmul(&c, &d).eval();
+    let bcd = Faer::default().matmul(&b, &cd).eval();
+    let result = Faer::default().matmul(&a, &bcd).eval();
 
     let expected = naive_matmul(&a, &naive_matmul(&b, &naive_matmul(&c, &d)));
 

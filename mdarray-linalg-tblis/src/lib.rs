@@ -18,20 +18,3 @@ pub mod matmul;
 
 #[derive(Default)]
 pub struct Tblis;
-
-/// Chains an arbitrary number of matrix multiplications using the TBLIS backend.
-#[macro_export]
-macro_rules! matmul {
-    ($a:expr, $b:expr) => {
-        Tblis.matmul($a, $b).eval()
-    };
-
-    ($a:expr, $b:expr, $($rest:expr),+ $(,)?) => {
-        Tblis
-            .matmul(
-                $a,
-                &matmul!($b, $($rest),+)
-            )
-            .eval()
-    };
-}

@@ -2,7 +2,7 @@
 //!
 //! ```rust,ignore
 //! use mdarray_linalg::prelude::*;
-//! use mdarray_linalg_backend::{Backend, eig};
+//! use mdarray_linalg_backend::Backend;
 //!
 //! // ----- Eigenvalue decomposition -----
 //! // Note: we must clone `a` here because decomposition routines destroy the input.
@@ -12,7 +12,9 @@
 //!     .expect("Eigenvalue decomposition failed");
 //!
 //! // Or...
-//! let (lambda, v) = eig!(&mut a.clone());
+//! let EigDecomp { eigenvalues: lambda, right_eigenvectors: Some(v), .. } = bd
+//!     .eig(&mut a.clone())
+//!     .expect("Eigenvalue decomposition failed");
 //!
 //! // Full decomposition with left and right eigenvectors.
 //! let EigDecomp { eigenvalues, left_eigenvectors, right_eigenvectors } = bd

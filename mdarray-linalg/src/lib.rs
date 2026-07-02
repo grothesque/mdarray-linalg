@@ -61,7 +61,6 @@
 //! // Backends are provided in partner crates (e.g. mdarray-linalg-blas or mdarray-linalg-faer),
 //! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
-//! use mdarray_linalg::matmul;
 //!
 //! fn main() {
 //!     // Declare two vectors
@@ -81,7 +80,8 @@
 //!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
 //!     println!("A * B + B * A = {:?}", c);
 //!
-//!     let d = matmul!(&a, &b, &c); // for concise chained matrix multiplication.
+//!     let tmp = Naive.matmul(&b, &c).eval();
+//!     let d = Naive.matmul(&a, &tmp).eval();
 //! }
 //! ```
 //!
