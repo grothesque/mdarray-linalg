@@ -222,7 +222,7 @@ where
 
         let shape: Vec<usize> = tsr.shape.iter().map(|&d| d as usize).collect();
         let mut result = Array::from_elem(shape, T::zero());
-        for (dst, src) in result.iter_mut().zip(vec.into_iter()) {
+        for (dst, src) in result.iter_mut().zip(vec) {
             *dst = self.alpha * src;
         }
         result
@@ -356,7 +356,7 @@ where
     L: Layout,
 {
     let shape: Vec<isize> = (0..slice.rank()).map(|i| slice.dim(i) as isize).collect();
-    let stride: Vec<isize> = (0..slice.rank()).map(|i| slice.stride(i) as isize).collect();
+    let stride: Vec<isize> = (0..slice.rank()).map(|i| slice.stride(i)).collect();
     TblisTensor::new(slice.as_ptr() as *mut T, &shape, &stride)
 }
 
@@ -367,7 +367,7 @@ where
     L: Layout,
 {
     let shape: Vec<isize> = (0..slice.rank()).map(|i| slice.dim(i) as isize).collect();
-    let stride: Vec<isize> = (0..slice.rank()).map(|i| slice.stride(i) as isize).collect();
+    let stride: Vec<isize> = (0..slice.rank()).map(|i| slice.stride(i)).collect();
     TblisTensor::new(slice.as_mut_ptr(), &shape, &stride)
 }
 

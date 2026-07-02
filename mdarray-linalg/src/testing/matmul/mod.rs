@@ -161,11 +161,11 @@ pub fn contract_einsum_vector_result_impl(backend: &impl Contract<f64>) {
     .into_dyn();
 
     let mut expected = [0f64; 2];
-    for l in 0..2 {
+    for (l, expected_l) in expected.iter_mut().enumerate() {
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    expected[l] +=
+                    *expected_l +=
                         (i * 8 + j * 4 + j * 2 + j) as f64 * (i * 8 + j * 4 + k * 2 + l) as f64;
                 }
             }

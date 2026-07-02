@@ -8,8 +8,7 @@ use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
     matmul::{Triangle, Type},
-    matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
-    utils::unravel_index,
+    matvec::{MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
 };
 use num_complex::{Complex32, Complex64, ComplexFloat};
 use num_traits::{One, Zero};

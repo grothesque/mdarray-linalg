@@ -62,27 +62,25 @@
 //! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
 //!
-//! fn main() {
-//!     // Declare two vectors
-//!     let x = array![1., 2.];
-//!     let y = array![2., 4.];
+//! // Declare two vectors
+//! let x = array![1., 2.];
+//! let y = array![2., 4.];
 //!
-//!     // Declare two matrices
-//!     let a = array![[1., 2.], [3., 4.]];
-//!     let b = array![[5., 6.], [7., 8.]];
+//! // Declare two matrices
+//! let a = array![[1., 2.], [3., 4.]];
+//! let b = array![[5., 6.], [7., 8.]];
 //!
-//!     // ----- Scalar product -----
-//!     let dot_result = Naive.dot(&x, &y);
-//!     println!("dot(x, y) = {}", dot_result); // x · y
+//! // ----- Scalar product -----
+//! let dot_result = Naive.dot(&x, &y);
+//! println!("dot(x, y) = {}", dot_result); // x · y
 //!
-//!     // ----- Matrix multiplication -----
-//!     let mut c = Naive.matmul(&a, &b).eval(); // C ← A ✕ B
-//!     Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
-//!     println!("A * B + B * A = {:?}", c);
+//! // ----- Matrix multiplication -----
+//! let mut c = Naive.matmul(&a, &b).eval(); // C ← A ✕ B
+//! Naive.matmul(&b, &a).add_to(&mut c);     // C ← B ✕ A + C
+//! println!("A * B + B * A = {:?}", c);
 //!
-//!     let tmp = Naive.matmul(&b, &c).eval();
-//!     let d = Naive.matmul(&a, &tmp).eval();
-//! }
+//! let tmp = Naive.matmul(&b, &c).eval();
+//! let d = Naive.matmul(&a, &tmp).eval();
 //! ```
 //!
 //! # Troubleshooting
@@ -99,10 +97,8 @@
 //! Then, create a `build.rs` file with the following content:
 //!
 //! ```rust
-//! fn main() {
-//!     println!("cargo:rustc-link-lib=openblas");
-//!     println!("cargo:rustc-link-search=native=/usr/lib");
-//! }
+//! println!("cargo:rustc-link-lib=openblas");
+//! println!("cargo:rustc-link-search=native=/usr/lib");
 //! ```
 
 pub mod prelude;

@@ -59,7 +59,7 @@ where
     T: ComplexFloat + ComplexField + One + Zero + 'static,
 {
     fn scale(mut self, factor: T) -> Self {
-        self.alpha = self.alpha * factor;
+        self.alpha *= factor;
         self
     }
 
@@ -133,7 +133,7 @@ where
     Sb: Shape,
 {
     fn scale(mut self, factor: T) -> Self {
-        self.alpha = self.alpha * factor;
+        self.alpha *= factor;
         self
     }
 
@@ -156,8 +156,9 @@ where
             if let (Some(current), Some(requested)) = (
                 self.current_output_labels.as_deref(),
                 self.requested_output_labels.as_deref(),
-            ) {
-                if current != requested {
+            )
+                && current != requested
+            {
                     let perm: Vec<usize> = requested
                         .iter()
                         .map(|label| {
@@ -168,7 +169,6 @@ where
                         })
                         .collect();
                     result = result.permute(perm).to_tensor().into_dyn();
-                }
             }
 
             if self.alpha != T::one() {

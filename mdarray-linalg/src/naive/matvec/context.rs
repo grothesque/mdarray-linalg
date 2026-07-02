@@ -147,14 +147,14 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
         x: &Slice<T, (D,), Lx>,
         y: &mut Slice<T, (D,), Ly>,
     ) {
-        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+        for (elem_x, elem_y) in std::iter::zip(x, y) {
             *elem_y = alpha * (*elem_x) + *elem_y;
         }
     }
 
     fn dot<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D,), Lx>, y: &Slice<T, (D,), Ly>) -> T {
         let mut result = T::zero();
-        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+        for (elem_x, elem_y) in std::iter::zip(x, y) {
             result = result + *elem_x * (*elem_y);
         }
         result
@@ -162,7 +162,7 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
 
     fn dotc<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D,), Lx>, y: &Slice<T, (D,), Ly>) -> T {
         let mut result = T::zero();
-        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+        for (elem_x, elem_y) in std::iter::zip(x, y) {
             result = result + elem_x.conj() * (*elem_y);
         }
         result
@@ -203,7 +203,7 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
         //
         // For real types, s* == s and this reduces to the standard real Givens rotation.
         // This matches the BLAS `drot`/`zrot` convention.
-        for (elem_x, elem_y) in std::iter::zip(x.into_iter(), y.into_iter()) {
+        for (elem_x, elem_y) in std::iter::zip(x, y) {
             // Store original x before overwriting it
             let old_x = *elem_x;
             let old_y = *elem_y;

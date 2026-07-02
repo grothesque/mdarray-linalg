@@ -1,6 +1,5 @@
 use std::ops::{Add, Mul};
 
-use cblas_sys::CBLAS_UPLO;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
@@ -11,7 +10,7 @@ use num_traits::Zero;
 
 use super::{
     scalar::BlasScalar,
-    simple::{amax, asum, axpy, dotc, dotu, gemv, ger, her, nrm2, syr},
+    simple::{amax, asum, axpy, dotc, dotu, gemv, ger, nrm2},
 };
 use crate::Blas;
 
