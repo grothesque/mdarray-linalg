@@ -104,14 +104,14 @@
 //! println!("cargo:rustc-link-search=native=/usr/lib");
 //! ```
 
-#![cfg_attr(docrs, doc = concat!(
+#![cfg_attr(docsrs, doc = concat!(
     "[blas-docs]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
     "[lapack-docs]: https://docs.rs/mdarray-linalg-lapack/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_lapack/\n",
     "[faer-docs]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/\n",
     "[nalgebra-docs]: https://docs.rs/mdarray-linalg-nalgebra/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_nalgebra/\n",
     "[tblis-docs]: https://docs.rs/mdarray-linalg-tblis/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_tblis/",
 ))]
-#![cfg_attr(not(docrs), doc = "\
+#![cfg_attr(not(docsrs), doc = "\
 [blas-docs]: ../mdarray_linalg_blas/index.html
 [lapack-docs]: ../mdarray_linalg_lapack/index.html
 [faer-docs]: ../mdarray_linalg_faer/index.html
