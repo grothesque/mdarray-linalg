@@ -1,21 +1,24 @@
 //! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray)
 //!
-//! This crate defines a set of traits (`MatVec`, `MatMul`, `Eig`, `SVD`, …) that are
-//! implemented by different backends, allowing users to switch between them depending
-//! on their needs (performance, portability, or debugging).
+//! This crate defines a set of generic traits (`MatVec<T>`, `MatMul<T>`, `Eig<T>`, `SVD<T>`, …)
+//! that expose common linear algebra operations. The traits are implemented by backends that
+//! delegate the work to specialized linear algebra libraries. The backend design allows users to
+//! mix and switch between them depending on their needs (performance, portability, or debugging).
 //!
-//! # Backends
+//! Each backend (except `Naive`) lives in a separate crate with specific dependencies.
 //!
-//! - [`Blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
-//! - [`Lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`Faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
-//! - [`Nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
-//! - [`Tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
+//! # Backend crates
+//!
+//! - [`mdarray_linalg_blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
+//! - [`mdarray_linalg_lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - [`mdarray_linalg_faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
+//! - [`mdarray_linalg_nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
+//! - [`mdarray_linalg_tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
 //! - `Naive`: simple demo backend, integrated into this crate
-//! > **Note:** Not all backends support all functionalities.
 //!
-// ! <details>
-// ! <summary>Click to expand the feature support table</summary>
+//! # Backend functionality
+//!
+//! Backends support functionality based on the capabilities of the underlying libraries.
 //!
 //! | Functionality                                     | BLAS | LAPACK | Naive | Faer | Nalgebra | TBLIS |
 //! |---------------------------------------------------|:----:|:------:|:-----:|:----:|:--------:|:-----:|
