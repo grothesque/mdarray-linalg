@@ -1,29 +1,100 @@
+//! # mdarray-linalg-nalgebra
+//!
+//! [nalgebra](https://crates.io/crates/nalgebra) backend for [`mdarray_linalg`].
+//!
+//! This crate provides the [`Nalgebra`] struct that implements the linear algebra traits
+//! defined by `mdarray-linalg`, delegating computations to the pure-Rust `nalgebra` library.
+//! Nalgebra is particularly efficient for **small matrices** thanks to its extensive use of
+//! compile-time dimension optimizations.
+//!
+//! ## Scope
+//!
+//! The Nalgebra backend covers:
+//!
+//! - **Level 1** — vector operations: `dot`, `dotc`, `norm2`, `norm1`, `add_to_scaled`
+//! - **Level 2** — matrix-vector & outer product: `matvec`, `outer`
+//! - **Level 3** — matrix multiplication: `matmul`
+//! - **Tensor contraction** — `contract_all`, `contract_n`, `contract_pairs`, `contract`
+//! - **Eigenvalue decomposition** — `eig`, `eig_full`, `eig_values`, `eigh`, `eigs`
+//! - **Schur decomposition** — `schur`, `schur_complex`
+//! - **SVD** — `svd`, `svd_thin`, `svd_s`
+//! - **LU decomposition** — `lu`, `det`, `inv`
+//! - **Cholesky decomposition** — `choleski`
+//! - **QR decomposition** — `qr`
+//! - **Linear system solving** — `solve`
+//! - **Argmax** — `argmax`, `argmax_abs`
+//!
+//! ## Setup
+//!
+//! Add the following to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! mdarray = "0.8"
+//! mdarray-linalg = "0.2"
+//! mdarray-linalg-nalgebra = "0.2"
+//! ```
+//!
+//! ## Example
+//!
+//! All operations are accessed through the [`Nalgebra`] backend via the traits from
+//! `mdarray_linalg::prelude::*`:
+//!
 //! ```rust
-//! use mdarray::{DArray, tensor};
-//! use mdarray_linalg::prelude::*; // Imports traits anonymously
-//!
+//! use mdarray::array;
+//! use mdarray_linalg::prelude::*;
+//! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
-//! use mdarray_linalg::diag;
-//!
 //! use mdarray_linalg_nalgebra::Nalgebra;
 //!
-//! // Declare a matrix
-//! let a = tensor![[1., 2.], [3., 4.]];
+//! // ----- Matrix multiplication -----
+//! let a = array![[1., 2.], [3., 4.]];
+//! let b = array![[5., 6.], [7., 8.]];
 //!
-//! // ----- Singular Value Decomposition (SVD) -----
-//! let bd = Nalgebra::default();
-//! let SVDDecomp { s, u, vt } = bd.svd(&mut a.clone()).expect("SVD failed");
+//! let c = Nalgebra::default().matmul(&a, &b).eval();
+//! assert_eq!(c, array![[19., 22.], [43., 50.]]);
+//!
+//! // ----- Eigenvalue decomposition -----
+//! let mut a = array![[1., 2.], [3., 4.]];
+//! let EigDecomp {
+//!     eigenvalues: lambda,
+//!     right_eigenvectors,
+//!     ..
+//! } = Nalgebra::default().eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//!
+//! println!("Eigenvalues: {:?}", lambda);
+//!
+//! // ----- SVD -----
+//! let mut a = array![[1., 2.], [3., 4.]];
+//! let SVDDecomp { s, u, vt } = Nalgebra::default().svd(&mut a).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
-//! println!("Left singular vectors U: {:?}", u);
-//! println!("Right singular vectors V^T: {:?}", vt);
-//! let SVDDecomp { s, u, vt } = Nalgebra::default().svd(&mut a.clone()).expect("SVD failed");
-//! let tmp = Nalgebra::default().matmul(&diag(&s), &vt).eval();
-//! let b = Nalgebra::default().matmul(&u, &tmp).eval();
-//! assert!(((a[[0,1]] - b[[0,1]]) as f64).abs() < 10e-10_f64);
+//!
+//! // ----- Argmax -----
+//! let x = array![1., 5., 3., 8., 2.];
+//! let idx = Nalgebra::default().argmax(&x).unwrap();
+//! assert_eq!(idx, vec![3]);
+//!
+//! // ----- Tensor contraction -----
+//! let t1 = array![[1., 2.], [3., 4.]].into_dyn();
+//! let t2 = array![[5., 6.], [7., 8.]].into_dyn();
+//!
+//! let scalar = Nalgebra::default().contract_all(&t1, &t2);
+//! assert_eq!(scalar, 70.0);
 //! ```
+//!
+//! > **Note:** Decomposition routines (eig, svd, lu, etc.) **destroy the input matrix**.
+//! > Always pass a clone if you need the original data.
+//!
+//! ## Supported types
+//!
+//! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
 
-use mdarray::{Dim, Layout, Shape, Slice};
-use num_complex::{Complex, ComplexFloat};
+#![cfg_attr(docsrs, doc = concat!(
+    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+))]
+#![cfg_attr(not(docsrs), doc = "\
+[mdarray_linalg]: ../mdarray_linalg/index.html
+")]
 
 pub mod eig;
 pub mod lu;
@@ -33,13 +104,22 @@ pub mod qr;
 pub mod solve;
 pub mod svd;
 
+/// Configuration for the QR decomposition.
 #[derive(Default, Debug, Clone, Copy)]
 pub enum QRConfig {
+    /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
     #[default]
-    Reduced, // Q: M×K, R: K×N
-    Complete, // Q: M×M, R: M×N
+    Reduced,
+    /// Complete QR: Q is M×M, R is M×N.
+    Complete,
 }
 
+/// Nalgebra backend.
+///
+/// Implements the linear algebra traits from [`mdarray_linalg`] by delegating
+/// to the pure-Rust `nalgebra` library.  Nalgebra is particularly well-suited
+/// for **small matrices** where its compile-time dimension optimizations
+/// provide excellent performance without the overhead of system BLAS/LAPACK.
 pub struct Nalgebra {
     qr_config: QRConfig,
 }
@@ -53,11 +133,16 @@ impl Default for Nalgebra {
 }
 
 impl Nalgebra {
+    /// Selects the QR algorithm variant.
+    #[must_use]
     pub fn config_qr(mut self, config: QRConfig) -> Self {
         self.qr_config = config;
         self
     }
 }
+
+use mdarray::{Dim, Layout, Shape, Slice};
+use num_complex::{Complex, ComplexFloat};
 
 /// Copy an mdarray matrix into a dense nalgebra matrix.
 pub(crate) fn to_dmatrix<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> nalgebra::DMatrix<T>
@@ -238,4 +323,3 @@ pub(crate) fn write_complex_dvector<R, D1, L>(
         *dsti = *srci;
     }
 }
-

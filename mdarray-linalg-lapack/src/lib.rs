@@ -1,53 +1,103 @@
+//! # mdarray-linalg-lapack
+//!
+//! LAPACK backend for [`mdarray_linalg`].
+//!
+//! This crate provides the [`Lapack`] struct that implements the decomposition and
+//! solver traits defined by `mdarray-linalg`, delegating computations to a LAPACK
+//! implementation (e.g. OpenBLAS) via the `lapack-sys` and `cblas-sys` crates.
+//!
+//! ## Scope
+//!
+//! The LAPACK backend covers:
+//!
+//! - **Eigenvalue decomposition** — `eig`, `eig_full`, `eig_values`, `eigh`, `eigs`
+//! - **Schur decomposition** — `schur`, `schur_complex`
+//! - **SVD** — `svd`, `svd_thin`, `svd_s`
+//! - **LU decomposition** — `lu`, `det`, `inv`
+//! - **Cholesky decomposition** — `choleski`
+//! - **QR decomposition** — `qr`
+//! - **Linear system solving** — `solve`
+//!
+//! For basic matrix/vector operations (Level 1–3 BLAS) and tensor contractions,
+//! use the `mdarray-linalg-blas` or `mdarray-linalg-faer` backends instead.
+//!
+//! ## Setup
+//!
+//! Add the following to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! mdarray = "0.8"
+//! mdarray-linalg = "0.2"
+//! mdarray-linalg-lapack = "0.2"
+//! openblas-src = { version = "0.10", features = ["system"] }
+//! ```
+//!
+//! ## Example
+//!
+//! All operations are accessed through the [`Lapack`] backend via the traits from
+//! `mdarray_linalg::prelude::*`:
+//!
 //! ```rust
-//! use mdarray::{DArray, tensor};
-//! use mdarray_linalg::prelude::*; // Import traits anonymously
-//! use mdarray_linalg::diag;
+//! use mdarray::array;
+//! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg::eig::EigDecomp;
+//! use mdarray_linalg::solve::Solve;
 //! use mdarray_linalg::svd::SVDDecomp;
-//! use mdarray_linalg::Naive;
-//!
-//! use mdarray_linalg_lapack::Lapack;
-//! use mdarray_linalg_lapack::SVDConfig;
-//!
-//! let a = tensor![[1., 2.], [3., 4.]];
+//! use mdarray_linalg_lapack::{Lapack, SVDConfig};
 //!
 //! // ----- Eigenvalue decomposition -----
-//! // Note: we must clone `a` here because decomposition routines destroy the input.
-//! let bd = Lapack::new(); // Unlike Blas, Lapack is not a zero-sized backend so `new` must be called.
+//! let mut a = array![[1., 2.], [3., 4.]];
 //! let EigDecomp {
 //!     eigenvalues: lambda,
 //!     right_eigenvectors,
 //!     ..
-//! } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//! } = Lapack::new().eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
 //!
 //! println!("Eigenvalues: {:?}", lambda);
 //! if let Some(v) = right_eigenvectors {
 //!     println!("Right eigenvectors: {:?}", v);
 //! }
 //!
-//! // ----- Singular Value Decomposition (SVD) -----
+//! // ----- SVD (with configuration) -----
+//! let mut a = array![[1., 2.], [3., 4.]];
 //! let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
-//! let SVDDecomp { s, u, vt } = bd.svd_thin(&mut a.clone()).expect("SVD failed");
+//! let SVDDecomp { s, u, vt } = bd.svd_thin(&mut a).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
-//! println!("Left singular vectors U: {:?}", u);
-//! println!("Right singular vectors V^T: {:?}", vt);
-//! let SVDDecomp { s, u, vt } = Lapack::default().svd_thin(&mut a.clone()).expect("SVD failed");
-//! let tmp = Naive.matmul(&diag(&s), &vt).eval();
-//! let b = Naive.matmul(&u, &tmp).eval();
 //!
-//! assert!(((a[[0,1]] - b[[0,1]]) as f64).abs() < 10e-10_f64);
-//!
-//!
-//! // ----- QR Decomposition -----
-//! let (m, n) = *a.shape();
-//! let mut q = DArray::<f64, 2>::zeros([m, m]);
-//! let mut r = DArray::<f64, 2>::zeros([m, n]);
-//!
-//! let bd = Lapack::new();
-//! bd.qr_write(&mut a.clone(), &mut q, &mut r); //
+//! // ----- QR decomposition -----
+//! let mut a = array![[12., -51., 4.], [6., 167., -68.], [-4., 24., -41.]];
+//! let (q, r) = Lapack::new().qr(&mut a);
 //! println!("Q: {:?}", q);
 //! println!("R: {:?}", r);
+//!
+//! // ----- Solve linear system Ax = b -----
+//! let mut a = array![[2., 1., 0.], [1., 3., 1.], [0., 1., 2.]];
+//! let b = array![[1., 0., 0.], [2., 0., 0.], [1., 0., 0.]];
+//! let result = Lapack::new().solve(&mut a, &b).expect("Solve failed");
+//! println!("x = {:?}", result.x);
 //! ```
+//!
+//! > **Note:** Decomposition routines (eig, svd, lu, etc.) **destroy the input matrix**.
+//! > Always pass a clone if you need the original data.
+//!
+//! ## Supported types
+//!
+//! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
+//!
+//! ## Troubleshooting
+//!
+//! If you encounter linking issues, the included `build.rs` links against
+//! `libopenblas` in `/usr/lib`.  For other LAPACK implementations or custom
+//! install paths, you may need to override `build.rs`.
+//! See also the `mdarray-linalg` crate documentation.
+
+#![cfg_attr(docsrs, doc = concat!(
+    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+))]
+#![cfg_attr(not(docsrs), doc = "\
+[mdarray_linalg]: ../mdarray_linalg/index.html
+")]
 
 pub mod eig;
 pub mod lu;
@@ -55,28 +105,53 @@ pub mod qr;
 pub mod solve;
 pub mod svd;
 
+/// Configuration for the SVD algorithm.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum SVDConfig {
+    /// Let the backend choose the best algorithm.
     #[default]
     Auto,
+    /// Divide-and-conquer algorithm (faster for large matrices).
     DivideConquer,
+    /// Jacobi algorithm (more accurate for small matrices).
     Jacobi,
 }
 
+/// Configuration for the QR decomposition.
+#[derive(Default, Debug, Clone, Copy)]
+pub enum QRConfig {
+    /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
+    #[default]
+    Reduced,
+    /// Complete QR: Q is M×M, R is M×N.
+    Complete,
+}
+
+/// LAPACK backend.
+///
+/// Implements the decomposition and solver traits from [`mdarray_linalg`] by
+/// delegating to LAPACK routines.  Unlike the zero-sized
+/// `mdarray_linalg_blas::Blas`, `Lapack` carries configuration state
+/// for algorithm selection.
+///
+/// # Configuration
+///
+/// Use the builder-style methods to select algorithms:
+///
+/// ```rust
+/// use mdarray_linalg_lapack::{Lapack, SVDConfig};
+///
+/// let default_bd = Lapack::new();
+/// let svd_bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
+/// ```
 #[derive(Debug, Default, Clone)]
 pub struct Lapack {
     svd_config: SVDConfig,
     qr_config: QRConfig,
 }
 
-#[derive(Default, Debug, Clone, Copy)]
-pub enum QRConfig {
-    #[default]
-    Reduced, // Q: M×K, R: K×N
-    Complete, // Q: M×M, R: M×N
-}
-
 impl Lapack {
+    /// Creates a new `Lapack` backend with default configuration.
     pub fn new() -> Self {
         Self {
             svd_config: SVDConfig::default(),
@@ -84,14 +159,17 @@ impl Lapack {
         }
     }
 
+    /// Selects the SVD algorithm.
+    #[must_use]
     pub fn config_svd(mut self, config: SVDConfig) -> Self {
         self.svd_config = config;
         self
     }
 
+    /// Selects the QR algorithm variant.
+    #[must_use]
     pub fn config_qr(mut self, config: QRConfig) -> Self {
         self.qr_config = config;
         self
     }
 }
-

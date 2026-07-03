@@ -1,3 +1,4 @@
+#![doc(html_logo_url = "logo.png")]
 //! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray)
 //!
 //! This crate defines a set of generic traits (`MatVec<T>`, `MatMul<T>`, `Eig<T>`, `SVD<T>`, …)

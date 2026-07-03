@@ -1,54 +1,105 @@
+//! # mdarray-linalg-faer
+//!
+//! [faer](https://crates.io/crates/faer) backend for [`mdarray_linalg`].
+//!
+//! This crate provides the [`Faer`] struct that implements the linear algebra traits
+//! defined by `mdarray-linalg`, delegating computations to the pure-Rust `faer` library.
+//! Unlike the BLAS/LAPACK backends, `faer` does **not** require a system BLAS installation.
+//!
+//! ## Scope
+//!
+//! The Faer backend is the most complete backend and covers:
+//!
+//! - **Level 1** — vector operations: `dot`, `dotc`, `norm2`, `norm1`, `add_to_scaled`
+//! - **Level 2** — matrix-vector & outer product: `matvec`, `outer`
+//! - **Level 3** — matrix multiplication: `matmul`
+//! - **Tensor contraction** — `contract_all`, `contract_n`, `contract_pairs`, `contract`
+//! - **Eigenvalue decomposition** — `eig`, `eig_full`, `eig_values`, `eigh`, `eigs`
+//! - **Schur decomposition** — `schur`, `schur_complex`
+//! - **SVD** — `svd`, `svd_thin`, `svd_s`
+//! - **LU decomposition** — `lu`, `det`, `inv`
+//! - **Cholesky decomposition** — `choleski`
+//! - **QR decomposition** — `qr`
+//! - **Linear system solving** — `solve`
+//!
+//! ## Setup
+//!
+//! Add the following to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! mdarray = "0.8"
+//! mdarray-linalg = "0.2"
+//! mdarray-linalg-faer = "0.2"
+//! ```
+//!
+//! > **Note:** No BLAS/LAPACK linking is required — `faer` is a pure-Rust crate.
+//!
+//! ## Example
+//!
+//! All operations are accessed through the [`Faer`] backend via the traits from
+//! `mdarray_linalg::prelude::*`:
+//!
 //! ```rust
-//! use mdarray::{DArray, tensor};
-//! use mdarray_linalg::prelude::*; // Imports traits anonymously
-//! use mdarray_linalg::diag;
+//! use mdarray::array;
+//! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::svd::SVDDecomp;
-//!
 //! use mdarray_linalg_faer::Faer;
 //!
-//! // Declare two matrices
-//! let a = tensor![[1., 2.], [3., 4.]];
-//! let b = tensor![[5., 6.], [7., 8.]];
+//! // ----- Matrix multiplication (Level 3) -----
+//! let a = array![[1., 2.], [3., 4.]];
+//! let b = array![[5., 6.], [7., 8.]];
 //!
-//! // ----- Matrix multiplication -----
 //! let c = Faer::default().matmul(&a, &b).eval();
-//! println!("A * B = {:?}", c);
+//! assert_eq!(c, array![[19., 22.], [43., 50.]]);
 //!
 //! // ----- Eigenvalue decomposition -----
-//! // Note: we must clone `a` here because decomposition routines destroy the input.
-//! let bd = Faer::default();
+//! let mut a = array![[1., 2.], [3., 4.]];
 //! let EigDecomp {
 //!     eigenvalues: lambda,
 //!     right_eigenvectors,
 //!     ..
-//! } = bd.eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
+//! } = Faer::default().eig(&mut a.clone()).expect("Eigenvalue decomposition failed");
 //!
 //! println!("Eigenvalues: {:?}", lambda);
 //! if let Some(v) = right_eigenvectors {
 //!     println!("Right eigenvectors: {:?}", v);
 //! }
 //!
-//! // ----- Singular Value Decomposition (SVD) -----
-//! let SVDDecomp { s, u, vt } = bd.svd_thin(&mut a.clone()).expect("SVD failed");
+//! // ----- SVD -----
+//! let mut a = array![[1., 2.], [3., 4.]];
+//! let SVDDecomp { s, u, vt } = Faer::default().svd_thin(&mut a).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
-//! println!("Left singular vectors U: {:?}", u);
-//! println!("Right singular vectors V^T: {:?}", vt);
-//! let SVDDecomp { s, u, vt } = Faer::default().svd_thin(&mut a.clone()).expect("SVD failed");
-//! let bd = Faer::default();
-//! let tmp = bd.matmul(&diag(&s), &vt).eval();
-//! let b = bd.matmul(&u, &tmp).eval();
-//! assert!(((a[[0,1]] - b[[0,1]]) as f64).abs() < 10e-10_f64);
 //!
-//! // ----- QR Decomposition -----
-//! let (m, n) = *a.shape();
-//! let mut q = DArray::<f64, 2>::zeros([m, m]);
-//! let mut r = DArray::<f64, 2>::zeros([m, n]);
-//!
-//! bd.qr_write(&mut a.clone(), &mut q, &mut r); //
+//! // ----- QR decomposition -----
+//! let mut a = array![[12., -51., 4.], [6., 167., -68.], [-4., 24., -41.]];
+//! let (q, r) = Faer::default().qr(&mut a);
 //! println!("Q: {:?}", q);
 //! println!("R: {:?}", r);
+//!
+//! // ----- Tensor contraction -----
+//! let t1 = array![[1., 2.], [3., 4.]].into_dyn();
+//! let t2 = array![[5., 6.], [7., 8.]].into_dyn();
+//!
+//! let scalar = Faer::default().contract_all(&t1, &t2);
+//! assert_eq!(scalar, 70.0);
 //! ```
+//!
+//! > **Note:** Decomposition routines (eig, svd, lu, etc.) **destroy the input matrix**.
+//! > Always pass a clone if you need the original data.
+//!
+//! ## Supported types
+//!
+//! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
+
+#![cfg_attr(docsrs, doc = concat!(
+    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+))]
+#![cfg_attr(not(docsrs), doc = "\
+[mdarray_linalg]: ../mdarray_linalg/index.html
+")]
+
 pub mod eig;
 pub mod lu;
 pub mod matmul;
@@ -57,13 +108,24 @@ pub mod qr;
 pub mod solve;
 pub mod svd;
 
+/// Configuration for the QR decomposition.
 #[derive(Default, Debug, Clone, Copy)]
 pub enum QRConfig {
+    /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
     #[default]
-    Reduced, // Q: M×K, R: K×N
-    Complete, // Q: M×M, R: M×N
+    Reduced,
+    /// Complete QR: Q is M×M, R is M×N.
+    Complete,
 }
 
+/// Faer backend.
+///
+/// Implements the linear algebra traits from [`mdarray_linalg`] by delegating
+/// to the pure-Rust `faer` library.  This backend supports the broadest range of
+/// operations — from basic BLAS to full decompositions and tensor contractions —
+/// without requiring any system BLAS/LAPACK installation.
+///
+/// By default, multithreading is enabled (via `rayon`).
 pub struct Faer {
     parallelize: bool,
     qr_config: QRConfig,
@@ -80,7 +142,7 @@ impl Default for Faer {
 
 use mdarray::{Dim, Layout, Shape, Slice};
 
-/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatRef<'a, T>`.
+/// Converts a `Slice<T, (_, _), L>` (from `mdarray`) into a `faer::MatRef<'a, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a Slice<T, (D0, D1), L>,
@@ -103,7 +165,7 @@ pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
     }
 }
 
-/// Converts a `Slice<T, (_, _) , L>` (from `mdarray`) into a `faer::MatMut<'a, T>`.
+/// Converts a `Slice<T, (_, _), L>` (from `mdarray`) into a `faer::MatMut<'a, T>`.
 /// This function **does not copy** any data.
 pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a mut Slice<T, (D0, D1), L>,
@@ -125,29 +187,6 @@ pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
         )
     }
 }
-
-// Converts a `faer::Mat<T>` into a `DArray<T, 2>` (from `mdarray`) by constructing
-// a strided view over the matrix memory. This function **does not copy** any data.
-// pub fn into_mdarray<T: std::clone::Clone>(mat: faer::Mat<T>) -> DArray<T, 2> {
-//     // Manually dropping to avoid a double free: DArray will take ownership of the data,
-//     // so we must prevent Rust from automatically dropping the original matrix.
-//     let mut mat = ManuallyDrop::new(mat);
-
-//     let (nrows, ncols) = (mat.nrows(), mat.ncols());
-
-//     // faer and mdarray have different memory layouts; we need to construct a
-//     // strided mapping explicitly to describe the layout of `mat` to mdarray.
-//     let mapping = StridedMapping::new((nrows, ncols), &[mat.row_stride(), mat.col_stride()]);
-
-//     // SAFETY:
-//     // We use `new_unchecked` because the memory layout in faer isn't guaranteed
-//     // to satisfy mdarray's internal invariants automatically.
-//     // `from_raw_parts` isn't usable here due to layout incompatibilities.
-//     let view_strided: View<'_, _, (usize, usize), Strided> =
-//         unsafe { mdarray::View::new_unchecked(mat.as_ptr_mut(), mapping) };
-
-//     DArray::<T, 2>::from(view_strided)
-// }
 
 /// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a
 /// `faer::MatMut<'a, T>` and transposes data.  This function
