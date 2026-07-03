@@ -1,9 +1,9 @@
 //! Don’t forget to include a BLAS implementation:
 //! ```toml
 //! [dependencies]
-//! mdarray = "0.7.1"
-//! mdarray-linalg = "0.1"
-//! mdarray-linalg-blas = "0.1"
+//! mdarray = "0.8.0"
+//! mdarray-linalg = "0.2.0"
+//! mdarray-linalg-blas = "0.2.0"
 //! openblas-src = { version = "0.10", features = ["system"] }
 //! ```
 //! The following example demonstrates the core functionality of BLAS:

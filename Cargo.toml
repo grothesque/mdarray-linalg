@@ -7,6 +7,11 @@ members = [
   "mdarray-linalg-nalgebra",
   "mdarray-linalg-tblis",
 ]
+default-members = [
+  "mdarray-linalg",
+  "mdarray-linalg-faer",
+  "mdarray-linalg-nalgebra",
+]
 resolver = "3"
 
 [workspace.dependencies]

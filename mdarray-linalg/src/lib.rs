@@ -6,11 +6,11 @@
 //!
 //! # Backends
 //!
-//! - [`Blas`](https://docs.rs/mdarray-linalg-blas): bindings to [BLAS](https://www.netlib.org/blas/)
-//! - [`Lapack`](https://docs.rs/mdarray-linalg-lapack): bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`Faer`](https://docs.rs/mdarray-linalg-faer): bindings to [faer](https://faer.veganb.tw/)
-//! - [`Nalgebra`](https://docs.rs/mdarray-linalg-nalgebra): bindings to [nalgebra](https://nalgebra.rs/)
-//! - [`Tblis`](https://docs.rs/mdarray-linalg-tblis): bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
+//! - [`Blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
+//! - [`Lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - [`Faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
+//! - [`Nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
+//! - [`Tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
 //! - `Naive`: simple demo backend, integrated into this crate
 //! > **Note:** Not all backends support all functionalities.
 //!
@@ -100,6 +100,21 @@
 //! println!("cargo:rustc-link-lib=openblas");
 //! println!("cargo:rustc-link-search=native=/usr/lib");
 //! ```
+
+#![cfg_attr(docrs, doc = concat!(
+    "[blas-docs]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
+    "[lapack-docs]: https://docs.rs/mdarray-linalg-lapack/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_lapack/\n",
+    "[faer-docs]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/\n",
+    "[nalgebra-docs]: https://docs.rs/mdarray-linalg-nalgebra/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_nalgebra/\n",
+    "[tblis-docs]: https://docs.rs/mdarray-linalg-tblis/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_tblis/",
+))]
+#![cfg_attr(not(docrs), doc = "\
+[blas-docs]: ../mdarray_linalg_blas/index.html
+[lapack-docs]: ../mdarray_linalg_lapack/index.html
+[faer-docs]: ../mdarray_linalg_faer/index.html
+[nalgebra-docs]: ../mdarray_linalg_nalgebra/index.html
+[tblis-docs]: ../mdarray_linalg_tblis/index.html
+")]
 
 pub mod prelude;
 
