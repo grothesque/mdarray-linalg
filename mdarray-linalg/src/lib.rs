@@ -1,20 +1,47 @@
 #![doc(html_logo_url = "logo.png")]
 //! Linear algebra backends for [`mdarray`](https://crates.io/crates/mdarray)
 //!
-//! This crate defines a set of generic traits (`MatVec<T>`, `MatMul<T>`, `Eig<T>`, `SVD<T>`, …)
-//! that expose common linear algebra operations. The traits are implemented by backends that
-//! delegate the work to specialized linear algebra libraries. The backend design allows users to
-//! mix and switch between them depending on their needs (performance, portability, or debugging).
+//! This crate defines traits for linear algebra operations on `mdarray` arrays. Whole-array
+//! operations including tensor contraction, matrix multiplication, decompositions and
+//! factorizations are exposed as trait methods. Crates such as `mdarray-linalg-blas` and
+//! `mdarray-linalg-faer` provide library-specific backends, i.e., Rust types that implement these
+//! traits.
+//!
+//! This backend-based approach is more than just a unified interface to multiple libraries.
+//! Backends are Rust values, so they can carry configuration such as threading settings or
+//! library-specific context.
+//!
+//! The operation traits are deliberately generic over the scalar type. This allows each backend to
+//! choose the scalar types it supports: BLAS/LAPACK backends naturally cover the classic BLAS
+//! scalar types, while other backends may be generic over broader families of scalars.
+//!
+//! User code can be generic over both the scalar type and the backend that provides whole-array
+//! operations. This allows user code to be written in any of the following ways:
+//!
+//! - tied to a concrete combination of backend and scalar type;
+//! - generic over the backend for a particular concrete scalar type;
+//! - generic over the scalar type for a concrete backend;
+//! - generic over both the backend and the scalar type.
+//!
+//! In the most general case, trait bounds for the scalar type and the backend are expressed independently:
+//! ```rust
+//! T: ...          // Require certain operations for the scalar type T.
+//! B: Contract<T>  // Require a backend that can contract arrays of T.
+//! ```
+//!
+//! This separation also leaves room for backend implementations optimized for particular scalar
+//! types, e.g., matrix multiplication for double-double scalars. These can outperform
+//! implementations built from generic scalar operations of that type.
 //!
 //! Each backend (except `Naive`) lives in a separate crate with specific dependencies.
 //!
 //! # Backend crates
 //!
-//! - [`mdarray_linalg_blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
-//! - [`mdarray_linalg_lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`mdarray_linalg_faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
-//! - [`mdarray_linalg_nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
-//! - [`mdarray_linalg_tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
+//! - [`mdarray-linalg-blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
+//! - [`mdarray-linalg-lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - [`mdarray-linalg-faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
+//! - [`mdarray-linalg-nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
+//! - [`mdarray-linalg-tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
 //! - `Naive`: simple demo backend, integrated into this crate
 //!
 //! # Backend functionality
