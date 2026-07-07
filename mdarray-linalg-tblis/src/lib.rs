@@ -18,16 +18,9 @@
 //! For vector operations, decompositions, or solving, use another backend
 //! (`mdarray-linalg-blas`, `mdarray-linalg-faer`, etc.).
 //!
-//! ## Setup
+//! ## Installation
 //!
-//! Add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-tblis = "0.2"
-//! ```
+//! You need to install `tblis` first, see the section Installation of [this page](https://docs.rs/tblis/latest/tblis/)
 //!
 //! ## Example
 //!
@@ -94,12 +87,15 @@
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
 
-#![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
-))]
-#![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
-")]
+// #![cfg_attr(docsrs, doc = concat!(
+//     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+// ))]
+// #![cfg_attr(
+//     not(docsrs),
+//     doc = "\
+// [mdarray_linalg]: ../mdarray_linalg/index.html
+// "
+// )]
 
 pub mod matmul;
 

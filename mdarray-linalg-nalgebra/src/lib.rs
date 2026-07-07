@@ -2,10 +2,9 @@
 //!
 //! [nalgebra](https://crates.io/crates/nalgebra) backend for [`mdarray_linalg`].
 //!
-//! This crate provides the [`Nalgebra`] struct that implements the linear algebra traits
-//! defined by `mdarray-linalg`, delegating computations to the pure-Rust `nalgebra` library.
-//! Nalgebra is particularly efficient for **small matrices** thanks to its extensive use of
-//! compile-time dimension optimizations.
+//! This crate provides the [`Nalgebra`] backend that implements the linear algebra traits
+//! defined by `mdarray-linalg`, delegating computations to the `nalgebra` library.
+//! Nalgebra is particularly efficient for **small matrices**.
 //!
 //! ## Scope
 //!
@@ -24,16 +23,6 @@
 //! - **Linear system solving** — `solve`
 //! - **Argmax** — `argmax`, `argmax_abs`
 //!
-//! ## Setup
-//!
-//! Add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-nalgebra = "0.2"
-//! ```
 //!
 //! ## Example
 //!
@@ -89,12 +78,15 @@
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
 
-#![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
-))]
-#![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
-")]
+// #![cfg_attr(docsrs, doc = concat!(
+//     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+// ))]
+// #![cfg_attr(
+//     not(docsrs),
+//     doc = "\
+// [mdarray_linalg]: ../mdarray_linalg/index.html
+// "
+// )]
 
 pub mod eig;
 pub mod lu;
@@ -167,8 +159,10 @@ where
 }
 
 /// Copy a dense nalgebra matrix back into an mdarray slice.
-pub(crate) fn write_dmatrix<T, D0, D1, L>(src: &nalgebra::DMatrix<T>, dst: &mut Slice<T, (D0, D1), L>)
-where
+pub(crate) fn write_dmatrix<T, D0, D1, L>(
+    src: &nalgebra::DMatrix<T>,
+    dst: &mut Slice<T, (D0, D1), L>,
+) where
     T: nalgebra::Scalar + Copy,
     D0: Dim,
     D1: Dim,
@@ -248,7 +242,10 @@ where
 
     let rstride = if x.rank() == 1 {
         let stride = x.stride(0);
-        assert!(stride > 0, "to_dvector_view: negative strides not supported");
+        assert!(
+            stride > 0,
+            "to_dvector_view: negative strides not supported"
+        );
         stride as usize
     } else {
         assert!(

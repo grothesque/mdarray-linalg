@@ -21,17 +21,6 @@
 //! For basic matrix/vector operations (Level 1–3 BLAS) and tensor contractions,
 //! use the `mdarray-linalg-blas` or `mdarray-linalg-faer` backends instead.
 //!
-//! ## Setup
-//!
-//! Add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-lapack = "0.2"
-//! openblas-src = { version = "0.10", features = ["system"] }
-//! ```
 //!
 //! ## Example
 //!
@@ -92,12 +81,15 @@
 //! install paths, you may need to override `build.rs`.
 //! See also the `mdarray-linalg` crate documentation.
 
-#![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
-))]
-#![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
-")]
+// #![cfg_attr(docsrs, doc = concat!(
+//     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+// ))]
+// #![cfg_attr(
+//     not(docsrs),
+//     doc = "\
+// [mdarray_linalg]: ../mdarray_linalg/index.html
+// "
+// )]
 
 pub mod eig;
 pub mod lu;

@@ -2,13 +2,12 @@
 //!
 //! [faer](https://crates.io/crates/faer) backend for [`mdarray_linalg`].
 //!
-//! This crate provides the [`Faer`] struct that implements the linear algebra traits
+//! This crate provides the [`Faer`] backend that implements the linear algebra traits
 //! defined by `mdarray-linalg`, delegating computations to the pure-Rust `faer` library.
-//! Unlike the BLAS/LAPACK backends, `faer` does **not** require a system BLAS installation.
 //!
 //! ## Scope
 //!
-//! The Faer backend is the most complete backend and covers:
+//! The Faer backend covers:
 //!
 //! - **Level 1** — vector operations: `dot`, `dotc`, `norm2`, `norm1`, `add_to_scaled`
 //! - **Level 2** — matrix-vector & outer product: `matvec`, `outer`
@@ -22,18 +21,6 @@
 //! - **QR decomposition** — `qr`
 //! - **Linear system solving** — `solve`
 //!
-//! ## Setup
-//!
-//! Add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-faer = "0.2"
-//! ```
-//!
-//! > **Note:** No BLAS/LAPACK linking is required — `faer` is a pure-Rust crate.
 //!
 //! ## Example
 //!
@@ -93,12 +80,15 @@
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
 
-#![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
-))]
-#![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
-")]
+// #![cfg_attr(docsrs, doc = concat!(
+//     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+// ))]
+// #![cfg_attr(
+//     not(docsrs),
+//     doc = "\
+// [mdarray_linalg]: ../mdarray_linalg/index.html
+// "
+// )]
 
 pub mod eig;
 pub mod lu;
