@@ -2,7 +2,7 @@ use num_complex::Complex;
 use paste::paste;
 
 #[allow(clippy::too_many_arguments)]
-pub trait LapackScalar {
+pub(super) trait LapackScalar {
     unsafe fn lapack_gesdd(
         jobz: i8,
         m: i32,
@@ -238,7 +238,7 @@ impl_lapack_scalar_real!(f64, d);
 impl_lapack_scalar_cplx!(Complex<f32>, c);
 impl_lapack_scalar_cplx!(Complex<f64>, z);
 
-pub trait NeedsRwork {
+pub(super) trait NeedsRwork {
     type RworkType;
     type Elem;
     fn rwork_len(m: i32, n: i32) -> usize;

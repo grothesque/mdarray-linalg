@@ -5,7 +5,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
 
-pub fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
+pub(super) fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     alpha: T,
     a: &Slice<T, (D0, D1), La>,
     x: &Slice<T, (D1,), Lx>,
@@ -70,7 +70,7 @@ pub fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     }
 }
 
-pub fn ger<T, La, Lx, Ly, D0: Dim, D1: Dim>(
+pub(super) fn ger<T, La, Lx, Ly, D0: Dim, D1: Dim>(
     beta: T,
     x: &Slice<T, (D0,), Lx>,
     y: &Slice<T, (D1,), Ly>,
@@ -122,18 +122,7 @@ pub fn ger<T, La, Lx, Ly, D0: Dim, D1: Dim>(
     }
 }
 
-pub fn scal<T, Lx, D1: Dim>(alpha: T, x: &mut Slice<T, (D1,), Lx>)
-where
-    T: BlasScalar + ComplexFloat,
-    Lx: Layout,
-{
-    let n = into_i32(x.len());
-    let incx = into_i32(x.stride(0));
-
-    unsafe { T::cblas_scal(n, alpha, x.as_mut_ptr(), incx) }
-}
-
-pub fn asum<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
+pub(super) fn asum<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -144,7 +133,7 @@ where
     unsafe { T::cblas_asum(n, x.as_ptr(), incx) }
 }
 
-pub fn axpy<T, D1: Dim, Lx, Ly>(alpha: T, x: &Slice<T, (D1,), Lx>, y: &mut Slice<T, (D1,), Ly>)
+pub(super) fn axpy<T, D1: Dim, Lx, Ly>(alpha: T, x: &Slice<T, (D1,), Lx>, y: &mut Slice<T, (D1,), Ly>)
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -159,7 +148,7 @@ where
     unsafe { T::cblas_axpy(n, alpha, x.as_ptr(), incx, y.as_mut_ptr(), incy) }
 }
 
-pub fn nrm2<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
+pub(super) fn nrm2<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real
 where
     T: BlasScalar + ComplexFloat,
     Lx: Layout,
@@ -170,7 +159,7 @@ where
     unsafe { T::cblas_nrm2(n, x.as_ptr(), incx) }
 }
 
-pub fn dotu<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
+pub(super) fn dotu<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     x: &Slice<T, (D1,), Lx>,
     y: &Slice<T, (D1,), Ly>,
 ) -> T {
@@ -187,7 +176,7 @@ pub fn dotu<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     }
 }
 
-pub fn dotc<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
+pub(super) fn dotc<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     x: &Slice<T, (D1,), Lx>,
     y: &Slice<T, (D1,), Ly>,
 ) -> T {
@@ -204,7 +193,7 @@ pub fn dotc<T: BlasScalar + ComplexFloat, D1: Dim, Lx: Layout, Ly: Layout>(
     }
 }
 
-pub fn amax<T, S, L>(x: &Slice<T, S, L>) -> usize
+pub(super) fn amax<T, S, L>(x: &Slice<T, S, L>) -> usize
 where
     T: BlasScalar + ComplexFloat,
     S: Shape,

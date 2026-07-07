@@ -5,7 +5,7 @@ use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 
 use crate::{to_dmatrix, to_dvector, write_dmatrix, write_dvector};
 
-pub fn gemv<T, D0, D1, La, Lx, Ly>(
+pub(super) fn gemv<T, D0, D1, La, Lx, Ly>(
     alpha: T,
     a: &Slice<T, (D0, D1), La>,
     x: &Slice<T, (D1,), Lx>,
@@ -31,7 +31,7 @@ pub fn gemv<T, D0, D1, La, Lx, Ly>(
     write_dvector(&y_nalgebra, y);
 }
 
-pub fn ger<T, Dx, Dy, Lx, Ly, La>(
+pub(super) fn ger<T, Dx, Dy, Lx, Ly, La>(
     alpha: T,
     x: &Slice<T, (Dx,), Lx>,
     y: &Slice<T, (Dy,), Ly>,
@@ -57,7 +57,7 @@ pub fn ger<T, Dx, Dy, Lx, Ly, La>(
     write_dmatrix(&a_nalgebra, a);
 }
 
-pub fn axpy<T, D1, Lx, Ly>(alpha: T, x: &Slice<T, (D1,), Lx>, y: &mut Slice<T, (D1,), Ly>)
+pub(super) fn axpy<T, D1, Lx, Ly>(alpha: T, x: &Slice<T, (D1,), Lx>, y: &mut Slice<T, (D1,), Ly>)
 where
     T: nalgebra::Scalar + ComplexFloat + Zero + One + ClosedAddAssign + ClosedMulAssign + Copy,
     D1: Dim,

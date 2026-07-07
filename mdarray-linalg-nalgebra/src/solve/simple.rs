@@ -6,7 +6,7 @@ use num_traits::Zero;
 use crate::to_dmatrix;
 
 /// Validate the dimensions of a linear system A * X = B.
-pub fn validate_solve_dims<T, D0, D1, La, Lb>(
+pub(super) fn validate_solve_dims<T, D0, D1, La, Lb>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D0, D1), Lb>,
 ) -> Result<(), SolveError>
@@ -28,7 +28,7 @@ where
 }
 
 /// Solve A * X = B and return the packed LU matrix, the solution, and P.
-pub fn solve<T, D0, D1, La, Lb>(
+pub(super) fn solve<T, D0, D1, La, Lb>(
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D0, D1), Lb>,
 ) -> Result<(nalgebra::DMatrix<T>, nalgebra::DMatrix<T>, nalgebra::DMatrix<T>), SolveError>

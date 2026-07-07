@@ -2,7 +2,7 @@ use num_complex::Complex;
 use paste::paste;
 
 #[allow(clippy::too_many_arguments)]
-pub trait LapackScalar {
+pub(super) trait LapackScalar {
     unsafe fn lapack_getrf(m: i32, n: i32, a: *mut Self, lda: i32, ipiv: *mut i32, info: *mut i32);
 
     unsafe fn lapack_getri(
@@ -92,7 +92,7 @@ impl_lapack_scalar!(f64, d);
 impl_lapack_scalar!(Complex<f32>, c);
 impl_lapack_scalar!(Complex<f64>, z);
 
-pub trait Workspace {
+pub(super) trait Workspace {
     type RworkType;
     type Elem;
     fn lwork_from_query(query: &Self::Elem) -> i32;

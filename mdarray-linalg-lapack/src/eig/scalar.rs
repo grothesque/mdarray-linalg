@@ -4,7 +4,7 @@ use num_complex::Complex;
 use paste::paste;
 
 #[allow(clippy::too_many_arguments)]
-pub trait LapackScalar {
+pub(super) trait LapackScalar {
     // General eigenvalue decomposition (GEEV)
     unsafe fn lapack_geev(
         jobvl: i8,
@@ -321,7 +321,7 @@ impl_lapack_scalar_real!(f64, d);
 impl_lapack_scalar_cplx!(Complex<f32>, c);
 impl_lapack_scalar_cplx!(Complex<f64>, z);
 
-pub trait NeedsRwork {
+pub(super) trait NeedsRwork {
     type RworkType;
     type Elem;
     fn rwork_len_geev(n: i32) -> usize;

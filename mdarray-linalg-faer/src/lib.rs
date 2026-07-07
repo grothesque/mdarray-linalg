@@ -6,6 +6,9 @@
 //! defined by `mdarray-linalg`, delegating computations to the pure-Rust `faer` library.
 //! Unlike the BLAS/LAPACK backends, `faer` does **not** require a system BLAS installation.
 //!
+//! Backend implementation modules are private.  Use [`Faer`] together with the
+//! operation traits from `mdarray_linalg::prelude::*`.
+//!
 //! ## Scope
 //!
 //! The Faer backend is the most complete backend and covers:
@@ -97,13 +100,13 @@
 [mdarray_linalg]: ../mdarray_linalg/index.html
 ")]
 
-pub mod eig;
-pub mod lu;
-pub mod contract;
-pub mod matvec;
-pub mod qr;
-pub mod solve;
-pub mod svd;
+mod eig;
+mod lu;
+mod contract;
+mod matvec;
+mod qr;
+mod solve;
+mod svd;
 
 /// Configuration for the QR decomposition.
 #[derive(Default, Debug, Clone, Copy)]
@@ -141,7 +144,7 @@ use mdarray::{Dim, Layout, Shape, Slice};
 
 /// Converts a `Slice<T, (_, _), L>` (from `mdarray`) into a `faer::MatRef<'a, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
+pub(crate) fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a Slice<T, (D0, D1), L>,
 ) -> faer::mat::MatRef<'a, T> {
     let (nrows, ncols) = *mat.shape();
@@ -164,7 +167,7 @@ pub fn into_faer<'a, T, L: Layout, D0: Dim, D1: Dim>(
 
 /// Converts a `Slice<T, (_, _), L>` (from `mdarray`) into a `faer::MatMut<'a, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
+pub(crate) fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
     mat: &'a mut Slice<T, (D0, D1), L>,
 ) -> faer::mat::MatMut<'a, T> {
     let (nrows, ncols) = *mat.shape();
@@ -188,7 +191,7 @@ pub fn into_faer_mut<'a, T, L: Layout, D0: Dim, D1: Dim>(
 /// Converts a `Slice<T, (D0, D1), L>` (from `mdarray`) into a
 /// `faer::MatMut<'a, T>` and transposes data.  This function
 /// **does not copy** any data.
-pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
+pub(crate) fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
     mat: &'a mut Slice<T, (D0, D1), L>,
 ) -> faer::mat::MatMut<'a, T> {
     let matsh = *mat.shape();
@@ -212,7 +215,7 @@ pub fn into_faer_mut_transpose<'a, T, D0: Dim, D1: Dim, L: Layout>(
 
 /// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::ColRef<'a, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_col<'a, T, D0: Dim, L: Layout>(
+pub(crate) fn into_faer_col<'a, T, D0: Dim, L: Layout>(
     vec: &'a Slice<T, (D0,), L>,
 ) -> faer::col::ColRef<'a, T> {
     let n = vec.shape().dim(0);
@@ -225,7 +228,7 @@ pub fn into_faer_col<'a, T, D0: Dim, L: Layout>(
 
 /// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::ColMut<'a, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_col_mut<'a, T, D0: Dim, L: Layout>(
+pub(crate) fn into_faer_col_mut<'a, T, D0: Dim, L: Layout>(
     vec: &'a mut Slice<T, (D0,), L>,
 ) -> faer::col::ColMut<'a, T> {
     let n = vec.shape().dim(0);
@@ -238,7 +241,7 @@ pub fn into_faer_col_mut<'a, T, D0: Dim, L: Layout>(
 
 /// Converts a `Slice<T, (D0,), L>` (from `mdarray`) into a `faer::RowRef<'a, T>`.
 /// This function **does not copy** any data.
-pub fn into_faer_row<'a, T, D0: Dim, L: Layout>(
+pub(crate) fn into_faer_row<'a, T, D0: Dim, L: Layout>(
     vec: &'a Slice<T, (D0,), L>,
 ) -> faer::row::RowRef<'a, T> {
     let n = vec.shape().dim(0);
@@ -249,17 +252,14 @@ pub fn into_faer_row<'a, T, D0: Dim, L: Layout>(
     unsafe { faer::row::RowRef::from_raw_parts(vec.as_ptr(), n, vec.stride(0)) }
 }
 
-/// Converts a mutable `Slice<T, (D0, D1), L>` (from `mdarray`) into a `faer::diag::DiagMut<'a, T>`,
-/// which is a mutable view over the diagonal elements of a matrix in Faer.
+/// Converts a mutable `Slice<T, (D0,), L>` (from `mdarray`) into a
+/// `faer::diag::DiagMut<'a, T>`.
 ///
-/// # Important Notes for Users:
-/// - This function **does not copy** any data. It gives direct mutable access to
-///   the diagonal values of the matrix represented by `mat`.
-/// - The stride along the **Y-axis (i.e., column stride)** is chosen to be consistent
-///   with LAPACK-style storage, where singular values are typically stored in the first row.
-/// - This function is unsafe internally and assumes that `mat` contains at least `n` elements
-///   in memory laid out consistently with the given stride.
-pub fn into_faer_diag_mut<'a, T, D0: Dim, L: Layout>(
+/// Internal implementation note: this is a zero-copy view used when faer wants
+/// singular values or eigenvalues as a diagonal object.  The caller must provide
+/// a vector-like slice whose pointer and stride remain valid for the returned
+/// view.
+pub(crate) fn into_faer_diag_mut<'a, T, D0: Dim, L: Layout>(
     mat: &'a mut Slice<T, (D0,), L>,
 ) -> faer::diag::DiagMut<'a, T> {
     let n = mat.shape().dim(0);

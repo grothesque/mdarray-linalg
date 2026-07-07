@@ -8,6 +8,9 @@
 //! and shines on large, high-rank tensors where BLAS-based backends would need costly
 //! transpositions.
 //!
+//! Backend implementation modules are private.  Use [`Tblis`] together with the
+//! operation traits from `mdarray_linalg::prelude::*`.
+//!
 //! ## Scope
 //!
 //! The TBLIS backend covers:
@@ -124,7 +127,7 @@
 #[cfg(test)]
 extern crate tblis_src as _;
 
-pub mod contract;
+mod contract;
 
 /// TBLIS backend.
 ///

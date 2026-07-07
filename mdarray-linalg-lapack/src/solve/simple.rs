@@ -4,7 +4,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::LapackScalar;
 
-pub fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar, D0, D1>(
+pub(super) fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar, D0, D1>(
     a: &mut Slice<T, (D0, D1), La>,
     b: &mut Slice<T, (D0, D1), Lb>,
 ) -> Result<Vec<i32>, SolveError>

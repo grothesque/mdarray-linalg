@@ -107,8 +107,8 @@
 #[cfg(test)]
 extern crate openblas_src as _;
 
-pub mod contract;
-pub mod matvec;
+mod contract;
+mod matvec;
 
 /// BLAS backend.
 ///

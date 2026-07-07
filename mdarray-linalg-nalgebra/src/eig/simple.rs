@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Compute a complex eigendecomposition from the complex Schur form.
-pub fn eigendecomp<T, D0, D1, L>(
+pub(super) fn eigendecomp<T, D0, D1, L>(
     a: &Slice<T, (D0, D1), L>,
 ) -> Result<(nalgebra::DVector<Complex<T::Real>>, nalgebra::DMatrix<Complex<T::Real>>), EigError>
 where
@@ -50,7 +50,7 @@ where
     Ok((schur_form.diagonal(), eigenvectors))
 }
 
-pub fn eig_values_from_complex_matrix<R, D>(
+pub(super) fn eig_values_from_complex_matrix<R, D>(
     values: &nalgebra::DVector<Complex<R>>,
 ) -> Array<Complex<R>, (D,)>
 where
@@ -65,7 +65,7 @@ where
     out
 }
 
-pub fn eig_vectors_from_complex_matrix<R, D0, D1>(
+pub(super) fn eig_vectors_from_complex_matrix<R, D0, D1>(
     vectors: &nalgebra::DMatrix<Complex<R>>,
 ) -> Array<Complex<R>, (D0, D1)>
 where
@@ -79,7 +79,7 @@ where
     out
 }
 
-pub fn schur<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<SchurDecomp<T, D0, D1>, SchurError>
+pub(super) fn schur<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<SchurDecomp<T, D0, D1>, SchurError>
 where
     T: ComplexFloat + Copy + Zero + nalgebra::ComplexField<RealField = T::Real>,
     T::Real: nalgebra::RealField + Copy,

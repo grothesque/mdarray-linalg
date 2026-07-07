@@ -1,4 +1,2 @@
-pub mod context;
-pub mod simple;
-
-pub use simple::{gemm, gemm_uninit};
+mod context;
+mod simple;

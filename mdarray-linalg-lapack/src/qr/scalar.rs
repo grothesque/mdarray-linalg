@@ -2,7 +2,7 @@ use num_complex::Complex;
 use paste::paste;
 
 #[allow(clippy::too_many_arguments)]
-pub trait LapackScalar {
+pub(super) trait LapackScalar {
     unsafe fn lapack_geqrf(
         m: i32,
         n: i32,
@@ -155,10 +155,9 @@ impl_lapack_real!(f64, d, or);
 impl_lapack_cplx!(Complex<f32>, c, un);
 impl_lapack_cplx!(Complex<f64>, z, un);
 
-pub trait NeedsRwork {
+pub(super) trait NeedsRwork {
     type RworkType;
     type Elem;
-    fn rwork_len(m: i32, n: i32) -> usize;
     fn lwork_from_query(query: &Self::Elem) -> i32;
     fn allocate(lwork: i32) -> Vec<Self::Elem>;
 }
@@ -168,10 +167,6 @@ macro_rules! impl_needs_rwork {
         impl NeedsRwork for $type {
             type RworkType = ();
             type Elem = $elem;
-
-            fn rwork_len(_: i32, _: i32) -> usize {
-                unimplemented!()
-            }
 
             fn lwork_from_query(query: &Self::Elem) -> i32 {
                 *query as i32
@@ -187,10 +182,6 @@ macro_rules! impl_needs_rwork {
         impl NeedsRwork for $type {
             type RworkType = $rwork;
             type Elem = $elem;
-
-            fn rwork_len(_: i32, _: i32) -> usize {
-                unimplemented!()
-            }
 
             fn lwork_from_query(query: &Self::Elem) -> i32 {
                 query.re as i32

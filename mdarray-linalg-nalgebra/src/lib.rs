@@ -7,6 +7,9 @@
 //! Nalgebra is particularly efficient for **small matrices** thanks to its extensive use of
 //! compile-time dimension optimizations.
 //!
+//! Backend implementation modules are private.  Use [`Nalgebra`] together with
+//! the operation traits from `mdarray_linalg::prelude::*`.
+//!
 //! ## Scope
 //!
 //! The Nalgebra backend covers:
@@ -93,13 +96,13 @@
 [mdarray_linalg]: ../mdarray_linalg/index.html
 ")]
 
-pub mod eig;
-pub mod lu;
-pub mod contract;
-pub mod matvec;
-pub mod qr;
-pub mod solve;
-pub mod svd;
+mod eig;
+mod lu;
+mod contract;
+mod matvec;
+mod qr;
+mod solve;
+mod svd;
 
 /// Configuration for the QR decomposition.
 #[derive(Default, Debug, Clone, Copy)]
