@@ -74,13 +74,6 @@
 //!
 //! # Example
 //!
-//! > **Note:**
-//! > When running doctests with Blas or Lapack, linking issues may occur due to this Rust issue:
-//! > [rust-lang/rust#125657](https://github.com/rust-lang/rust/issues/125657). In that case, run the doctests with:
-//! > `RUSTDOCFLAGS="-L native=/usr/lib -C link-arg=-lopenblas" cargo test --doc`
-//! >
-//! > See also the section **Troubleshooting** below.
-//!
 //! The following example demonstrates basic functionality:
 //!
 //! ```rust
@@ -114,23 +107,17 @@
 //! let d = Naive.matmul(&a, &tmp).eval();
 //! ```
 //!
-//! # Troubleshooting
+//! # Dependencies on non-Rust libraries
 //!
-//! If you encounter linking issues with BLAS or LAPACK on Linux,
-//! one solution is to add a `build.rs` file and configure it to link the libraries manually.
-//! In your `Cargo.toml`, add:
+//! Backend crates that bind non-Rust libraries do not impose a concrete library to link against.
+//! This choice is left to the user.  For example, users of `mdarray-linalg-blas` may add
+//! a provider crate such as `openblas-src`, users of `mdarray-linalg-lapack` may add
+//! `lapack-src`, and users of `mdarray-linalg-tblis` may add `tblis-src` or arrange
+//! to link TBLIS differently.  The provider crate must be referenced from Rust code,
+//! e.g. by adding `extern crate openblas_src as _;`, so that appropriate link
+//! directives are used.
 //!
-//! ```toml
-//! [package]
-//! build = "build.rs"
-//! ```
-//!
-//! Then, create a `build.rs` file with the following content:
-//!
-//! ```rust
-//! println!("cargo:rustc-link-lib=openblas");
-//! println!("cargo:rustc-link-search=native=/usr/lib");
-//! ```
+//! See the documentation of the individual backend crates for further information.
 
 #![cfg_attr(docsrs, doc = concat!(
     "[blas-docs]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",

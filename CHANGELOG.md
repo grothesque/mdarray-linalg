@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Native BLAS, LAPACK, and TBLIS backends no longer hardcode the library to link against.
+
 - **Matrix-vector interface overhaul:**
   Rework `matvec` API  for greater flexibility and consistency.
   Examples:

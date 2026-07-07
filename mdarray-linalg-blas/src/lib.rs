@@ -21,15 +21,22 @@
 //!
 //! ## Setup
 //!
-//! Add the following to your `Cargo.toml`:
+//! This crate binds to the CBLAS ABI but does not choose a native BLAS library to link against.
+//! This is left to the user. For example, to use a system OpenBLAS installation:
 //!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-blas = "0.2"
-//! openblas-src = { version = "0.10", features = ["system"] }
+//! ```bash
+//! cargo add mdarray mdarray-linalg mdarray-linalg-blas
+//! cargo add openblas-src --features system
 //! ```
+//!
+//! In one of your Rust crates, reference the CBLAS provider so its link directives are included:
+//!
+//! ```rust
+//! extern crate openblas_src as _;
+//! ```
+//!
+//! Other BLAS providers may be used if they expose the CBLAS symbols required by
+//! `cblas-sys`.
 //!
 //! ## Example
 //!
@@ -37,6 +44,7 @@
 //! `mdarray_linalg::prelude::*`:
 //!
 //! ```rust
+//! # extern crate openblas_src as _;
 //! use mdarray::array;
 //! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg_blas::Blas;
@@ -84,10 +92,10 @@
 //!
 //! ## Troubleshooting
 //!
-//! If you encounter linking issues, the included `build.rs` links against
-//! `libopenblas` in `/usr/lib`.  For other BLAS implementations or custom
-//! install paths, you may need to override `build.rs`.
-//! See also the `mdarray-linalg` crate documentation.
+//! Linking errors usually mean that no BLAS library was linked into the final
+//! binary, or that the selected library is not in the linker/runtime search
+//! path.  Add a source crate such as `openblas-src`, reference it from Rust code,
+//! or provide equivalent link flags from your application `build.rs`.
 
 #![cfg_attr(docsrs, doc = concat!(
     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
@@ -95,6 +103,9 @@
 #![cfg_attr(not(docsrs), doc = "\
 [mdarray_linalg]: ../mdarray_linalg/index.html
 ")]
+
+#[cfg(test)]
+extern crate openblas_src as _;
 
 pub mod matmul;
 pub mod matvec;

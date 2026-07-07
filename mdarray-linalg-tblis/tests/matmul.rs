@@ -1,3 +1,4 @@
+extern crate tblis_src as _;
 use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
     prelude::*,

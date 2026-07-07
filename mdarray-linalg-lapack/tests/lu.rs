@@ -1,3 +1,4 @@
+extern crate lapack_src as _;
 use mdarray_linalg::testing::lu::*;
 use mdarray_linalg_lapack::Lapack;
 

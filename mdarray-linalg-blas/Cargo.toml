@@ -8,7 +8,6 @@ keywords = ["mdarray", "linear-algebra", "math", "matrix", "blas"]
 description = "BLAS backend for mdarray-linalg"
 categories = ["mathematics", "science"]
 authors = ["Pierre Wulles", "Christoph Groth"]
-build = "build.rs"
 
 [dependencies]
 cblas-sys.workspace = true

@@ -23,15 +23,24 @@
 //!
 //! ## Setup
 //!
-//! Add the following to your `Cargo.toml`:
+//! This crate binds to the LAPACK/BLAS ABI but does not choose a native library to link against.
+//! This is left to the user.  For example, to use a system OpenBLAS installation:
 //!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-lapack = "0.2"
-//! openblas-src = { version = "0.10", features = ["system"] }
+//! ```bash
+//! cargo add mdarray mdarray-linalg mdarray-linalg-lapack
+//! cargo add lapack-src --features openblas
+//! cargo add openblas-src --features system
 //! ```
+//!
+//! In one of your Rust crates, reference the provider so its link directives are
+//! included:
+//!
+//! ```rust
+//! extern crate lapack_src as _;
+//! ```
+//!
+//! Other LAPACK providers may be used if they expose the symbols required by
+//! `lapack-sys` and `cblas-sys`.
 //!
 //! ## Example
 //!
@@ -39,6 +48,7 @@
 //! `mdarray_linalg::prelude::*`:
 //!
 //! ```rust
+//! # extern crate lapack_src as _;
 //! use mdarray::array;
 //! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg::eig::EigDecomp;
@@ -87,10 +97,11 @@
 //!
 //! ## Troubleshooting
 //!
-//! If you encounter linking issues, the included `build.rs` links against
-//! `libopenblas` in `/usr/lib`.  For other LAPACK implementations or custom
-//! install paths, you may need to override `build.rs`.
-//! See also the `mdarray-linalg` crate documentation.
+//! Linking errors usually mean that no LAPACK/BLAS implementation was linked
+//! into the final binary, or that the selected libraries are not in the
+//! linker/runtime search path.  Add a source crate such as `lapack-src`,
+//! reference it from Rust code, or provide equivalent link flags from your
+//! application `build.rs`.
 
 #![cfg_attr(docsrs, doc = concat!(
     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
@@ -98,6 +109,9 @@
 #![cfg_attr(not(docsrs), doc = "\
 [mdarray_linalg]: ../mdarray_linalg/index.html
 ")]
+
+#[cfg(test)]
+extern crate lapack_src as _;
 
 pub mod eig;
 pub mod lu;

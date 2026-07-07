@@ -20,20 +20,33 @@
 //!
 //! ## Setup
 //!
-//! Add the following to your `Cargo.toml`:
+//! This crate binds to TBLIS but does not choose which native TBLIS library to link against.
+//! This is left to the user.  For example, to link against an installed TBLIS library:
 //!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-tblis = "0.2"
+//! ```bash
+//! cargo add mdarray mdarray-linalg mdarray-linalg-tblis
+//! cargo add tblis-src
 //! ```
+//!
+//! In one of your Rust crates, reference the provider so its link directives are
+//! included:
+//!
+//! ```rust
+//! extern crate tblis_src as _;
+//! ```
+//!
+//! If TBLIS is installed outside standard linker paths, set `TBLIS_DIR`,
+//! `LD_LIBRARY_PATH`, or equivalent linker/runtime configuration.  If you need
+//! to install TBLIS from source, see the
+//! [upstream build guide](https://github.com/MatthewsResearchGroup/tblis/wiki/Building).
+//! You may also provide equivalent link flags from your application `build.rs`.
 //!
 //! ## Example
 //!
 //! All operations are accessed through the [`Tblis`] backend:
 //!
 //! ```rust
+//! # extern crate tblis_src as _;
 //! use mdarray::array;
 //! use mdarray_linalg::prelude::*;
 //! use mdarray_linalg_tblis::Tblis;
@@ -93,6 +106,13 @@
 //! ## Supported types
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
+//!
+//! ## Troubleshooting
+//!
+//! Linking errors usually mean that the native TBLIS library was not linked
+//! into the final binary, or that it is not in the linker/runtime search path.
+//! Add `tblis-src`, reference it from Rust code, or provide equivalent link
+//! flags from your application `build.rs`.
 
 #![cfg_attr(docsrs, doc = concat!(
     "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
@@ -100,6 +120,9 @@
 #![cfg_attr(not(docsrs), doc = "\
 [mdarray_linalg]: ../mdarray_linalg/index.html
 ")]
+
+#[cfg(test)]
+extern crate tblis_src as _;
 
 pub mod matmul;
 

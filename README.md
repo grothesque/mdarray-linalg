@@ -57,8 +57,27 @@ cargo add mdarray mdarray-linalg
 
 This is enough to use the built-in `Naive` backend.
 To use an optimized backend, add one of the backend crates as well.
-The [mdarray-linalg documentation](https://docs.rs/mdarray-linalg/)
-includes usage examples and a tabular overview of backend functionality.
+Note that some backends have non-Rust dependencies that need to be satisfied:
+see the backend documentation.
+
+## Local development
+
+This repository is a workspace that contains the main `mdarray-linalg` crate
+and multiple `mdarray-linalg-*` backend crates.
+Only backends without non-Rust dependencies are listed as `default-members` in `Cargo.toml`.
+This means that a simple `cargo test` should run in a fresh git clone.
+
+The tests for the BLAS and LAPACK backends assume that OpenBLAS is available.
+On Debian/Ubuntu,
+`sudo apt install pkgconf libopenblas-dev` should install all that is necessary.
+Install equivalent packages on other systems.
+
+The tests for the TBLIS backend assume that TBLIS is available.
+TBLIS can be installed from source following the
+[upstream build guide](https://github.com/MatthewsResearchGroup/tblis/wiki/Building).
+
+Developers who wish to use a different setup can carry a small local patch
+that reconfigures the workspace according to their preferences.
 
 ## License
 
