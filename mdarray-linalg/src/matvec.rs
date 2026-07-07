@@ -160,7 +160,7 @@
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use crate::matmul::{Triangle, Type};
+use crate::contract::{Triangle, Type};
 
 /// Matrix-vector multiplication and transformations
 pub trait MatVec<T, D0: Dim, D1: Dim> {

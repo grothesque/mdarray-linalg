@@ -1,20 +1,22 @@
 use std::iter::Sum;
+use std::mem::MaybeUninit;
 use std::ops::AddAssign;
 
-use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
+use mdarray::{Array, Dense, Dim, DynRank, Layout, Shape, Slice};
+use mdarray_linalg::contract::{
+    _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
+    MatMulBuilder,
+};
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
-use super::simple::naive_matmul;
-use crate::{
-    Naive,
-    matmul::{
-        _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
-        MatMulBuilder,
-    },
+use super::{
+    scalar::BlasScalar,
+    simple::{gemm, gemm_uninit},
 };
+use crate::Blas;
 
-struct NaiveMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+struct BlasMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -27,7 +29,7 @@ where
     b: &'a Slice<T, (D1, D2), Lb>,
 }
 
-struct NaiveContractBuilder<'a, T, Sa, Sb, La, Lb>
+struct BlasContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -46,11 +48,11 @@ where
 }
 
 impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
-    for NaiveMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for BlasMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + MulAdd<Output = T>,
+    T: BlasScalar + ComplexFloat + Zero + One,
     D0: Dim,
     D1: Dim,
     D2: Dim,
@@ -63,30 +65,29 @@ where
     fn eval(self) -> Array<T, (D0, D2)> {
         let (m, _) = *self.a.shape();
         let (_, n) = *self.b.shape();
-        let mut c = Array::from_elem((m, n), T::zero());
-        naive_matmul(self.alpha, self.a, self.b, T::zero(), &mut c);
-        c
+        let c = Array::from_elem((m, n), MaybeUninit::<T>::uninit());
+        gemm_uninit::<T, La, Lb, Dense, D0, D1, D2>(self.alpha, self.a, self.b, T::zero(), c)
     }
 
     fn write<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
-        naive_matmul(self.alpha, self.a, self.b, T::zero(), c);
+        gemm(self.alpha, self.a, self.b, T::zero(), c);
     }
 
     fn add_to<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>) {
-        naive_matmul(self.alpha, self.a, self.b, T::one(), c);
+        gemm(self.alpha, self.a, self.b, T::one(), c);
     }
 
     fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
-        naive_matmul(self.alpha, self.a, self.b, beta, c);
+        gemm(self.alpha, self.a, self.b, beta, c);
     }
 }
 
 impl<'a, T, Sa, Sb, La, Lb> ContractBuilder<'a, T, Sa, Sb, La, Lb>
-    for NaiveContractBuilder<'a, T, Sa, Sb, La, Lb>
+    for BlasContractBuilder<'a, T, Sa, Sb, La, Lb>
 where
     La: Layout,
     Lb: Layout,
-    T: ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
+    T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
     Sa: Shape,
     Sb: Shape,
 {
@@ -100,12 +101,6 @@ where
             let a = self.a.to_array().into_dyn();
             let b = self.b.to_array().into_dyn();
 
-            // TODO: it is very likely that this copy is useless. It
-            // should be removed in a near future (9th april
-            // 2026). However due to tricky typing error I did not
-            // manage to give the view to _hypercontract without
-            // removing the genericity toward Layout and shape :(
-
             let axes_a = self
                 .einsum_axes_a
                 .as_deref()
@@ -115,7 +110,7 @@ where
                 .as_deref()
                 .expect("missing einsum axis labels for B");
 
-            let mut result = _hypercontract(Naive, a.expr(), b.expr(), axes_a, axes_b);
+            let mut result = _hypercontract(Blas, a.expr(), b.expr(), axes_a, axes_b);
 
             if let (Some(current), Some(requested)) = (
                 self.current_output_labels.as_deref(),
@@ -132,7 +127,6 @@ where
                                 .expect("output label not present in contraction result")
                         })
                         .collect();
-
                     result = result.permute(perm).to_tensor().into_dyn();
             }
 
@@ -142,7 +136,7 @@ where
 
             result
         } else {
-            _contract(Naive, self.a, self.b, self.axes, self.alpha)
+            _contract(Blas, self.a, self.b, self.axes, self.alpha)
         }
     }
 
@@ -150,13 +144,7 @@ where
         let result = self.eval();
         assert_eq!(c.rank(), result.rank(), "output rank mismatch");
         for i in 0..c.rank() {
-            assert_eq!(
-                c.dim(i),
-                result.dim(i),
-                "output shape mismatch on axis {i}: expected {}, got {}",
-                result.dim(i),
-                c.dim(i)
-            );
+            assert_eq!(c.dim(i), result.dim(i), "output shape mismatch on axis {i}");
         }
         for (dst, src) in c.iter_mut().zip(result.iter()) {
             *dst = *src;
@@ -171,13 +159,7 @@ where
         let result = self.eval();
         assert_eq!(c.rank(), result.rank(), "output rank mismatch");
         for i in 0..c.rank() {
-            assert_eq!(
-                c.dim(i),
-                result.dim(i),
-                "output shape mismatch on axis {i}: expected {}, got {}",
-                result.dim(i),
-                c.dim(i)
-            );
+            assert_eq!(c.dim(i), result.dim(i), "output shape mismatch on axis {i}");
         }
         for (dst, src) in c.iter_mut().zip(result.iter()) {
             *dst = beta * *dst + *src;
@@ -185,9 +167,9 @@ where
     }
 }
 
-impl<T> Contract<T> for Naive
+impl<T> Contract<T> for Blas
 where
-    T: ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
+    T: BlasScalar + ComplexFloat + Zero + One + MulAdd<Output = T> + AddAssign + Sum,
 {
     fn matmul<'a, D0, D1, D2, La, Lb>(
         &self,
@@ -201,7 +183,7 @@ where
         D1: Dim,
         D2: Dim,
     {
-        NaiveMatMulBuilder {
+        BlasMatMulBuilder {
             alpha: T::one(),
             a,
             b,
@@ -220,7 +202,7 @@ where
         La: Layout,
         Lb: Layout,
     {
-        _contract(Naive, a, b, Axes::All, T::one()).into_scalar()
+        _contract(Blas, a, b, Axes::All, T::one()).into_scalar()
     }
 
     fn contract_n<'a, Sa, Sb, La, Lb>(
@@ -236,7 +218,7 @@ where
         La: Layout,
         Lb: Layout,
     {
-        NaiveContractBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -263,7 +245,7 @@ where
         La: Layout,
         Lb: Layout,
     {
-        NaiveContractBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,
@@ -291,20 +273,8 @@ where
         La: Layout,
         Lb: Layout,
     {
-        assert_eq!(
-            indices_a.len(),
-            a.rank(),
-            "einsum indices_a length ({}) must match A rank ({})",
-            indices_a.len(),
-            a.rank()
-        );
-        assert_eq!(
-            indices_b.len(),
-            b.rank(),
-            "einsum indices_b length ({}) must match B rank ({})",
-            indices_b.len(),
-            b.rank()
-        );
+        assert_eq!(indices_a.len(), a.rank(), "einsum indices_a length must match A rank");
+        assert_eq!(indices_b.len(), b.rank(), "einsum indices_b length must match B rank");
 
         let free: std::collections::HashSet<u8> = indices_c.iter().copied().collect();
         let current_output_labels: Vec<u8> = indices_a
@@ -316,7 +286,7 @@ where
         let (einsum_axes_a, einsum_axes_b) =
             einsum_to_contract_axes(indices_a, indices_b, indices_c);
 
-        NaiveContractBuilder {
+        BlasContractBuilder {
             alpha: T::one(),
             a,
             b,

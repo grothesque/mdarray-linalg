@@ -69,7 +69,7 @@ pub fn matmul4x4_view(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
     matmul_simple(&a, &b, &mut c);
 }
 
-// The same (even bigger) problem exists for our MatMul trait.
+// The same (even bigger) problem exists for the `Contract::matmul` API.
 #[inline(never)]
 pub fn matmul4x4_backend_naive(a: &Slice4x4, b: &Slice4x4, c: &mut Slice4x4) {
     Naive.matmul(a, b).write(c);

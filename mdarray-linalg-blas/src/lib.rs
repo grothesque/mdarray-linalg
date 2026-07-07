@@ -82,8 +82,8 @@
 //! assert_eq!(scalar, 70.0);  // 1·5 + 2·6 + 3·7 + 4·8
 //!
 //! // Contract last n axes (n=1 → standard matmul)
-//! let tensordot = Blas.contract_n(&t1, &t2, 1).eval();
-//! assert_eq!(tensordot, array![[19., 22.], [43., 50.]].into_dyn());
+//! let contracted = Blas.contract_n(&t1, &t2, 1).eval();
+//! assert_eq!(contracted, array![[19., 22.], [43., 50.]].into_dyn());
 //! ```
 //!
 //! ## Supported types
@@ -107,7 +107,7 @@
 #[cfg(test)]
 extern crate openblas_src as _;
 
-pub mod matmul;
+pub mod contract;
 pub mod matvec;
 
 /// BLAS backend.

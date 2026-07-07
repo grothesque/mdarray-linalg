@@ -1,5 +1,5 @@
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{Axes, Contract, ContractBuilder, MatMulBuilder};
+use mdarray_linalg::contract::{Axes, Contract, ContractBuilder, MatMulBuilder};
 use num_traits::{MulAdd, One, Zero};
 use tblis::{
     containers::TblisTensor,
@@ -118,7 +118,7 @@ where
                 let mut c = Array::from_elem(shape_c, T::zero());
                 self.run_structured_into(&indices_a, &indices_b, &indices_c, &mut c, T::zero());
                 // When all axes are contracted, TBLIS returns a scalar but the
-                // API expects a 1×1 tensor (like numpy's np.tensordot).
+                // structured contraction API expects a 1×1 tensor.
                 if c.rank() == 0 {
                     let scalar = c.iter().next().copied().unwrap_or(T::zero());
                     c = Array::from_elem([1, 1], scalar).into_dyn();

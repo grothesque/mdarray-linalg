@@ -1,10 +1,9 @@
-//! Matrix multiplication and tensor contraction
+//! Tensor contraction and matrix multiplication
 //!
 //!```rust
 //!use mdarray::tensor;
 //!use mdarray_linalg::prelude::*;
 //!use mdarray_linalg::Naive;
-//!use mdarray_linalg::matmul;
 //!
 //!let a = tensor![[1., 2.], [3., 4.]];
 //!let b = tensor![[5., 6.], [7., 8.]];
@@ -25,8 +24,8 @@
 //!
 //!// Contract last n axes of a with first n axes of b
 //!let expected_n = tensor![[19., 22.], [43., 50.]].into_dyn();
-//!let result_contract_k = Naive.contract_n(&a, &b, 1).eval();
-//!assert_eq!(result_contract_k, expected_n);
+//!let result_contract_n = Naive.contract_n(&a, &b, 1).eval();
+//!assert_eq!(result_contract_n, expected_n);
 //!
 //!// Contract specific axes (equivalent to matmul: contract axis 1 of a with axis 0 of b)
 //!let expected_pairs = tensor![[19., 22.], [43., 50.]].into_dyn();
@@ -120,7 +119,7 @@ pub trait Contract<T: One + MulAdd<Output = T>> {
 
     /// Contracts explicit pairs of axes.
     ///
-    /// This is the structured tensordot-style API.
+    /// This is the structured contraction API.
     /// `contract_pairs(&a, &b, &[1], &[0])` is matrix multiplication for 2D inputs.
     fn contract_pairs<'a, Sa, Sb, La, Lb>(
         &self,
@@ -474,7 +473,7 @@ where
     let mut map_b: Vec<usize> = (0..b.shape().dims().len()).collect();
 
     // Contraction axis pairs accumulated from (Some, Some) edges,
-    // consumed in one shot by the final tensordot.
+    // consumed in one shot by the final contraction.
     let mut axes_a: Vec<usize> = Vec::new();
     let mut axes_b: Vec<usize> = Vec::new();
 
@@ -499,7 +498,7 @@ where
                 b_owned = Some(apply_hypersum(&view, axes, &mut map_b));
             }
             // Delta bridges A and B: prepare one contraction axis on each side.
-            // The actual dot-product is deferred to the tensordot call below.
+            // The actual dot-product is deferred to the final contraction below.
             (Some(axes_a_idx), Some(axes_b_idx)) => {
                 let ax_a = {
                     let view = a_owned
@@ -527,7 +526,7 @@ where
         }
     }
 
-    // Final tensordot: contracts all (Some, Some) edge axes simultaneously.
+    // Final contraction: contracts all (Some, Some) edge axes simultaneously.
     let final_a = a_owned
         .as_ref()
         .map(|o| o.expr())
@@ -724,12 +723,12 @@ where
     }
 }
 
-/// Process a `(Some, Some)` edge: prepare the contraction axis for tensordot.
+/// Process a `(Some, Some)` edge: prepare the contraction axis.
 ///
 /// For a delta that bridges A and B, we do *not* contract immediately. Instead
 /// we reduce the multi-axis delta to a single axis (by extracting the
 /// generalized diagonal when needed) and return its current position so that
-/// `hypercontract` can pass it to the final tensordot.
+/// `hypercontract` can pass it to the final contraction.
 fn extract_hyperdiag<T, L: Layout>(
     view: View<'_, T, DynRank, L>,
     idx: &[usize],

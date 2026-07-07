@@ -2,7 +2,7 @@ use std::iter::Sum;
 use std::ops::AddAssign;
 
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{
+use mdarray_linalg::contract::{
     _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
     MatMulBuilder, Side, Triangle, Type,
 };
