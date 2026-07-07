@@ -7,7 +7,7 @@ use num_complex::ComplexFloat;
 use super::scalar::{LapackScalar, NeedsRwork};
 use crate::SVDConfig;
 
-pub fn gsvd<
+pub(super) fn gsvd<
     T: ComplexFloat + Default + LapackScalar + NeedsRwork,
     D: Dim,
     La: Layout,

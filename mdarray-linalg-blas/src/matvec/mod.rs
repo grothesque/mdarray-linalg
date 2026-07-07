@@ -1,3 +1,3 @@
-pub mod context;
-pub mod scalar;
-pub mod simple;
+mod context;
+mod scalar;
+mod simple;

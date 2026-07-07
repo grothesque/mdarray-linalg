@@ -6,6 +6,9 @@
 //! solver traits defined by `mdarray-linalg`, delegating computations to a LAPACK
 //! implementation (e.g. OpenBLAS) via the `lapack-sys` and `cblas-sys` crates.
 //!
+//! Backend implementation modules are private.  Use [`Lapack`] together with the
+//! operation traits from `mdarray_linalg::prelude::*`.
+//!
 //! ## Scope
 //!
 //! The LAPACK backend covers:
@@ -113,11 +116,11 @@
 #[cfg(test)]
 extern crate lapack_src as _;
 
-pub mod eig;
-pub mod lu;
-pub mod qr;
-pub mod solve;
-pub mod svd;
+mod eig;
+mod lu;
+mod qr;
+mod solve;
+mod svd;
 
 /// Configuration for the SVD algorithm.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

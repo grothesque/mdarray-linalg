@@ -5,7 +5,7 @@ use num_complex::ComplexFloat;
 
 use crate::{into_faer, into_faer_mut, QRConfig};
 
-pub fn qr_faer<
+pub(super) fn qr_faer<
     T: ComplexFloat + ComplexField + Default,
     D0: Dim,
     D1: Dim,

@@ -6,7 +6,7 @@ use num_traits::Zero;
 use crate::to_dmatrix;
 
 /// Compute the LU factors and permutation matrix.
-pub fn lu<T, D0, D1, L>(
+pub(super) fn lu<T, D0, D1, L>(
     a: &Slice<T, (D0, D1), L>,
 ) -> (nalgebra::DMatrix<T>, nalgebra::DMatrix<T>, nalgebra::DMatrix<T>)
 where
@@ -25,7 +25,7 @@ where
 }
 
 /// Compute the inverse of a square matrix.
-pub fn inv<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
+pub(super) fn inv<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
     D0: Dim,
@@ -49,7 +49,7 @@ where
 }
 
 /// Compute the determinant of a square matrix.
-pub fn det<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> T
+pub(super) fn det<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> T
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
     D0: Dim,
@@ -60,7 +60,7 @@ where
 }
 
 /// Compute the Cholesky factor of a square positive-definite matrix.
-pub fn choleski<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
+pub(super) fn choleski<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
     D0: Dim,

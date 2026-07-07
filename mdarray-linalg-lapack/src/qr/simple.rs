@@ -5,7 +5,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};
 
-pub fn geqrf<
+pub(super) fn geqrf<
     La: Layout,
     Lq: Layout,
     Lr: Layout,

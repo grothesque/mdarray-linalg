@@ -4,7 +4,7 @@ use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use num_complex::{Complex, ComplexFloat};
 
 #[allow(clippy::too_many_arguments, unused_variables)]
-pub trait BlasScalar: Sized + ComplexFloat {
+pub(super) trait BlasScalar: Sized + ComplexFloat {
     /// # Safety
     /// Calls must respect BLAS conventions.
     unsafe fn cblas_gemm(

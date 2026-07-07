@@ -9,7 +9,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};
 
-pub fn geig<
+pub(super) fn geig<
     La: Layout,
     Ler: Layout,
     Lei: Layout,
@@ -116,7 +116,7 @@ where
     }
 }
 
-pub fn geigh<
+pub(super) fn geigh<
     La: Layout,
     Lw: Layout,
     Lv: Layout,
@@ -321,7 +321,7 @@ where
     info
 }
 
-pub fn gees<
+pub(super) fn gees<
     La: Layout,
     Lwr: Layout,
     Lwi: Layout,
@@ -450,7 +450,7 @@ where
     }
     Ok(())
 }
-pub fn gees_complex<
+pub(super) fn gees_complex<
     La: Layout,
     Lw: Layout,
     Lvs: Layout,

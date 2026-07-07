@@ -9,7 +9,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
 
-pub fn gemm<T, La, Lb, Lc, D0, D1, D2>(
+pub(super) fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D1, D2), Lb>,
@@ -76,7 +76,7 @@ pub fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     }
 }
 
-pub fn gemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
+pub(super) fn gemm_uninit<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
     a: &Slice<T, (D0, D1), La>,
     b: &Slice<T, (D1, D2), Lb>,

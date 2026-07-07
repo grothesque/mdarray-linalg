@@ -5,7 +5,7 @@ use num_traits::Zero;
 use crate::to_dmatrix;
 
 /// Compute the reduced QR decomposition.
-pub fn qr_reduced<T, D0, D1, L>(
+pub(super) fn qr_reduced<T, D0, D1, L>(
     a: &Slice<T, (D0, D1), L>,
 ) -> (nalgebra::DMatrix<T>, nalgebra::DMatrix<T>)
 where
@@ -19,7 +19,7 @@ where
 }
 
 /// Compute the complete QR decomposition.
-pub fn qr_complete<T, D0, D1, L>(
+pub(super) fn qr_complete<T, D0, D1, L>(
     a: &Slice<T, (D0, D1), L>,
 ) -> (nalgebra::DMatrix<T>, nalgebra::DMatrix<T>)
 where

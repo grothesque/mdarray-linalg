@@ -4,7 +4,7 @@ use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, Workspace};
 
-pub fn getrf<
+pub(super) fn getrf<
     T: ComplexFloat + Default + LapackScalar,
     D0: Dim,
     D1: Dim,
@@ -81,7 +81,7 @@ where
     ipiv
 }
 
-pub fn getri<T: ComplexFloat + Default + LapackScalar + Workspace, D0: Dim, D1: Dim, L: Layout>(
+pub(super) fn getri<T: ComplexFloat + Default + LapackScalar + Workspace, D0: Dim, D1: Dim, L: Layout>(
     a: &mut Slice<T, (D0, D1), L>,
     ipiv: &mut [i32],
 ) -> i32
@@ -148,7 +148,7 @@ where
     info
 }
 
-pub fn potrf<T: ComplexFloat + Default + LapackScalar, D0: Dim, D1: Dim, La: Layout>(
+pub(super) fn potrf<T: ComplexFloat + Default + LapackScalar, D0: Dim, D1: Dim, La: Layout>(
     a: &mut Slice<T, (D0, D1), La>,
     uplo: char,
 ) -> i32
