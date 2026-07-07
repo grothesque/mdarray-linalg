@@ -160,8 +160,6 @@
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use crate::contract::{Triangle, Type};
-
 /// Matrix-vector multiplication and transformations
 pub trait MatVec<T, D0: Dim, D1: Dim> {
     fn matvec<'a, La, Lx>(
@@ -290,12 +288,4 @@ where
 
     /// Rank-1 update: `A := α·x·yᵀ + A`
     fn add_to<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>);
-
-    /// Structured rank-1 update.
-    fn add_to_special<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>, _ty: Type, _tr: Triangle)
-    where
-        Self: Sized,
-    {
-        self.add_to(a)
-    }
 }

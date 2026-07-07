@@ -37,16 +37,6 @@ fn add_outer_cplx() {
 }
 
 #[test]
-fn add_outer_sym() {
-    test_add_outer_sym(Nalgebra::default())
-}
-
-#[test]
-fn add_outer_her() {
-    test_add_outer_her(Nalgebra::default())
-}
-
-#[test]
 fn add_to_scaled_vecvec() {
     test_add_to_scaled_vecvec(Nalgebra::default())
 }

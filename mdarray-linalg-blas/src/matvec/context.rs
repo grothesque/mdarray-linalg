@@ -229,17 +229,6 @@ where
         ger(self.alpha, self.x, self.y, a);
     }
 
-    // fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
-    //     let cblas_uplo = match tr {
-    //         Triangle::Lower => CBLAS_UPLO::CblasLower,
-    //         Triangle::Upper => CBLAS_UPLO::CblasUpper,
-    //     };
-    //     match ty {
-    //         Type::Sym => syr(cblas_uplo, self.alpha, self.x, a), // Assume x == y
-    //         Type::Her => her(cblas_uplo, self.alpha.re(), self.x, a),
-    //         Type::Tri => ger(self.alpha, self.x, self.y, a),
-    //     }
-    // }
 }
 
 impl<T, Dx, Dy> Outer<T, Dx, Dy> for Blas

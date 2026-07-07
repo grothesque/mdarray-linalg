@@ -6,10 +6,7 @@ use faer::{
 };
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::{
-    contract::{Triangle, Type},
-    matvec::{MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
-};
+use mdarray_linalg::matvec::{MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps};
 use num_complex::{Complex32, Complex64, ComplexFloat};
 use num_traits::{One, Zero};
 
@@ -321,9 +318,5 @@ where
             self.alpha,
             self.par,
         );
-    }
-
-    fn add_to_special<La: Layout>(self, _a: &mut Slice<T, (Dx, Dy), La>, _ty: Type, _tr: Triangle) {
-        unimplemented!();
     }
 }

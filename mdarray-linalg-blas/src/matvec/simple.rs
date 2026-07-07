@@ -1,4 +1,4 @@
-use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE, CBLAS_UPLO};
+use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{Dim, Layout, Shape, Slice};
 use mdarray_linalg::{into_i32, trans_stride};
 use num_complex::ComplexFloat;
@@ -131,100 +131,6 @@ where
     let incx = into_i32(x.stride(0));
 
     unsafe { T::cblas_scal(n, alpha, x.as_mut_ptr(), incx) }
-}
-
-pub fn syr<T, Lx, La, D0: Dim, D1: Dim>(
-    uplo: CBLAS_UPLO,
-    alpha: T,
-    x: &Slice<T, (D0,), Lx>,
-    a: &mut Slice<T, (D0, D1), La>,
-) where
-    T: BlasScalar + ComplexFloat,
-    Lx: Layout,
-    La: Layout,
-{
-    let ash = *a.shape();
-    let (m, n) = (ash.dim(0), ash.dim(1));
-
-    assert_eq!(m, n, "Matrix a must be square for symmetric update");
-    assert_eq!(x.len(), n, "x length must match matrix dimension");
-
-    let row_major = a.stride(1) == 1;
-    assert!(
-        row_major || a.stride(0) == 1,
-        "a must be contiguous in one dimension"
-    );
-
-    let x_inc = into_i32(x.stride(0));
-    let lda = if row_major {
-        into_i32(a.stride(0))
-    } else {
-        into_i32(a.stride(1))
-    };
-
-    unsafe {
-        T::cblas_syr(
-            if row_major {
-                CBLAS_LAYOUT::CblasRowMajor
-            } else {
-                CBLAS_LAYOUT::CblasColMajor
-            },
-            uplo,
-            into_i32(n),
-            alpha,
-            x.as_ptr(),
-            x_inc,
-            a.as_mut_ptr(),
-            lda,
-        )
-    }
-}
-
-pub fn her<T, Lx, La, D0: Dim, D1: Dim>(
-    uplo: CBLAS_UPLO,
-    alpha: T::Real,
-    x: &Slice<T, (D0,), Lx>,
-    a: &mut Slice<T, (D0, D1), La>,
-) where
-    T: BlasScalar + ComplexFloat,
-    Lx: Layout,
-    La: Layout,
-{
-    let ash = *a.shape();
-    let (m, n) = (ash.dim(0), ash.dim(1));
-
-    assert_eq!(m, n, "Matrix a must be square for hermitian update");
-    assert_eq!(x.len(), n, "x length must match matrix dimension");
-
-    let row_major = a.stride(1) == 1;
-    assert!(
-        row_major || a.stride(0) == 1,
-        "a must be contiguous in one dimension"
-    );
-
-    let x_inc = into_i32(x.stride(0));
-    let lda = if row_major {
-        into_i32(a.stride(0))
-    } else {
-        into_i32(a.stride(1))
-    };
-
-    unsafe {
-        T::cblas_her(
-            if row_major {
-                CBLAS_LAYOUT::CblasRowMajor
-            } else {
-                CBLAS_LAYOUT::CblasColMajor
-            },
-            uplo,
-            into_i32(n),
-            alpha,
-            x.as_ptr(),
-            x_inc,
-            a.as_mut_ptr(),
-            lda,
-        )
-    }
 }
 
 pub fn asum<T, D1: Dim, Lx>(x: &Slice<T, (D1,), Lx>) -> T::Real

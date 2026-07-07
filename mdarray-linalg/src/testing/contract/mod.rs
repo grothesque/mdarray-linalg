@@ -1,4 +1,4 @@
-use mdarray::{Array, DArray, array, expr, expr::Expression as _, tensor};
+use mdarray::{array, expr, expr::Expression as _, tensor};
 use num_complex::Complex64;
 
 use super::common::*;
@@ -37,54 +37,6 @@ pub fn matmul_complex_with_scaling_impl(backend: &impl Contract<Complex64>) {
 }
 
 
-pub fn create_symmetric_matrix_f64(size: usize) -> DArray<f64, 2> {
-    let mut matrix = Array::from_elem([size, size], 0.0);
-    for i in 0..size {
-        for j in 0..size {
-            let value = ((i + 1) * (j + 1)) as f64;
-            matrix[[i, j]] = value;
-            matrix[[j, i]] = value;
-        }
-    }
-    matrix
-}
-
-pub fn create_upper_triangular_f64(size: usize) -> DArray<f64, 2> {
-    let mut matrix = Array::from_elem([size, size], 0.0);
-    for i in 0..size {
-        for j in i..size {
-            matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
-        }
-    }
-    matrix
-}
-
-pub fn create_lower_triangular_f64(size: usize) -> DArray<f64, 2> {
-    let mut matrix = Array::from_elem([size, size], 0.0);
-    for i in 0..size {
-        for j in 0..=i {
-            matrix[[i, j]] = ((i + 1) * (j + 1)) as f64;
-        }
-    }
-    matrix
-}
-
-pub fn create_hermitian_matrix_complex(size: usize) -> DArray<Complex64, 2> {
-    let mut matrix = Array::from_elem([size, size], Complex64::new(0.0, 0.0));
-    for i in 0..size {
-        for j in 0..size {
-            if i == j {
-                matrix[[i, j]] = Complex64::new((i + 1) as f64, 0.0);
-            } else if i < j {
-                let real = ((i + 1) * (j + 1)) as f64;
-                let imag = (i + j + 1) as f64;
-                matrix[[i, j]] = Complex64::new(real, imag);
-                matrix[[j, i]] = Complex64::new(real, -imag);
-            }
-        }
-    }
-    matrix
-}
 // --- Structured contraction helpers ---
 
 pub fn contract_all_impl(backend: &impl Contract<f64>) {
