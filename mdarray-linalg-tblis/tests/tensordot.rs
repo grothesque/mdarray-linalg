@@ -1,3 +1,4 @@
+extern crate tblis_src as _;
 use mdarray_linalg::{testing::matmul::*, testing::tensordot::*};
 use mdarray_linalg_tblis::Tblis;
 

@@ -1,3 +1,4 @@
+extern crate openblas_src as _;
 use mdarray_linalg::testing::tensordot::*;
 use mdarray_linalg_blas::Blas;
 
