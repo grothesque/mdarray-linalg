@@ -4,57 +4,14 @@ use std::ops::AddAssign;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::contract::{
     _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
-    MatMulBuilder, Side, Triangle, Type,
+    MatMulBuilder,
 };
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 
 use super::simple::gemm;
-use crate::{Nalgebra, to_dmatrix, write_dmatrix};
-
-/// Rebuild the missing half of a structured matrix before dispatching to nalgebra.
-fn copy_special_matrix<T, D0, D1, L>(
-    a: &Slice<T, (D0, D1), L>,
-    ty: &Type,
-    tr: &Triangle,
-) -> nalgebra::DMatrix<T>
-where
-    T: nalgebra::Scalar + ComplexFloat + Zero + Copy,
-    D0: Dim,
-    D1: Dim,
-    L: Layout,
-{
-    let rows = a.shape().dim(0);
-    let cols = a.shape().dim(1);
-    assert_eq!(
-        rows, cols,
-        "special matrix operations require a square matrix"
-    );
-
-    let mut out = nalgebra::DMatrix::from_element(rows, cols, T::zero());
-
-    for i in 0..rows {
-        for j in 0..cols {
-            let stored = match tr {
-                Triangle::Upper => i <= j,
-                Triangle::Lower => i >= j,
-            };
-
-            out[(i, j)] = if stored {
-                a[[i, j]]
-            } else {
-                match ty {
-                    Type::Sym => a[[j, i]],
-                    Type::Her => a[[j, i]].conj(),
-                    Type::Tri => T::zero(),
-                }
-            };
-        }
-    }
-
-    out
-}
+use crate::Nalgebra;
 
 struct NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
@@ -122,26 +79,6 @@ where
         gemm(self.alpha, self.a, self.b, beta, c);
     }
 
-    fn special(self, lr: Side, ty: Type, tr: Triangle) -> Array<T, (D0, D2)> {
-        let (m, _) = *self.a.shape();
-        let (_, n) = *self.b.shape();
-        let mut c_nalgebra = nalgebra::DMatrix::from_element(m.size(), n.size(), T::zero());
-
-        let a_nalgebra = match lr {
-            Side::Left => copy_special_matrix(self.a, &ty, &tr),
-            Side::Right => to_dmatrix(self.a),
-        };
-        let b_nalgebra = match lr {
-            Side::Left => to_dmatrix(self.b),
-            Side::Right => copy_special_matrix(self.b, &ty, &tr),
-        };
-
-        c_nalgebra.gemm(self.alpha, &a_nalgebra, &b_nalgebra, T::zero());
-
-        let mut c = Array::<T, (D0, D2)>::from_elem((m, n), T::zero());
-        write_dmatrix(&c_nalgebra, &mut c);
-        c
-    }
 }
 
 impl<'a, T, La, Lb, Sa, Sb> ContractBuilder<'a, T, Sa, Sb, La, Lb>

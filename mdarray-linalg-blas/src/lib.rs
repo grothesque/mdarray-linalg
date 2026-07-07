@@ -12,7 +12,7 @@
 //!
 //! - **Level 1** — vector operations: `dot`, `dotc`, `norm2`, `norm1`, `add_to_scaled`
 //! - **Level 2** — matrix-vector & outer product: `matvec`, `outer`
-//! - **Level 3** — matrix multiplication: `matmul`, `symm`, `hemm`, `trmm`
+//! - **Level 3** — matrix multiplication: `matmul`
 //! - **Tensor contraction** — `contract_all`, `contract_n`, `contract_pairs`, `contract`
 //! - **Argmax** — `argmax`, `argmax_abs`
 //!

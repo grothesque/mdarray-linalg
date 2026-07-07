@@ -1,6 +1,5 @@
 use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
-    contract::{Side, Triangle, Type},
     prelude::*,
     testing::{common::*, contract::*},
 };
@@ -75,94 +74,6 @@ fn chained_operations() {
 #[test]
 fn backend_defaults() {
     let _ = Nalgebra::default();
-}
-
-#[test]
-fn special_symmetric_left_lower() {
-    let a_sym = create_symmetric_matrix_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
-
-    let result = Nalgebra::default()
-        .matmul(&a_sym, &b)
-        .special(Side::Left, Type::Sym, Triangle::Lower);
-    let result_upper = Nalgebra::default()
-        .matmul(&a_sym, &b)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
-
-    assert_eq!(*result.shape(), (3, 4));
-    assert_eq!(result, result_upper);
-}
-
-#[test]
-fn special_triangular_upper_left() {
-    let a_tri = create_upper_triangular_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
-
-    let result = Nalgebra::default()
-        .matmul(&a_tri, &b)
-        .special(Side::Left, Type::Tri, Triangle::Upper);
-    let result_std = Nalgebra::default().matmul(&a_tri, &b).eval();
-
-    assert_eq!(result, result_std);
-}
-
-#[test]
-fn special_triangular_lower_left() {
-    let a_tri = create_lower_triangular_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
-
-    let result = Nalgebra::default()
-        .matmul(&a_tri, &b)
-        .special(Side::Left, Type::Tri, Triangle::Lower);
-    let result_std = Nalgebra::default().matmul(&a_tri, &b).eval();
-
-    assert_eq!(result, result_std);
-}
-
-#[test]
-fn special_hermitian_left_lower() {
-    let a_her = create_hermitian_matrix_complex(3);
-    let b = create_test_matrix_complex([3, 4]).eval();
-
-    let result = Nalgebra::default()
-        .matmul(&a_her, &b)
-        .special(Side::Left, Type::Her, Triangle::Lower);
-    let result_std = Nalgebra::default().matmul(&a_her, &b).eval();
-
-    assert_eq!(*result.shape(), (3, 4));
-    for (lhs, rhs) in result.iter().zip(result_std.iter()) {
-        assert!((lhs - rhs).norm() < 1e-10);
-    }
-}
-
-#[test]
-fn special_with_scaling() {
-    let a_sym = create_symmetric_matrix_f64(3);
-    let b = create_test_matrix_f64([3, 4]).eval();
-
-    let result = Nalgebra::default()
-        .matmul(&a_sym, &b)
-        .scale(2.5)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
-    let result_std = Nalgebra::default()
-        .matmul(&a_sym, &b)
-        .scale(2.5)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
-
-    assert_eq!(result, result_std);
-}
-
-#[test]
-fn special_single_element() {
-    let a = tensor![[5.0]];
-    let b = tensor![[2.0]];
-
-    let result = Nalgebra::default()
-        .matmul(&a, &b)
-        .special(Side::Left, Type::Sym, Triangle::Upper);
-
-    assert_eq!(*result.shape(), (1, 1));
-    assert_eq!(result[[0, 0]], 10.0);
 }
 
 #[test]

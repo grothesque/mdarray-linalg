@@ -390,15 +390,4 @@ where
         naive_outer(a, self.x, self.y, self.alpha);
     }
 
-    // Rank-1 update: `A := α·x·xᵀ (or x·x† ) + A` on special matrix
-    // fn add_to_special(self, a: &mut Slice<T, (Dx, Dy)>, ty: Type, tr: Triangle) {
-    //     let n = self.x.shape().dim(0);
-    //     let ash = *a.shape();
-    //     let (ma, na) = (ash.dim(0), ash.dim(1));
-
-    //     assert!(ma == na, "Input matrix must be square");
-    //     assert!(na == n, "Output shape must match input vector length");
-
-    //     naive_outer(a, self.x, self.y, self.alpha, Some(ty), Some(tr));
-    // }
 }

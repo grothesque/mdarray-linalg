@@ -2,7 +2,6 @@ use std::ops::{Add, Mul};
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    contract::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
     utils::unravel_index,
 };
@@ -245,34 +244,6 @@ where
 
     fn add_to<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>) {
         ger(self.alpha, self.x, self.y, T::one(), a);
-    }
-
-    fn add_to_special<La: Layout>(self, a: &mut Slice<T, (Dx, Dy), La>, ty: Type, tr: Triangle) {
-        match ty {
-            Type::Tri => self.add_to(a),
-            Type::Sym | Type::Her => {
-                assert_eq!(a.shape().dim(0), a.shape().dim(1));
-                assert_eq!(a.shape().dim(0), self.x.len());
-                assert_eq!(a.shape().dim(1), self.y.len());
-
-                for i in 0..a.shape().dim(0) {
-                    for j in 0..a.shape().dim(1) {
-                        let stored = match tr {
-                            Triangle::Upper => i <= j,
-                            Triangle::Lower => i >= j,
-                        };
-                        if stored {
-                            let rhs = match ty {
-                                Type::Sym => self.alpha * self.x[[i]] * self.y[[j]],
-                                Type::Her => self.alpha * self.x[[i]] * self.y[[j]].conj(),
-                                Type::Tri => unreachable!(),
-                            };
-                            a[[i, j]] += rhs;
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
