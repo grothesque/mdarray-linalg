@@ -88,6 +88,11 @@
 // "
 // )]
 
+#[cfg(feature = "cblas-sys-backend")]
+extern crate cblas_sys;
+#[cfg(feature = "cblas-inject-backend")]
+extern crate cblas_inject as cblas_sys;
+
 pub mod matmul;
 pub mod matvec;
 

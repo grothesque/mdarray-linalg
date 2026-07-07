@@ -91,6 +91,10 @@
 // "
 // )]
 
+#[cfg(feature = "lapack-sys-backend")]
+extern crate lapack_sys;
+#[cfg(feature = "lapack-inject-backend")]
+extern crate lapack_inject as lapack_sys;
 pub mod eig;
 pub mod lu;
 pub mod qr;
