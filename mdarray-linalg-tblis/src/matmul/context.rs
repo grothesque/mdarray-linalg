@@ -264,6 +264,14 @@ where
         La: Layout,
         Lb: Layout,
     {
+        assert_eq!(
+            a.rank(),
+            b.rank(),
+            "contract_all requires tensors of equal rank, got rank {} and rank {}",
+            a.rank(),
+            b.rank()
+        );
+
         // contract_n returns a 1×1 tensor when all axes are contracted;
         // extract the scalar from it.
         self.contract_n(a, b, a.rank())
