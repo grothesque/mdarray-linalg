@@ -24,7 +24,7 @@
 //! - generic over both the backend and the scalar type.
 //!
 //! In the most general case, trait bounds for the scalar type and the backend are expressed independently:
-//! ```rust
+//! ```ignore
 //! T: ...          // Require certain operations for the scalar type T.
 //! B: Contract<T>  // Require a backend that can contract arrays of T.
 //! ```
