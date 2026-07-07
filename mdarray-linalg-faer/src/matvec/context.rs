@@ -7,7 +7,7 @@ use faer::{
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    matmul::{Triangle, Type},
+    contract::{Triangle, Type},
     matvec::{MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
 };
 use num_complex::{Complex32, Complex64, ComplexFloat};

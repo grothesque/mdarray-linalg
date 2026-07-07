@@ -2,7 +2,7 @@ use mdarray::{DArray, tensor};
 use num_complex::Complex;
 
 use crate::{
-    matmul::{Triangle, Type},
+    contract::{Triangle, Type},
     matvec::{Argmax, MatVec, Outer, VecOps},
     prelude::*,
 };

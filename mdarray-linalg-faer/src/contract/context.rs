@@ -5,7 +5,7 @@ use std::ops::AddAssign;
 use faer::{Accum, Par, linalg::matmul::matmul};
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::matmul::{
+use mdarray_linalg::contract::{
     _contract, _hypercontract, einsum_to_contract_axes, extract_axes, Axes, Contract,
     ContractAxes, ContractBuilder, MatMulBuilder,
 };

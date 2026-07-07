@@ -2,7 +2,7 @@ use std::ops::{Add, Mul};
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    matmul::{Triangle, Type},
+    contract::{Triangle, Type},
     matvec::{Argmax, MatVec, MatVecBuilder, Outer, OuterBuilder, VecOps},
     utils::unravel_index,
 };

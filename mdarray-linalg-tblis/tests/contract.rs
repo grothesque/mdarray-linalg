@@ -2,13 +2,13 @@ extern crate tblis_src as _;
 use mdarray::{Array, Shape, Strided, StridedMapping, View, array, expr::Expression, tensor};
 use mdarray_linalg::{
     prelude::*,
-    testing::{common::*, matmul::*},
+    testing::{common::*, contract::*},
 };
 use mdarray_linalg_tblis::Tblis;
 
 #[test]
 fn matmul_complex_with_scaling() {
-    test_matmul_complex_with_scaling_impl(&Tblis);
+    matmul_complex_with_scaling_impl(&Tblis);
 }
 
 #[test]
@@ -114,4 +114,98 @@ fn macro_matmul() {
     let expected = naive_matmul(&a, &naive_matmul(&b, &naive_matmul(&c, &d)));
 
     assert_eq!(result, expected);
+}
+
+// --- Structured contractions ---
+
+#[test]
+fn contract_all() {
+    contract_all_impl(&Tblis);
+}
+
+#[test]
+fn contract_n_2_should_match_all_axes() {
+    contract_n_2_should_match_all_axes_impl(&Tblis);
+}
+
+#[test]
+fn contract_pairs_matrix_multiplication() {
+    contract_pairs_matrix_multiplication_impl(&Tblis);
+}
+
+#[test]
+fn contract_n_0_should_outer_product() {
+    contract_n_0_should_outer_product_impl(&Tblis);
+}
+
+#[test]
+fn contract_scalar_inputs_should_multiply() {
+    contract_scalar_inputs_should_multiply_impl(&Tblis);
+}
+
+#[test]
+fn contract_increase_deep() {
+    contract_increase_deep_impl(&Tblis);
+}
+
+#[test]
+fn contract_vector_dot_product() {
+    contract_vector_dot_product_impl(&Tblis);
+}
+
+#[test]
+fn contract_mismatched_dimensions_should_panic() {
+    contract_mismatched_dimensions_should_panic_impl(&Tblis);
+}
+
+#[test]
+fn contract_outer_should_match_manual_kronecker() {
+    contract_outer_should_match_manual_kronecker_impl(&Tblis);
+}
+
+// --- Einsum-style contractions ---
+
+#[test]
+fn contract_einsum_matrix_multiplication() {
+    contract_einsum_matrix_multiplication_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_full_contraction() {
+    contract_einsum_full_contraction_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_output_permutation() {
+    contract_einsum_output_permutation_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_outer_product() {
+    contract_einsum_outer_product_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_trace_diagonal() {
+    contract_einsum_trace_diagonal_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_index_relabelling() {
+    contract_einsum_index_relabelling_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_partial_trace_then_contract() {
+    contract_einsum_partial_trace_then_contract_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_cross_diagonal() {
+    contract_einsum_cross_diagonal_impl(&Tblis)
+}
+
+#[test]
+fn contract_einsum_vector_result() {
+    contract_einsum_vector_result_impl(&Tblis)
 }

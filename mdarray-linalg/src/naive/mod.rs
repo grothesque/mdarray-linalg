@@ -1,4 +1,4 @@
-pub mod matmul;
+pub mod contract;
 pub mod matvec;
 pub mod qr;
 

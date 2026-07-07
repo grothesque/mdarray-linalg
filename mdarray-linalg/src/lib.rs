@@ -53,7 +53,7 @@
 //! | **▶︎ Basic vector/matrix operations**              |||||||
 //! | [Matrix-vector multiplications](crate::matvec#matrix-vector-operations) | ✅ | ⬜ | ✅ | ✅ | ✅ | ⬜ |
 //! | [Operations on vectors](crate::matvec#vector-operations)     | ✅ | ⬜ | ✅ | ✅ | ✅ | ⬜ |
-//! | [Matrix multiplication](mod@crate::matmul)     | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
+//! | [Matrix multiplication](mod@crate::contract)     | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
 //! | [Argmax](crate::matvec#argmax)                    | ✅ | ⬜ | ✅ | ⬜ | ✅ | ⬜ |
 //! | **▶︎ Decomposition and solving**                              |||||||
 //! | [Eigen decomposition](crate::eig)             | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
@@ -64,7 +64,7 @@
 //! | [Cholesky decomposition](crate::lu)| ⬜ | ✅ | ⬜ | ✅ |✅ | ⬜ |
 //! | [Schur decomposition](crate::eig)         | ⬜ | ✅ | ⬜ | ✅ | ✅ | ⬜ |
 //! | **▶︎ Advanced**                                   |||||||
-//! | [Tensor contraction](mod@crate::matmul)        | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
+//! | [Tensor contraction](mod@crate::contract)        | ✅ | ⬜ | ✅ | ✅ | ✅ | ✅ |
 //!
 //! ✅ = implemented
 //! 🔧 = not implemented yet / partially implemented
@@ -140,7 +140,7 @@ pub mod prelude;
 
 pub mod eig;
 pub mod lu;
-pub mod matmul;
+pub mod contract;
 pub mod matvec;
 pub mod qr;
 pub mod solve;

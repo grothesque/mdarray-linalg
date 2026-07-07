@@ -124,7 +124,7 @@
 #[cfg(test)]
 extern crate tblis_src as _;
 
-pub mod matmul;
+pub mod contract;
 
 /// TBLIS backend.
 ///
