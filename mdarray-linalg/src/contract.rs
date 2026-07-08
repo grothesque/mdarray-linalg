@@ -357,7 +357,7 @@ macro_rules! finish_contraction {
         let keep_shape_b = $keep_shape_b;
 
         if keep_shape_a.is_empty() && keep_shape_b.is_empty() {
-            $ab.into_dyn()
+            mdarray::Array::from_elem((), $ab.into_scalar()).into_dyn()
         } else if keep_shape_a.is_empty() {
             $ab.view(0, ..)
                 .reshape(keep_shape_b)
