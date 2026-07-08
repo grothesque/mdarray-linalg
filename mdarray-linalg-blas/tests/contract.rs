@@ -223,8 +223,8 @@ fn contract_vector_dot_product() {
 }
 
 #[test]
-fn contract_mismatched_dimensions_should_panic() {
-    contract_mismatched_dimensions_should_panic_impl(&Blas);
+fn contract_all_invalid_shapes_should_panic() {
+    contract_all_invalid_shapes_should_panic_impl(&Blas);
 }
 
 #[test]
