@@ -145,12 +145,18 @@ pub fn contract_vector_dot_product_impl(backend: &impl Contract<f64>) {
     assert_eq!(result, expected);
 }
 
-pub fn contract_mismatched_dimensions_should_panic_impl(
+pub fn contract_all_invalid_shapes_should_panic_impl(
     backend: &(impl Contract<f64> + std::panic::RefUnwindSafe),
 ) {
-    // Should panic when dimensions are not aligned
+    // Should panic when ranks differ.
+    let a = tensor![1., 2.].into_dyn();
+    let b = tensor![[3., 4.], [5., 6.]].into_dyn();
+    let result = std::panic::catch_unwind(|| backend.contract_all(&a, &b));
+    assert!(result.is_err());
+
+    // Should panic when ranks match but dimensions differ.
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
-    let b = tensor![[1., 2., 3.]].into_dyn(); // shape mismatch
+    let b = tensor![[1., 2., 3.]].into_dyn();
     let result = std::panic::catch_unwind(|| backend.contract_all(&a, &b));
     assert!(result.is_err());
 }
