@@ -90,12 +90,17 @@ pub fn contract_all_impl(backend: &impl Contract<f64>) {
 }
 
 pub fn contract_n_2_should_match_all_axes_impl(backend: &impl Contract<f64>) {
-    // contract_n(2) is equivalent to full contraction for 2D tensors
+    // contract_n(2) is equivalent to full contraction for 2D tensors.
     let a = tensor![[1., 2.], [3., 4.]].into_dyn();
     let b = tensor![[5., 6.], [7., 8.]].into_dyn();
-    let expected = tensor![[70.0]].into_dyn();
+
     let result = backend.contract_n(&a, &b, 2).eval();
-    assert_eq!(result, expected);
+    assert_eq!(result.rank(), 0);
+    assert_eq!(result.into_scalar(), 70.0);
+
+    let result = backend.contract_pairs(&a, &b, &[0, 1], &[0, 1]).eval();
+    assert_eq!(result.rank(), 0);
+    assert_eq!(result.into_scalar(), 70.0);
 }
 
 pub fn contract_pairs_matrix_multiplication_impl(backend: &impl Contract<f64>) {
@@ -186,6 +191,7 @@ pub fn contract_einsum_full_contraction_impl(backend: &impl Contract<f64>) {
     let a = array![[1., 2.], [3., 4.]].into_dyn();
     let b = array![[5., 6.], [7., 8.]].into_dyn();
     let result = backend.contract(&a, &b, &[0, 1], &[0, 1], &[]).eval();
+    assert_eq!(result.rank(), 0);
     assert_eq!(result.into_scalar(), 70.);
 }
 
@@ -212,6 +218,7 @@ pub fn contract_einsum_trace_diagonal_impl(backend: &impl Contract<f64>) {
     let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
     let b = array![[0., 1.], [2., 3.]].into_dyn();
     let result = backend.contract(&a, &b, &[0, 1, 1], &[0, 1], &[]).eval();
+    assert_eq!(result.rank(), 0);
     assert_eq!(result.into_scalar(), 32.);
 }
 
@@ -220,6 +227,7 @@ pub fn contract_einsum_index_relabelling_impl(backend: &impl Contract<f64>) {
     let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
     let b = array![[0., 1.], [2., 3.]].into_dyn();
     let result = backend.contract(&a, &b, &[1, 0, 0], &[1, 0], &[]).eval();
+    assert_eq!(result.rank(), 0);
     assert_eq!(result.into_scalar(), 32.);
 }
 
@@ -237,6 +245,7 @@ pub fn contract_einsum_cross_diagonal_impl(backend: &impl Contract<f64>) {
     let a = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
     let b = array![[[0., 1.], [2., 3.]], [[4., 5.], [6., 7.]]].into_dyn();
     let result = backend.contract(&a, &b, &[0, 1, 1], &[0, 0, 1], &[]).eval();
+    assert_eq!(result.rank(), 0);
     assert_eq!(result.into_scalar(), 76.);
 }
 
