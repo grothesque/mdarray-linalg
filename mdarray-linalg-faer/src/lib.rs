@@ -110,37 +110,14 @@ mod qr;
 mod solve;
 mod svd;
 
-/// Configuration for the QR decomposition.
-#[derive(Default, Debug, Clone, Copy)]
-pub enum QRConfig {
-    /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
-    #[default]
-    Reduced,
-    /// Complete QR: Q is M×M, R is M×N.
-    Complete,
-}
-
 /// Faer backend.
 ///
 /// Implements the linear algebra traits from [`mdarray_linalg`] by delegating
 /// to the pure-Rust `faer` library.  This backend supports the broadest range of
 /// operations — from basic BLAS to full decompositions and tensor contractions —
 /// without requiring any system BLAS/LAPACK installation.
-///
-/// By default, multithreading is enabled (via `rayon`).
-pub struct Faer {
-    parallelize: bool,
-    qr_config: QRConfig,
-}
-
-impl Default for Faer {
-    fn default() -> Self {
-        Self {
-            parallelize: true,
-            qr_config: QRConfig::Reduced,
-        }
-    }
-}
+#[derive(Default)]
+pub struct Faer;
 
 use mdarray::{Dim, Layout, Shape, Slice};
 

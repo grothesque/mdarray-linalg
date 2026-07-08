@@ -36,10 +36,6 @@ where
     D0: Dim,
     D1: Dim,
 {
-    fn parallelize(self) -> Self {
-        self
-    }
-
     fn scale(mut self, alpha: T) -> Self {
         self.alpha = alpha * self.alpha;
         self

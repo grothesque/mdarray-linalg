@@ -3,7 +3,7 @@ use faer_traits::ComplexField;
 use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::ComplexFloat;
 
-use crate::{into_faer, into_faer_mut, QRConfig};
+use crate::{into_faer, into_faer_mut};
 
 pub(super) fn qr_faer<
     T: ComplexFloat + ComplexField + Default,
@@ -17,7 +17,6 @@ pub(super) fn qr_faer<
     a: &Slice<T, (D0, D1), La>,
     q_mda: Option<&mut Slice<T, (D0, D2), Lq>>,
     r_mda: &mut Slice<T, (D2, D1), Lr>,
-    _config: QRConfig,
 ) {
     let ash = *a.shape();
     let (m, n) = (ash.dim(0), ash.dim(1));

@@ -57,7 +57,7 @@
 //! use mdarray_linalg::eig::EigDecomp;
 //! use mdarray_linalg::solve::Solve;
 //! use mdarray_linalg::svd::SVDDecomp;
-//! use mdarray_linalg_lapack::{Lapack, SVDConfig};
+//! use mdarray_linalg_lapack::Lapack;
 //!
 //! // ----- Eigenvalue decomposition -----
 //! let mut a = array![[1., 2.], [3., 4.]];
@@ -72,10 +72,9 @@
 //!     println!("Right eigenvectors: {:?}", v);
 //! }
 //!
-//! // ----- SVD (with configuration) -----
+//! // ----- SVD -----
 //! let mut a = array![[1., 2.], [3., 4.]];
-//! let bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
-//! let SVDDecomp { s, u, vt } = bd.svd_thin(&mut a).expect("SVD failed");
+//! let SVDDecomp { s, u, vt } = Lapack::new().svd_thin(&mut a).expect("SVD failed");
 //! println!("Singular values: {:?}", s);
 //!
 //! // ----- QR decomposition -----
@@ -129,6 +128,9 @@ mod solve;
 mod svd;
 
 /// Configuration for the SVD algorithm.
+///
+/// This is hidden while backend configuration is being reconsidered.
+#[doc(hidden)]
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum SVDConfig {
     /// Let the backend choose the best algorithm.
@@ -136,11 +138,14 @@ pub enum SVDConfig {
     Auto,
     /// Divide-and-conquer algorithm (faster for large matrices).
     DivideConquer,
-    /// Jacobi algorithm (more accurate for small matrices).
+    /// Standard LAPACK SVD driver.
     Jacobi,
 }
 
 /// Configuration for the QR decomposition.
+///
+/// This is hidden while backend configuration is being reconsidered.
+#[doc(hidden)]
 #[derive(Default, Debug, Clone, Copy)]
 pub enum QRConfig {
     /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
@@ -153,20 +158,7 @@ pub enum QRConfig {
 /// LAPACK backend.
 ///
 /// Implements the decomposition and solver traits from [`mdarray_linalg`] by
-/// delegating to LAPACK routines.  Unlike the zero-sized
-/// `mdarray_linalg_blas::Blas`, `Lapack` carries configuration state
-/// for algorithm selection.
-///
-/// # Configuration
-///
-/// Use the builder-style methods to select algorithms:
-///
-/// ```rust
-/// use mdarray_linalg_lapack::{Lapack, SVDConfig};
-///
-/// let default_bd = Lapack::new();
-/// let svd_bd = Lapack::new().config_svd(SVDConfig::DivideConquer);
-/// ```
+/// delegating to LAPACK routines.
 #[derive(Debug, Default, Clone)]
 pub struct Lapack {
     svd_config: SVDConfig,
@@ -174,7 +166,7 @@ pub struct Lapack {
 }
 
 impl Lapack {
-    /// Creates a new `Lapack` backend with default configuration.
+    /// Creates a new `Lapack` backend.
     pub fn new() -> Self {
         Self {
             svd_config: SVDConfig::default(),
@@ -183,6 +175,7 @@ impl Lapack {
     }
 
     /// Selects the SVD algorithm.
+    #[doc(hidden)]
     #[must_use]
     pub fn config_svd(mut self, config: SVDConfig) -> Self {
         self.svd_config = config;
@@ -190,6 +183,7 @@ impl Lapack {
     }
 
     /// Selects the QR algorithm variant.
+    #[doc(hidden)]
     #[must_use]
     pub fn config_qr(mut self, config: QRConfig) -> Self {
         self.qr_config = config;

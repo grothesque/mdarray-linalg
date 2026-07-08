@@ -26,19 +26,26 @@ pub(super) fn geqrf<
     let min_mn = m.min(n);
 
     let ncols_q = match mode {
-        QRConfig::Complete => m,     // Q is M×M
-        QRConfig::Reduced => min_mn, // Q is M×K
+        QRConfig::Complete => m,
+        QRConfig::Reduced => min_mn,
     };
 
     let qsh = *q.shape();
-    let (_mq, _nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
+    let (mq, nq) = (into_i32(qsh.dim(0)), into_i32(qsh.dim(1)));
 
     let rsh = *r.shape();
-    let (_mr, _nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
+    let (mr, nr) = (into_i32(rsh.dim(0)), into_i32(rsh.dim(1)));
 
-    // assert_eq!(mq, nq, "Q must be square (m × m)");
-    // assert_eq!(mr, min_mn, "R must have min(m,n) rows");
-    // assert_eq!(nr, n, "R must have n columns");
+    assert_eq!(mq, m, "Q must have the same number of rows as A");
+    assert!(
+        nq >= ncols_q,
+        "Q has too few columns for the configured QR mode"
+    );
+    assert!(
+        mr >= ncols_q,
+        "R has too few rows for the configured QR mode"
+    );
+    assert_eq!(nr, n, "R must have the same number of columns as A");
 
     // Allocate tau (Householder scalars)
     let mut tau = vec![T::default(); min_mn as usize];
@@ -91,9 +98,13 @@ pub(super) fn geqrf<
 
     assert_eq!(info, 0, "geqrf failed with info={}", info);
 
-    for i in 0_usize..(min_mn as usize) {
-        for j in i..(n as usize) {
-            r[[i, j]] = a_col[j * (m as usize) + i];
+    for i in 0_usize..(mr as usize) {
+        for j in 0_usize..(n as usize) {
+            r[[i, j]] = if (i as i32) < min_mn && j >= i {
+                a_col[j * (m as usize) + i]
+            } else {
+                T::default()
+            };
         }
     }
 

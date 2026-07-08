@@ -106,42 +106,14 @@ mod qr;
 mod solve;
 mod svd;
 
-/// Configuration for the QR decomposition.
-#[derive(Default, Debug, Clone, Copy)]
-pub enum QRConfig {
-    /// Reduced QR: Q is M×K, R is K×N (where K = min(M, N)).
-    #[default]
-    Reduced,
-    /// Complete QR: Q is M×M, R is M×N.
-    Complete,
-}
-
 /// Nalgebra backend.
 ///
 /// Implements the linear algebra traits from [`mdarray_linalg`] by delegating
 /// to the pure-Rust `nalgebra` library.  Nalgebra is particularly well-suited
 /// for **small matrices** where its compile-time dimension optimizations
 /// provide excellent performance without the overhead of system BLAS/LAPACK.
-pub struct Nalgebra {
-    qr_config: QRConfig,
-}
-
-impl Default for Nalgebra {
-    fn default() -> Self {
-        Self {
-            qr_config: QRConfig::Reduced,
-        }
-    }
-}
-
-impl Nalgebra {
-    /// Selects the QR algorithm variant.
-    #[must_use]
-    pub fn config_qr(mut self, config: QRConfig) -> Self {
-        self.qr_config = config;
-        self
-    }
-}
+#[derive(Default)]
+pub struct Nalgebra;
 
 use mdarray::{Dim, Layout, Shape, Slice};
 use num_complex::{Complex, ComplexFloat};
