@@ -5,21 +5,14 @@
 //!     - Q is m × k (orthogonal/unitary matrix)
 //!     - R is k × n (upper triangular matrix)
 //!
-//! This implementation supports two modes controlled by `QRConfig`, accessible via
-//! `Nalgebra::default().config_qr(mode)`:
-//! - **Reduced** (default): k = min(m, n)
-//!   - Q is m × min(m,n)
-//!   - R is min(m,n) × n
-//! - **Complete**:
-//!   - Q is m × m
-//!   - R is m × n
+//! `qr()` returns the reduced factorization where k = min(m, n):
+//! Q is m × k and R is k × n.  `qr_write()` infers the requested mode
+//! from the shapes of the provided output matrices, so callers can request
+//! either reduced or complete QR by choosing output shapes.
 //!
 //! The implementation wraps nalgebra's Householder QR decomposition:
 //! - reduced mode uses the explicit `q()` and `r()` factors,
 //! - complete mode reconstructs the square Q from the stored reflectors and pads R with zeros.
-//!
-//! `qr()` follows `QRConfig`, while `qr_write()` infers the requested mode from the shapes of
-//! the provided output matrices.
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::qr::QR;
@@ -27,7 +20,7 @@ use num_complex::ComplexFloat;
 use num_traits::Zero;
 
 use super::simple::{qr_complete, qr_reduced};
-use crate::{Nalgebra, QRConfig, write_dmatrix};
+use crate::{Nalgebra, write_dmatrix};
 
 impl<T, D0: Dim, D1: Dim> QR<T, D0, D1> for Nalgebra
 where
@@ -68,22 +61,14 @@ where
         let n = a.shape().dim(1);
         let k = m.min(n);
 
-        let (q_rows, q_cols, r_rows, r_cols) = match self.qr_config {
-            QRConfig::Reduced => (m, k, k, n),
-            QRConfig::Complete => (m, m, m, n),
-        };
-
-        let (q_nalgebra, r_nalgebra) = match self.qr_config {
-            QRConfig::Reduced => qr_reduced(a),
-            QRConfig::Complete => qr_complete(a),
-        };
+        let (q_nalgebra, r_nalgebra) = qr_reduced(a);
 
         let mut q = Array::from_elem(
-            <(D0, usize) as Shape>::from_dims(&[q_rows, q_cols]),
+            <(D0, usize) as Shape>::from_dims(&[m, k]),
             T::zero(),
         );
         let mut r = Array::from_elem(
-            <(usize, D1) as Shape>::from_dims(&[r_rows, r_cols]),
+            <(usize, D1) as Shape>::from_dims(&[k, n]),
             T::zero(),
         );
 

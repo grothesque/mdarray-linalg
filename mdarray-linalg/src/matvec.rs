@@ -181,8 +181,6 @@ where
     La: 'a,
     Lx: 'a,
 {
-    fn parallelize(self) -> Self;
-
     /// `α := α·α'`
     fn scale(self, alpha: T) -> Self;
 

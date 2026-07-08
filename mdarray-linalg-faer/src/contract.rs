@@ -1,5 +1,4 @@
 use std::iter::Sum;
-use std::num::NonZero;
 use std::ops::AddAssign;
 
 use faer::{Accum, Par, linalg::matmul::matmul};
@@ -250,11 +249,7 @@ where
             alpha: T::one(),
             a,
             b,
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
         }
     }
 
@@ -270,17 +265,7 @@ where
         La: Layout,
         Lb: Layout,
     {
-        _contract(
-            Faer {
-                parallelize: self.parallelize,
-                qr_config: self.qr_config,
-            },
-            a,
-            b,
-            Axes::All,
-            T::one(),
-        )
-        .into_scalar()
+        _contract(Faer, a, b, Axes::All, T::one()).into_scalar()
     }
 
     fn contract_n<'a, Sa, Sb, La, Lb>(
@@ -301,11 +286,7 @@ where
             a,
             b,
             axes: Axes::LastFirst { k: n },
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
             einsum: false,
             einsum_axes_a: None,
             einsum_axes_b: None,
@@ -333,11 +314,7 @@ where
             a,
             b,
             axes: Axes::Specific(axes_a, axes_b),
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
             einsum: false,
             einsum_axes_a: None,
             einsum_axes_b: None,
@@ -379,11 +356,7 @@ where
             a,
             b,
             axes: Axes::SpecificOwned(Vec::new(), Vec::new()),
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
             einsum: true,
             einsum_axes_a: Some(einsum_axes_a),
             einsum_axes_b: Some(einsum_axes_b),

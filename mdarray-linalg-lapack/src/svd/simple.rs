@@ -29,12 +29,9 @@ where
     let (m, n) = (ash.dim(0), ash.dim(1));
     let min_mn = m.min(n);
 
-    // Determine which algorithm to use
+    // Determine which algorithm to use.
     let use_divide_conquer = match config {
-        SVDConfig::Auto => {
-            // Auto: use divide and conquer for larger matrices, Jacobi for smaller ones
-            min_mn > 100
-        }
+        SVDConfig::Auto => min_mn > 100,
         SVDConfig::DivideConquer => true,
         SVDConfig::Jacobi => false,
     };
@@ -72,8 +69,8 @@ where
     let u_ptr: *mut T = u.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
     let vt_ptr: *mut T = vt.as_mut().map_or(null_mut(), |x| x.as_mut_ptr());
 
-    // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer
-    // This allows fallback to gesvd with the original matrix if gesdd fails
+    // Create a backup copy of matrix A if we're in Auto mode and using divide-and-conquer.
+    // This allows fallback to gesvd with the original matrix if gesdd fails.
     let a_backup = if use_divide_conquer && matches!(config, SVDConfig::Auto) {
         let mut a2 = DArray::<T, 2>::from_elem([m, n], T::default());
         for i in 0..m {
@@ -114,9 +111,9 @@ where
             -info
         );
     } else if info > 0 && use_divide_conquer && (config == SVDConfig::Auto) {
-        // If divide-and-conquer failed and the user asked for "Auto", fallback to Jacobi (gesvd).
-        // This provides robustness since gesvd is generally more stable but slower than gesdd.
-        // We restore the original matrix A from our backup since gesdd may have corrupted it.
+        // If divide-and-conquer failed and the backend chose it automatically,
+        // fall back to the standard driver.  We restore the original matrix A
+        // from our backup since gesdd may have corrupted it.
         let mut backup = a_backup.unwrap();
         let info = call_gesvd(
             &mut backup,

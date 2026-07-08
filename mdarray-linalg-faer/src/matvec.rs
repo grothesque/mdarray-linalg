@@ -1,5 +1,3 @@
-use std::num::NonZero;
-
 use faer::{
     Accum, Conj, Par,
     linalg::matmul::{dot::inner_prod, matmul},
@@ -75,11 +73,6 @@ where
     D1: Dim,
     T: FaerVectorScalar + One,
 {
-    fn parallelize(mut self) -> Self {
-        self.par = Par::Rayon(NonZero::new(num_cpus::get()).unwrap());
-        self
-    }
-
     fn scale(mut self, alpha: T) -> Self {
         self.alpha *= alpha;
         self
@@ -173,11 +166,7 @@ where
             alpha: T::one(),
             a,
             x,
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
         }
     }
 }
@@ -256,11 +245,7 @@ where
             alpha: T::one(),
             x,
             y,
-            par: if self.parallelize {
-                Par::Rayon(NonZero::new(num_cpus::get()).unwrap())
-            } else {
-                Par::Seq
-            },
+            par: faer::get_global_parallelism(),
         }
     }
 }

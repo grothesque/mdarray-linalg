@@ -12,7 +12,7 @@ use mdarray_linalg::qr::QR;
 use num_complex::ComplexFloat;
 
 use super::simple::qr_faer;
-use crate::{Faer, QRConfig};
+use crate::Faer;
 
 impl<T, D0: Dim, D1: Dim> QR<T, D0, D1> for Faer
 where
@@ -26,18 +26,13 @@ where
         let (m, n) = (ash.dim(0), ash.dim(1));
         let k = m.min(n);
 
-        let (q_cols, r_rows) = match self.qr_config {
-            QRConfig::Reduced => (k, k),  // Q: m×k, R: k×n
-            QRConfig::Complete => (m, m), // Q: m×m, R: m×n
-        };
-
-        let q_shape = <(D0, usize) as Shape>::from_dims(&[m, q_cols]);
-        let r_shape = <(usize, D1) as Shape>::from_dims(&[r_rows, n]);
+        let q_shape = <(D0, usize) as Shape>::from_dims(&[m, k]);
+        let r_shape = <(usize, D1) as Shape>::from_dims(&[k, n]);
 
         let mut q_mda = Array::from_elem(q_shape, T::default());
         let mut r_mda = Array::from_elem(r_shape, T::default());
 
-        qr_faer(a, Some(&mut q_mda), &mut r_mda, self.qr_config);
+        qr_faer(a, Some(&mut q_mda), &mut r_mda);
         (q_mda, r_mda)
     }
 
@@ -47,6 +42,6 @@ where
         q: &mut Slice<T, (D0, D2), Lq>,
         r: &mut Slice<T, (D2, D1), Lr>,
     ) {
-        qr_faer(a, Some(q), r, self.qr_config)
+        qr_faer(a, Some(q), r)
     }
 }

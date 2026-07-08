@@ -5,32 +5,27 @@
 //!     - Q is m × k (orthogonal matrix)
 //!     - R is k × n (upper triangular matrix)
 //!
-//! This implementation supports two modes controlled by `QRConfig`, accessible via Lapack::default().config_qr(mode);:
-//! - **Reduced** (default / economy mode): k = min(m, n)
-//!   - Q is m × min(m,n)
-//!   - R is min(m,n) × n
-//! - **Complete** (full mode):
-//!   - Q is m × m (orthogonal)
-//!   - R is m × n (upper triangular, with zeros below the diagonal)
+//! `qr()` returns the reduced factorization where k = min(m, n):
+//! Q is m × k and R is k × n.  `qr_write()` infers the requested mode
+//! from the shapes of the provided output matrices, so callers can request
+//! either reduced or complete QR by choosing output shapes.
 //!
 //! The implementation wraps two LAPACK routines:
 //! - `geqrf`: Computes the QR factorization in a compact (implicit) form using
 //!   blocked Householder reflectors.
 //! - `orgqr` / `ungqr`: Explicitly generates the orthogonal matrix Q from the
-//!   reflectors returned by `geqrf`, producing either the thin Q (Reduced) or
-//!   the square Q (Complete) depending on [`QRConfig`].
+//!   reflectors returned by `geqrf`, producing either the thin or square Q
+//!   depending on the output shape.
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::qr::QR;
 use num_complex::ComplexFloat;
 
-use crate::QRConfig;
-
 use super::{
     scalar::{LapackScalar, NeedsRwork},
     simple::geqrf,
 };
-use crate::Lapack;
+use crate::{Lapack, QRConfig};
 
 impl<T, D0: Dim, D1: Dim> QR<T, D0, D1> for Lapack
 where
