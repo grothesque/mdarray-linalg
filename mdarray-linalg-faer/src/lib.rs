@@ -24,13 +24,10 @@
 //!
 //! ## Setup
 //!
-//! Add the following to your `Cargo.toml`:
+//! Add the dependencies to your project:
 //!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-faer = "0.2"
+//! ```bash
+//! cargo add mdarray mdarray-linalg mdarray-linalg-faer
 //! ```
 //!
 //! > **Note:** No BLAS/LAPACK linking is required — `faer` is a pure-Rust crate.
