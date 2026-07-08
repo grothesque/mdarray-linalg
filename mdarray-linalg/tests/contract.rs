@@ -47,6 +47,18 @@ fn contract_outer_should_match_manual_kronecker() {
     contract_outer_should_match_manual_kronecker_impl(&Naive);
 }
 
+// --- Builder APIs ---
+
+#[test]
+fn matmul_builder_methods() {
+    matmul_builder_methods_impl(&Naive);
+}
+
+#[test]
+fn contract_builder_methods() {
+    contract_builder_methods_impl(&Naive);
+}
+
 // --- Einsum-style contractions ---
 
 #[test]

@@ -36,6 +36,47 @@ pub fn matmul_complex_with_scaling_impl(backend: &impl Contract<Complex64>) {
     assert_eq!(result, expected);
 }
 
+pub fn matmul_builder_methods_impl(backend: &impl Contract<f64>) {
+    let a = array![[1., 2., 3.], [4., 5., 6.]];
+    let b = array![[7., 8.], [9., 10.], [11., 12.]];
+    let product = array![[58., 64.], [139., 154.]];
+    let initial = array![[1., 2.], [3., 4.]];
+
+    let mut c = array![[0., 0.], [0., 0.]];
+    backend.matmul(&a, &b).write(&mut c);
+    assert_eq!(c, product);
+
+    let mut c = initial.clone();
+    backend.matmul(&a, &b).add_to(&mut c);
+    assert_eq!(c, array![[59., 66.], [142., 158.]]);
+
+    let mut c = initial;
+    backend.matmul(&a, &b).add_to_scaled(&mut c, 2.0);
+    assert_eq!(c, array![[60., 68.], [145., 162.]]);
+}
+
+// --- Builder helpers ---
+
+pub fn contract_builder_methods_impl(backend: &impl Contract<f64>) {
+    let a = array![[1., 2., 3.], [4., 5., 6.]].into_dyn();
+    let b = array![[7., 8.], [9., 10.], [11., 12.]].into_dyn();
+    let product = array![[58., 64.], [139., 154.]].into_dyn();
+    let initial = array![[1., 2.], [3., 4.]].into_dyn();
+
+    let mut c = array![[0., 0.], [0., 0.]].into_dyn();
+    backend.contract_pairs(&a, &b, &[1], &[0]).write(&mut c);
+    assert_eq!(c, product);
+
+    let mut c = initial.clone();
+    backend.contract_pairs(&a, &b, &[1], &[0]).add_to(&mut c);
+    assert_eq!(c, array![[59., 66.], [142., 158.]].into_dyn());
+
+    let mut c = initial;
+    backend
+        .contract_pairs(&a, &b, &[1], &[0])
+        .add_to_scaled(&mut c, 2.0);
+    assert_eq!(c, array![[60., 68.], [145., 162.]].into_dyn());
+}
 
 // --- Structured contraction helpers ---
 

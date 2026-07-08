@@ -88,6 +88,16 @@ fn backend_defaults() {
 }
 
 #[test]
+fn matmul_builder_methods() {
+    matmul_builder_methods_impl(&Faer::default());
+}
+
+#[test]
+fn contract_builder_methods() {
+    contract_builder_methods_impl(&Faer::default());
+}
+
+#[test]
 pub fn non_contiguous_along_both_axis() {
     let bufa: Vec<f64> = vec![1., 0., 3., 0., 2., 0., 4.];
 
