@@ -1,9 +1,10 @@
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::{into_i32, trans_stride};
+use mdarray_linalg::utils::into_i32;
 use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
+use crate::trans_stride;
 
 pub(super) fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     alpha: T,
@@ -43,7 +44,7 @@ pub(super) fn gemv<T, D0: Dim, D1: Dim, La, Lx, Ly>(
     } else {
         (CBLAS_TRANSPOSE::CblasTrans, CBLAS_TRANSPOSE::CblasNoTrans)
     };
-    let (a_trans, a_stride) = trans_stride!(a, same_order, other_order);
+    let (a_trans, a_stride) = trans_stride(a, same_order, other_order);
 
     let x_inc = into_i32(x.stride(0));
     let y_inc = into_i32(y.stride(0));

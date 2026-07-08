@@ -201,6 +201,10 @@ where
     fn add_to_scaled<Sc: Shape, Lc: Layout>(self, c: &mut Slice<T, Sc, Lc>, beta: T);
 }
 
+// The following exported items are unstable backend-implementation helpers.
+// They are hidden from generated documentation and may be redesigned before
+// the public API stabilizes.
+#[doc(hidden)]
 pub enum Axes<'a> {
     All,
     LastFirst { k: usize },
@@ -208,6 +212,7 @@ pub enum Axes<'a> {
     SpecificOwned(Vec<usize>, Vec<usize>),
 }
 
+#[doc(hidden)]
 pub struct ContractAxes {
     pub keep_size_a: usize,
     pub keep_size_b: usize,
@@ -221,6 +226,7 @@ pub struct ContractAxes {
 /// Resolves the axis partition for a tensor contraction, avoiding
 /// allocations when axes are already provided as slices
 /// (`Axes::Specific`).
+#[doc(hidden)]
 pub fn extract_axes<T, Sa, Sb, La, Lb>(
     axes: Axes,
     a: &Slice<T, Sa, La>,
@@ -326,6 +332,7 @@ where
     }
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! prepare_contraction {
     ($axes:expr, $a:expr, $b:expr) => {{
@@ -350,6 +357,7 @@ macro_rules! prepare_contraction {
     }};
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! finish_contraction {
     ($ab:expr, $keep_shape_a:expr, $keep_shape_b:expr) => {{
@@ -380,6 +388,7 @@ macro_rules! finish_contraction {
 /// Helper for implementing contraction through matrix multiplication.
 /// Backends that implement `Contract` directly should call the macros
 /// `prepare_contraction!` and `finish_contraction!` themselves.
+#[doc(hidden)]
 pub fn _contract<T, La, Lb, Sa, Sb>(
     bd: impl Contract<T>,
     a: &Slice<T, Sa, La>,
@@ -401,6 +410,7 @@ where
     finish_contraction!(ab, keep_shape_a, keep_shape_b)
 }
 
+#[doc(hidden)]
 pub const FREE_AXIS: usize = usize::MAX;
 
 /// General contraction on labeled axes.
@@ -408,6 +418,7 @@ pub const FREE_AXIS: usize = usize::MAX;
 /// `axes_a` and `axes_b` have one entry per original axis. Equal values belong
 /// to the same contraction/diagonalization hyper-edge. `FREE_AXIS` marks axes
 /// that remain in the output.
+#[doc(hidden)]
 pub fn _hypercontract<T>(
     bd: impl Contract<T>,
     a: View<'_, T, DynRank>,
@@ -519,6 +530,7 @@ where
 }
 
 /// Generalized diagonal extraction along an arbitrary set of axes (zero-copy)
+#[doc(hidden)]
 pub fn hyperdiagonal<'a, T, L: Layout>(
     a: View<'a, T, DynRank, L>,
     axes: &[usize],
@@ -576,6 +588,7 @@ pub fn hyperdiagonal<'a, T, L: Layout>(
 /// Sum a tensor over an arbitrary subset of its axes.
 /// Equivalent to a sequence of `np.sum(a, axis=s)` calls (with appropriate
 /// index renumbering after each removal), but performed in a single pass.
+#[doc(hidden)]
 pub fn hypersum<T, L: Layout>(a: &View<'_, T, DynRank, L>, axes: &[usize]) -> Array<T, DynRank>
 where
     T: std::iter::Sum + Copy + Zero + std::ops::AddAssign,
@@ -759,6 +772,7 @@ fn axes_to_hyperedges(
     edges
 }
 
+#[doc(hidden)]
 pub fn einsum_to_contract_axes(
     indices_a: &[u8],
     indices_b: &[u8],

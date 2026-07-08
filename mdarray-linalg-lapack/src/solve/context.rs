@@ -12,8 +12,8 @@
 
 use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
-    ipiv_to_perm_mat,
     solve::{Solve, SolveError, SolveResult, SolveResultType},
+    utils::ipiv_to_perm_mat,
 };
 use num_complex::ComplexFloat;
 

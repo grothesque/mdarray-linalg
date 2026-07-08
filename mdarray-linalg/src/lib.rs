@@ -147,9 +147,9 @@ pub mod solve;
 pub mod svd;
 
 pub mod utils;
-pub use utils::*;
 
 mod naive;
 pub use naive::Naive;
 
+#[doc(hidden)]
 pub mod testing;

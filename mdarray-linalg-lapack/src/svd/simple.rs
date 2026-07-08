@@ -1,7 +1,10 @@
 use std::ptr::null_mut;
 
 use mdarray::{DArray, Dim, Layout, Shape, Slice};
-use mdarray_linalg::{into_i32, svd::SVDError, transpose_in_place};
+use mdarray_linalg::{
+    svd::SVDError,
+    utils::{into_i32, transpose_in_place},
+};
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};

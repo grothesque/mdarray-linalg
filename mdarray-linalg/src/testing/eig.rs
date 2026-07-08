@@ -2,11 +2,10 @@ use approx::assert_relative_eq;
 use mdarray::DArray;
 use num_complex::{Complex, ComplexFloat};
 
-use super::common::{naive_matmul, random_matrix};
+use super::common::{assert_complex_matrix_eq, assert_matrix_eq, naive_matmul, random_matrix};
 use crate::{
-    assert_complex_matrix_eq, assert_matrix_eq,
     eig::{Eig, EigDecomp, SchurDecomp},
-    pretty_print,
+    utils::pretty_print,
 };
 
 fn test_eigen_reconstruction<T>(

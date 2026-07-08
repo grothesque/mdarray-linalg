@@ -10,9 +10,8 @@
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
 use mdarray::{Dim, Layout, Shape, Slice, Array};
 use mdarray_linalg::{
-    into_i32, ipiv_to_perm_mat,
     lu::{InvError, InvResult, LU},
-    transpose_in_place,
+    utils::{into_i32, ipiv_to_perm_mat, transpose_in_place},
 };
 use num_complex::ComplexFloat;
 

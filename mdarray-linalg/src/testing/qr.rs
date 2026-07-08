@@ -3,8 +3,8 @@ use mdarray::DArray;
 use num_complex::Complex;
 use rand::prelude::*;
 
-use super::common::naive_matmul;
-use crate::{assert_complex_matrix_eq, assert_matrix_eq, pretty_print, qr::QR};
+use super::common::{assert_complex_matrix_eq, assert_matrix_eq, naive_matmul};
+use crate::{qr::QR, utils::pretty_print};
 
 pub fn test_qr_random_matrix(bd: &impl QR<f64, usize, usize>) {
     let (m, n) = (5, 5);

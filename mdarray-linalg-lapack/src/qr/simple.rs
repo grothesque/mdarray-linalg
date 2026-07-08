@@ -1,6 +1,6 @@
 use crate::QRConfig;
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::into_i32;
+use mdarray_linalg::utils::into_i32;
 use num_complex::ComplexFloat;
 
 use super::scalar::{LapackScalar, NeedsRwork};

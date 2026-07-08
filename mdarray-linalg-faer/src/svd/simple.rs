@@ -1,7 +1,7 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::{conjugate_in_place, svd::SVDError};
+use mdarray_linalg::{svd::SVDError, utils::conjugate_in_place};
 use num_complex::ComplexFloat;
 
 use crate::{into_faer, into_faer_diag_mut, into_faer_mut, into_faer_mut_transpose};

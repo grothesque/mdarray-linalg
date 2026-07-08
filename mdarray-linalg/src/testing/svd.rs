@@ -3,10 +3,10 @@ use mdarray::{DArray, Dense, Dyn};
 use num_complex::{Complex, ComplexFloat};
 use rand::Rng;
 
-use super::common::naive_matmul;
+use super::common::{assert_complex_matrix_eq, assert_matrix_eq, naive_matmul};
 use crate::{
-    assert_complex_matrix_eq, assert_matrix_eq, pretty_print,
     svd::{SVD, SVDDecomp},
+    utils::pretty_print,
 };
 
 fn test_svd_reconstruction<T>(bd: &impl SVD<T, Dyn, Dense>, a: &DArray<T, 2>, debug_print: bool)

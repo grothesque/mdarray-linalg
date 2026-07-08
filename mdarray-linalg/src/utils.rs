@@ -1,9 +1,9 @@
 //! Utility functions for matrix printing, shape retrieval, identity
 //! generation, Kronecker product, trace, transpose operations, ...
 //!
-//! These functions were necessary for implementing this crate.  They are
-//! exposed because they can be generally useful, but this is not meant to be
-//! a complete collection of linear algebra utilities at this time.
+//! This module contains small user-facing utilities, plus hidden unstable
+//! helpers used by backend implementation crates. It is not meant to be a
+//! complete collection of linear algebra utilities at this time.
 
 use mdarray::{Array, Dim, Layout, Shape, Slice, tensor};
 use num_complex::ComplexFloat;
@@ -25,7 +25,11 @@ where
     println!();
 }
 
+// The following backend-oriented helpers are exported for workspace backend
+// crates. They are hidden from generated documentation and may be redesigned
+// before the public API stabilizes.
 /// Safely casts a value to `i32`
+#[doc(hidden)]
 pub fn into_i32<T>(x: T) -> i32
 where
     T: TryInto<i32>,
@@ -37,6 +41,7 @@ where
 /// Make sure that matrix shapes are compatible with `C = A * B`, and
 /// return the dimensions `(m, n, k)` safely cast to `i32`, where `C` is `(m
 /// x n)`, and `k` is the common dimension of `A` and `B`
+#[doc(hidden)]
 pub fn dims3(a_shape: impl Shape, b_shape: impl Shape, c_shape: impl Shape) -> (i32, i32, i32) {
     let (m, k) = (a_shape.dim(0), a_shape.dim(1));
     let (k2, n) = (b_shape.dim(0), b_shape.dim(1));
@@ -54,6 +59,7 @@ pub fn dims3(a_shape: impl Shape, b_shape: impl Shape, c_shape: impl Shape) -> (
 
 /// Make sure that matrix shapes are compatible with `A * B`, and return
 /// the dimensions `(m, n)` safely cast to `i32`
+#[doc(hidden)]
 pub fn dims2(a_shape: impl Shape, b_shape: impl Shape) -> (i32, i32) {
     let (m, k) = (a_shape.dim(0), a_shape.dim(1));
     let (k2, n) = (b_shape.dim(0), b_shape.dim(1));
@@ -66,26 +72,11 @@ pub fn dims2(a_shape: impl Shape, b_shape: impl Shape) -> (i32, i32) {
     (into_i32(m), into_i32(n))
 }
 
-/// Handles different stride layouts by selecting the correct memory
-/// order and stride for contiguous arrays
-#[macro_export]
-macro_rules! trans_stride {
-    ($x:expr, $same_order:expr, $other_order:expr) => {{
-        if $x.stride(1) == 1 {
-            ($same_order, into_i32($x.stride(0)))
-        } else {
-            {
-                assert!($x.stride(0) == 1, stringify!($x must be contiguous in one dimension));
-                ($other_order, into_i32($x.stride(1)))
-            }
-        }
-    }};
-}
-
 /// Transposes a matrix in-place. Dimensions stay the same, only the memory ordering changes.
 /// - For square matrices: swaps elements across the main diagonal.
 /// - For rectangular matrices: reshuffles data in a temporary buffer so that the
 ///   same `(rows, cols)` slice now represents the transposed layout.
+#[doc(hidden)]
 pub fn transpose_in_place<T, D0, D1, L>(c: &mut Slice<T, (D0, D1), L>)
 where
     T: ComplexFloat + Default,
@@ -122,6 +113,7 @@ where
 /// Conjugates a matrix in-place.
 /// For complex matrices, replaces each element z with its conjugate conj(z).
 /// For real matrices, this is a no-op.
+#[doc(hidden)]
 pub fn conjugate_in_place<T, D0, D1, L>(c: &mut Slice<T, (D0, D1), L>)
 where
     T: ComplexFloat + Default,
@@ -133,6 +125,7 @@ where
 }
 
 /// Convert pivot indices to permutation matrix
+#[doc(hidden)]
 pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
     ipiv: &[i32],
     m: usize,
@@ -161,6 +154,7 @@ pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
 /// Given an input matrix of shape `(m × n)`, this function creates and returns
 /// a new matrix of shape `(n × m)`, where each element at position `(i, j)` in the
 /// original is moved to position `(j, i)` in the result.
+#[doc(hidden)]
 pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Array<T, (D0, D1)>
 where
     T: ComplexFloat + Default + Clone,
@@ -185,7 +179,7 @@ where
 /// # Examples
 /// ```
 /// use mdarray::tensor;
-/// use mdarray_linalg::trace;
+/// use mdarray_linalg::utils::trace;
 ///
 /// let a = tensor![[1., 2., 3.],
 ///                 [4., 5., 6.],
@@ -216,7 +210,7 @@ where
 /// # Examples
 /// ```
 /// use mdarray::tensor;
-/// use mdarray_linalg::identity;
+/// use mdarray_linalg::utils::identity;
 ///
 /// let i3 = identity::<f64, usize, usize>(3);
 /// assert_eq!(i3, tensor![[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]);
@@ -236,7 +230,7 @@ pub fn identity<T: Zero + One, D0: Dim, D1: Dim>(n: usize) -> Array<T, (D0, D1)>
 /// # Examples
 /// ```
 /// use mdarray::{Const, tensor};
-/// use mdarray_linalg::identity_k;
+/// use mdarray_linalg::utils::identity_k;
 ///
 /// let i3 = identity_k::<f64, Const<3>, Const<3>>(3, 1);
 /// assert_eq!(i3, tensor![[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]]);
@@ -260,7 +254,7 @@ pub fn identity_k<T: Zero + One, D0: Dim, D1: Dim>(n: usize, k: isize) -> Array<
 /// # Examples
 /// ```
 /// use mdarray::tensor;
-/// use mdarray_linalg::kron;
+/// use mdarray_linalg::utils::kron;
 ///
 /// let a = tensor![[1., 2.],
 ///                 [3., 4.]];
@@ -315,7 +309,7 @@ where
 ///
 /// ```
 /// use mdarray::DArray;
-/// use mdarray_linalg::unravel_index;
+/// use mdarray_linalg::utils::unravel_index;
 ///
 /// let x = DArray::<usize, 2>::from_fn([2,3], |i| i[0] + i[1]);
 ///
@@ -353,7 +347,7 @@ pub fn unravel_index<T, S: Shape, L: Layout>(x: &Slice<T, S, L>, mut flat: usize
 /// # Examples
 /// ```
 /// use mdarray::{Const, array, view};
-/// use mdarray_linalg::diag;
+/// use mdarray_linalg::utils::diag;
 ///
 /// let v = view![1., 2., 3.];
 /// let d = diag(&v);

@@ -4,10 +4,11 @@ use std::mem::MaybeUninit;
 
 use cblas_sys::{CBLAS_LAYOUT, CBLAS_TRANSPOSE};
 use mdarray::{Array, Dense, Dim, Layout, Slice};
-use mdarray_linalg::{dims3, into_i32, trans_stride};
+use mdarray_linalg::utils::{dims3, into_i32};
 use num_complex::ComplexFloat;
 
 use super::scalar::BlasScalar;
+use crate::trans_stride;
 
 pub(super) fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     alpha: T,
@@ -47,8 +48,8 @@ pub(super) fn gemm<T, La, Lb, Lc, D0, D1, D2>(
     } else {
         (CBLAS_TRANSPOSE::CblasTrans, CBLAS_TRANSPOSE::CblasNoTrans)
     };
-    let (a_trans, a_stride) = trans_stride!(a, same_order, other_order);
-    let (b_trans, b_stride) = trans_stride!(b, same_order, other_order);
+    let (a_trans, a_stride) = trans_stride(a, same_order, other_order);
+    let (b_trans, b_stride) = trans_stride(b, same_order, other_order);
 
     let c_stride = into_i32(c.stride(if row_major { 0 } else { 1 }));
 
@@ -109,8 +110,8 @@ where
     let same_order = CBLAS_TRANSPOSE::CblasNoTrans;
     let other_order = CBLAS_TRANSPOSE::CblasTrans;
 
-    let (a_trans, a_stride) = trans_stride!(a, same_order, other_order);
-    let (b_trans, b_stride) = trans_stride!(b, same_order, other_order);
+    let (a_trans, a_stride) = trans_stride(a, same_order, other_order);
+    let (b_trans, b_stride) = trans_stride(b, same_order, other_order);
 
     let c_stride = into_i32(c.stride(0));
 

@@ -11,7 +11,6 @@ pub fn example_matrix(
     expr::from_fn(shape, move |i| (shape[1] * i[0] + i[1] + 1) as f64)
 }
 
-#[macro_export]
 macro_rules! assert_matrix_eq {
     ($a:expr, $b:expr) => {
         assert_matrix_eq!($a, $b, 1e-8f64)
@@ -26,8 +25,8 @@ macro_rules! assert_matrix_eq {
         }
     };
 }
+pub(crate) use assert_matrix_eq;
 
-#[macro_export]
 macro_rules! assert_complex_matrix_eq {
     ($a:expr, $b:expr) => {
         assert_complex_matrix_eq!($a, $b, 1e-8)
@@ -46,6 +45,7 @@ macro_rules! assert_complex_matrix_eq {
         }
     };
 }
+pub(crate) use assert_complex_matrix_eq;
 
 /// Generate a random matrix of size m x n
 pub fn random_matrix(m: usize, n: usize) -> DArray<f64, 2> {

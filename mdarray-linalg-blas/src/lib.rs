@@ -123,3 +123,24 @@ mod matvec;
 /// by the underlying BLAS library.
 #[derive(Default)]
 pub struct Blas;
+
+pub(crate) fn trans_stride<T, D0, D1, L>(
+    x: &mdarray::Slice<T, (D0, D1), L>,
+    same_order: cblas_sys::CBLAS_TRANSPOSE,
+    other_order: cblas_sys::CBLAS_TRANSPOSE,
+) -> (cblas_sys::CBLAS_TRANSPOSE, i32)
+where
+    D0: mdarray::Dim,
+    D1: mdarray::Dim,
+    L: mdarray::Layout,
+{
+    if x.stride(1) == 1 {
+        (same_order, mdarray_linalg::utils::into_i32(x.stride(0)))
+    } else {
+        assert!(
+            x.stride(0) == 1,
+            "matrix must be contiguous in one dimension"
+        );
+        (other_order, mdarray_linalg::utils::into_i32(x.stride(1)))
+    }
+}

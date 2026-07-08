@@ -1,5 +1,8 @@
 use mdarray::{Dim, Layout, Shape, Slice};
-use mdarray_linalg::{into_i32, solve::SolveError, to_col_major, transpose_in_place};
+use mdarray_linalg::{
+    solve::SolveError,
+    utils::{into_i32, to_col_major, transpose_in_place},
+};
 use num_complex::ComplexFloat;
 
 use super::scalar::LapackScalar;

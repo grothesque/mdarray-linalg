@@ -3,7 +3,10 @@ use mdarray::{DArray, DSlice, Dense, tensor};
 use num_complex::ComplexFloat;
 
 use super::common::{naive_matmul, random_matrix};
-use crate::{identity, lu::LU, pretty_print, transpose_in_place};
+use crate::{
+    lu::LU,
+    utils::{identity, pretty_print, transpose_in_place},
+};
 
 pub fn test_lu_reconstruction<T>(
     a: &DArray<T, 2>,
