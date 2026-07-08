@@ -34,22 +34,6 @@ where
     x.try_into().expect("dimension must fit into i32")
 }
 
-/// Returns the dimensions of an arbitrary number of matrices (e.g.,
-/// `A, B, C → (ma, na), (mb, nb), (mc, nc))`
-#[macro_export]
-macro_rules! get_dims {
-    ( $( $matrix:expr ),+ ) => {
-        (
-            $(
-                {
-                    let shape = $matrix.shape();
-                    (into_i32(shape.0), into_i32(shape.1))
-                }
-            ),*
-        )
-    };
-}
-
 /// Make sure that matrix shapes are compatible with `C = A * B`, and
 /// return the dimensions `(m, n, k)` safely cast to `i32`, where `C` is `(m
 /// x n)`, and `k` is the common dimension of `A` and `B`
