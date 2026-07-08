@@ -1,9 +1,9 @@
-//! # mdarray-linalg-nalgebra
+//! # mdarray_linalg_nalgebra
 //!
 //! [nalgebra](https://crates.io/crates/nalgebra) backend for [`mdarray_linalg`].
 //!
 //! This crate provides the [`Nalgebra`] struct that implements the linear algebra traits
-//! defined by `mdarray-linalg`, delegating computations to the pure-Rust `nalgebra` library.
+//! defined by [`mdarray_linalg`], delegating computations to the pure-Rust `nalgebra` library.
 //! Nalgebra is particularly efficient for **small matrices** thanks to its extensive use of
 //! compile-time dimension optimizations.
 //!
@@ -88,12 +88,14 @@
 //! ## Supported types
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
-
+//!
+// Keep the doc-comment blank line above: these reference definitions must start
+// a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+    "[`mdarray_linalg`]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
+[`mdarray_linalg`]: ../mdarray_linalg/index.html
 ")]
 
 mod eig;

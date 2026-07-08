@@ -1,9 +1,9 @@
-//! # mdarray-linalg-lapack
+//! # mdarray_linalg_lapack
 //!
 //! LAPACK backend for [`mdarray_linalg`].
 //!
 //! This crate provides the [`Lapack`] struct that implements the decomposition and
-//! solver traits defined by `mdarray-linalg`, delegating computations to a LAPACK
+//! solver traits defined by [`mdarray_linalg`], delegating computations to a LAPACK
 //! implementation (e.g. OpenBLAS) via the `lapack-sys` and `cblas-sys` crates.
 //!
 //! Backend implementation modules are private.  Use [`Lapack`] together with the
@@ -22,7 +22,7 @@
 //! - **Linear system solving** — `solve`
 //!
 //! For basic matrix/vector operations (Level 1–3 BLAS) and tensor contractions,
-//! use the `mdarray-linalg-blas` or `mdarray-linalg-faer` backends instead.
+//! use the [`mdarray_linalg_blas`] or [`mdarray_linalg_faer`] backends instead.
 //!
 //! ## Setup
 //!
@@ -105,12 +105,18 @@
 //! linker/runtime search path.  Add a source crate such as `lapack-src`,
 //! reference it from Rust code, or provide equivalent link flags from your
 //! application `build.rs`.
-
+//!
+// Keep the doc-comment blank line above: these reference definitions must start
+// a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+    "[`mdarray_linalg`]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/\n",
+    "[`mdarray_linalg_blas`]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
+    "[`mdarray_linalg_faer`]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
+[`mdarray_linalg`]: ../mdarray_linalg/index.html
+[`mdarray_linalg_blas`]: ../mdarray_linalg_blas/index.html
+[`mdarray_linalg_faer`]: ../mdarray_linalg_faer/index.html
 ")]
 
 #[cfg(test)]
