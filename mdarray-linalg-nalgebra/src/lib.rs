@@ -26,13 +26,10 @@
 //!
 //! ## Setup
 //!
-//! Add the following to your `Cargo.toml`:
+//! Add the dependencies to your project:
 //!
-//! ```toml
-//! [dependencies]
-//! mdarray = "0.8"
-//! mdarray-linalg = "0.2"
-//! mdarray-linalg-nalgebra = "0.2"
+//! ```bash
+//! cargo add mdarray mdarray-linalg mdarray-linalg-nalgebra
 //! ```
 //!
 //! ## Example
