@@ -86,6 +86,16 @@ fn backend_defaults() {
 }
 
 #[test]
+fn matmul_builder_methods() {
+    matmul_builder_methods_impl(&Blas);
+}
+
+#[test]
+fn contract_builder_methods() {
+    contract_builder_methods_impl(&Blas);
+}
+
+#[test]
 fn test_matmul_builder_accumulation() {
     let a = example_matrix([2, 3]).eval();
     let b = example_matrix([3, 4]).eval();

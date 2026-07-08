@@ -109,7 +109,11 @@ where
         );
     }
 
-    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, _beta: T) {
+    fn add_to_scaled<Lc: Layout>(self, c: &mut Slice<T, (D0, D2), Lc>, beta: T) {
+        for value in c.iter_mut() {
+            *value = beta * *value;
+        }
+
         let mut c_faer = into_faer_mut(c);
         matmul(
             &mut c_faer,
@@ -119,7 +123,6 @@ where
             self.alpha,
             self.par,
         );
-        todo!(); // multiplication by beta not implemented in faer ?
     }
 }
 
