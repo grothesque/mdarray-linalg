@@ -1,9 +1,9 @@
-//! # mdarray-linalg-tblis
+//! # mdarray_linalg_tblis
 //!
 //! [TBLIS](https://github.com/devinamatthews/tblis) backend for [`mdarray_linalg`].
 //!
 //! This crate provides the [`Tblis`] struct that implements matrix multiplication and
-//! tensor contraction traits from `mdarray-linalg`, delegating to the high-performance
+//! tensor contraction traits from [`mdarray_linalg`], delegating to the high-performance
 //! C library TBLIS.  TBLIS is specifically designed for **dense tensor contractions**
 //! and shines on large, high-rank tensors where BLAS-based backends would need costly
 //! transpositions.
@@ -19,7 +19,7 @@
 //! - **Tensor contraction** — `contract_all`, `contract_n`, `contract_pairs`, `contract` (einsum)
 //!
 //! For vector operations, decompositions, or solving, use another backend
-//! (`mdarray-linalg-blas`, `mdarray-linalg-faer`, etc.).
+//! ([`mdarray_linalg_blas`], [`mdarray_linalg_faer`], etc.).
 //!
 //! ## Setup
 //!
@@ -116,12 +116,18 @@
 //! into the final binary, or that it is not in the linker/runtime search path.
 //! Add `tblis-src`, reference it from Rust code, or provide equivalent link
 //! flags from your application `build.rs`.
-
+//!
+// Keep the doc-comment blank line above: these reference definitions must start
+// a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+    "[`mdarray_linalg`]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/\n",
+    "[`mdarray_linalg_blas`]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
+    "[`mdarray_linalg_faer`]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
+[`mdarray_linalg`]: ../mdarray_linalg/index.html
+[`mdarray_linalg_blas`]: ../mdarray_linalg_blas/index.html
+[`mdarray_linalg_faer`]: ../mdarray_linalg_faer/index.html
 ")]
 
 #[cfg(test)]

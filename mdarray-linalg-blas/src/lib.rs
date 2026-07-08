@@ -1,9 +1,9 @@
-//! # mdarray-linalg-blas
+//! # mdarray_linalg_blas
 //!
 //! BLAS backend for [`mdarray_linalg`].
 //!
 //! This crate provides the [`Blas`] struct that implements the linear algebra traits
-//! defined by `mdarray-linalg`, delegating computations to a BLAS implementation
+//! defined by [`mdarray_linalg`], delegating computations to a BLAS implementation
 //! (e.g. OpenBLAS) via the `cblas-sys` crate.
 //!
 //! ## Scope
@@ -17,7 +17,7 @@
 //! - **Argmax** — `argmax`, `argmax_abs`
 //!
 //! For decompositions (Eig, SVD, LU, QR, Cholesky, Schur) and solving linear systems,
-//! use the `mdarray-linalg-lapack` or `mdarray-linalg-faer` backends instead.
+//! use the [`mdarray_linalg_lapack`] or [`mdarray_linalg_faer`] backends instead.
 //!
 //! ## Setup
 //!
@@ -96,12 +96,18 @@
 //! binary, or that the selected library is not in the linker/runtime search
 //! path.  Add a source crate such as `openblas-src`, reference it from Rust code,
 //! or provide equivalent link flags from your application `build.rs`.
-
+//!
+// Keep the doc-comment blank line above: these reference definitions must start
+// a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+    "[`mdarray_linalg`]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/\n",
+    "[`mdarray_linalg_lapack`]: https://docs.rs/mdarray-linalg-lapack/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_lapack/\n",
+    "[`mdarray_linalg_faer`]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
+[`mdarray_linalg`]: ../mdarray_linalg/index.html
+[`mdarray_linalg_lapack`]: ../mdarray_linalg_lapack/index.html
+[`mdarray_linalg_faer`]: ../mdarray_linalg_faer/index.html
 ")]
 
 #[cfg(test)]

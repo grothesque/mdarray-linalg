@@ -3,8 +3,8 @@
 //!
 //! This crate defines traits for linear algebra operations on `mdarray` arrays. Whole-array
 //! operations including tensor contraction, matrix multiplication, decompositions and
-//! factorizations are exposed as trait methods. Crates such as `mdarray-linalg-blas` and
-//! `mdarray-linalg-faer` provide library-specific backends, i.e., Rust types that implement these
+//! factorizations are exposed as trait methods. Crates such as [`mdarray_linalg_blas`] and
+//! [`mdarray_linalg_faer`] provide library-specific backends, i.e., Rust types that implement these
 //! traits.
 //!
 //! This backend-based approach is more than just a unified interface to multiple libraries.
@@ -37,11 +37,11 @@
 //!
 //! # Backend crates
 //!
-//! - [`mdarray-linalg-blas`][blas-docs]: bindings to [BLAS](https://www.netlib.org/blas/)
-//! - [`mdarray-linalg-lapack`][lapack-docs]: bindings to [LAPACK](https://www.netlib.org/lapack/)
-//! - [`mdarray-linalg-faer`][faer-docs]: bindings to [faer](https://faer.veganb.tw/)
-//! - [`mdarray-linalg-nalgebra`][nalgebra-docs]: bindings to [nalgebra](https://nalgebra.rs/)
-//! - [`mdarray-linalg-tblis`][tblis-docs]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
+//! - [`mdarray_linalg_blas`]: bindings to [BLAS](https://www.netlib.org/blas/)
+//! - [`mdarray_linalg_lapack`]: bindings to [LAPACK](https://www.netlib.org/lapack/)
+//! - [`mdarray_linalg_faer`]: bindings to [faer](https://faer.veganb.tw/)
+//! - [`mdarray_linalg_nalgebra`]: bindings to [nalgebra](https://nalgebra.rs/)
+//! - [`mdarray_linalg_tblis`]: bindings to [TBLIS](https://github.com/MatthewsResearchGroup/tblis)
 //! - `Naive`: simple demo backend, integrated into this crate
 //!
 //! # Backend functionality
@@ -82,7 +82,7 @@
 //! // The prelude does not expose any names.  It only provides traits as _.
 //! use mdarray_linalg::prelude::*;
 //!
-//! // Backends are provided in partner crates (e.g. mdarray-linalg-blas or mdarray-linalg-faer),
+//! // Backends are provided in partner crates (e.g. mdarray_linalg_blas or mdarray_linalg_faer),
 //! // the naive backend exists mostly as a demonstration.
 //! use mdarray_linalg::Naive;
 //!
@@ -110,9 +110,9 @@
 //! # Dependencies on non-Rust libraries
 //!
 //! Backend crates that bind non-Rust libraries do not impose a concrete library to link against.
-//! This choice is left to the user.  For example, users of `mdarray-linalg-blas` may add
-//! a provider crate such as `openblas-src`, users of `mdarray-linalg-lapack` may add
-//! `lapack-src`, and users of `mdarray-linalg-tblis` may add `tblis-src` or arrange
+//! This choice is left to the user.  For example, users of [`mdarray_linalg_blas`] may add
+//! a provider crate such as `openblas-src`, users of [`mdarray_linalg_lapack`] may add
+//! `lapack-src`, and users of [`mdarray_linalg_tblis`] may add `tblis-src` or arrange
 //! to link TBLIS differently.  The provider crate must be referenced from Rust code,
 //! e.g. by adding `extern crate openblas_src as _;`, so that appropriate link
 //! directives are used.
@@ -122,18 +122,18 @@
 // Keep the doc-comment blank line above: these reference definitions must start
 // a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[blas-docs]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
-    "[lapack-docs]: https://docs.rs/mdarray-linalg-lapack/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_lapack/\n",
-    "[faer-docs]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/\n",
-    "[nalgebra-docs]: https://docs.rs/mdarray-linalg-nalgebra/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_nalgebra/\n",
-    "[tblis-docs]: https://docs.rs/mdarray-linalg-tblis/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_tblis/",
+    "[`mdarray_linalg_blas`]: https://docs.rs/mdarray-linalg-blas/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_blas/\n",
+    "[`mdarray_linalg_lapack`]: https://docs.rs/mdarray-linalg-lapack/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_lapack/\n",
+    "[`mdarray_linalg_faer`]: https://docs.rs/mdarray-linalg-faer/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_faer/\n",
+    "[`mdarray_linalg_nalgebra`]: https://docs.rs/mdarray-linalg-nalgebra/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_nalgebra/\n",
+    "[`mdarray_linalg_tblis`]: https://docs.rs/mdarray-linalg-tblis/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg_tblis/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[blas-docs]: ../mdarray_linalg_blas/index.html
-[lapack-docs]: ../mdarray_linalg_lapack/index.html
-[faer-docs]: ../mdarray_linalg_faer/index.html
-[nalgebra-docs]: ../mdarray_linalg_nalgebra/index.html
-[tblis-docs]: ../mdarray_linalg_tblis/index.html
+[`mdarray_linalg_blas`]: ../mdarray_linalg_blas/index.html
+[`mdarray_linalg_lapack`]: ../mdarray_linalg_lapack/index.html
+[`mdarray_linalg_faer`]: ../mdarray_linalg_faer/index.html
+[`mdarray_linalg_nalgebra`]: ../mdarray_linalg_nalgebra/index.html
+[`mdarray_linalg_tblis`]: ../mdarray_linalg_tblis/index.html
 ")]
 
 pub mod prelude;

@@ -1,9 +1,9 @@
-//! # mdarray-linalg-faer
+//! # mdarray_linalg_faer
 //!
 //! [faer](https://crates.io/crates/faer) backend for [`mdarray_linalg`].
 //!
 //! This crate provides the [`Faer`] struct that implements the linear algebra traits
-//! defined by `mdarray-linalg`, delegating computations to the pure-Rust `faer` library.
+//! defined by [`mdarray_linalg`], delegating computations to the pure-Rust `faer` library.
 //! Unlike the BLAS/LAPACK backends, `faer` does **not** require a system BLAS installation.
 //!
 //! Backend implementation modules are private.  Use [`Faer`] together with the
@@ -92,12 +92,14 @@
 //! ## Supported types
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
-
+//!
+// Keep the doc-comment blank line above: these reference definitions must start
+// a separate Markdown block from the preceding paragraph.
 #![cfg_attr(docsrs, doc = concat!(
-    "[mdarray_linalg]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
+    "[`mdarray_linalg`]: https://docs.rs/mdarray-linalg/", env!("CARGO_PKG_VERSION"), "/mdarray_linalg/",
 ))]
 #![cfg_attr(not(docsrs), doc = "\
-[mdarray_linalg]: ../mdarray_linalg/index.html
+[`mdarray_linalg`]: ../mdarray_linalg/index.html
 ")]
 
 mod eig;
