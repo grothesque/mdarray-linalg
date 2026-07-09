@@ -43,7 +43,7 @@ use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
 
 /// Tensor contraction and related operations
-pub trait Contract<T: One + MulAdd<Output = T>> {
+pub trait Contract<T> {
     /// Matrix multiplication.
     ///
     /// ```rust
@@ -60,7 +60,6 @@ pub trait Contract<T: One + MulAdd<Output = T>> {
         b: &'a Slice<T, (D1, D2), Lb>,
     ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
-        T: One,
         D0: Dim,
         D1: Dim,
         D2: Dim,
