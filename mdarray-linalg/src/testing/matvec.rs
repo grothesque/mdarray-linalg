@@ -126,7 +126,7 @@ pub fn test_add_outer_subview(bd: impl Outer<f64, usize, usize>) {
     assert_eq!(a, expected);
 }
 
-pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize>) {
+pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize, Real = f64>) {
     let n = 3;
     let alpha = 2.0;
     let x = DArray::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
@@ -138,7 +138,7 @@ pub fn test_add_to_scaled_vecvec(bd: impl VecOps<f64, usize>) {
     assert_eq!(y, expected);
 }
 
-pub fn test_dot_real(bd: impl VecOps<f64, usize>) {
+pub fn test_dot_real(bd: impl VecOps<f64, usize, Real = f64>) {
     let n = 3;
     let x = DArray::<f64, 1>::from_fn([n], |i| (i[0] + 1) as f64); // [1., 2., 3.]
     let y = DArray::<f64, 1>::from_fn([n], |i| (2 * (i[0] + 1)) as f64); // [2., 4., 6.]
@@ -147,7 +147,7 @@ pub fn test_dot_real(bd: impl VecOps<f64, usize>) {
     assert_eq!(bd.dot(&x, &y), 28.0);
 }
 
-pub fn test_dot_complex(bd: impl VecOps<Complex<f64>, usize>) {
+pub fn test_dot_complex(bd: impl VecOps<Complex<f64>, usize, Real = f64>) {
     use num_complex::Complex64;
     let n = 3;
     let x = DArray::<Complex64, 1>::from_fn([n], |i| Complex64::new((i[0] + 1) as f64, 0.)); // [1., 2., 3.]
@@ -158,7 +158,7 @@ pub fn test_dot_complex(bd: impl VecOps<Complex<f64>, usize>) {
     assert_eq!(bd.dot(&x, &y), expected);
 }
 
-pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>, usize>) {
+pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>, usize, Real = f64>) {
     use num_complex::Complex64;
 
     let n = 2;
@@ -178,7 +178,7 @@ pub fn test_dotc_complex(bd: impl VecOps<Complex<f64>, usize>) {
     assert_eq!(result, expected);
 }
 
-pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>, usize>) {
+pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>, usize, Real = f64>) {
     use num_complex::Complex64;
 
     let n = 3;
@@ -197,7 +197,7 @@ pub fn test_norm1_complex(bd: impl VecOps<Complex<f64>, usize>) {
     assert!((result - expected).abs() < 1e-12);
 }
 
-pub fn test_norm2_complex(bd: impl VecOps<Complex<f64>, usize>) {
+pub fn test_norm2_complex(bd: impl VecOps<Complex<f64>, usize, Real = f64>) {
     use num_complex::Complex64;
 
     let n = 3;

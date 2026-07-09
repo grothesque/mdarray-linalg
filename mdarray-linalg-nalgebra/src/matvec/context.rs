@@ -96,6 +96,8 @@ where
         + Mul<Output = T>,
     D1: Dim,
 {
+    type Real = T::Real;
+
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
@@ -118,7 +120,7 @@ where
             .fold(T::zero(), |acc, (xi, yi)| acc + xi.conj() * *yi)
     }
 
-    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real {
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real {
         x.iter()
             .fold(T::Real::zero(), |acc, xi| {
                 let abs = xi.abs();
@@ -127,10 +129,7 @@ where
             .sqrt()
     }
 
-    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
-    where
-        T: ComplexFloat,
-    {
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real {
         x.iter().fold(T::Real::zero(), |acc, xi| acc + xi.l1_norm())
     }
 
@@ -138,11 +137,9 @@ where
         &self,
         _x: &mut Slice<T, (D1,), Lx>,
         _y: &mut Slice<T, (D1,), Ly>,
-        _c: T::Real,
+        _c: Self::Real,
         _s: T,
-    ) where
-        T: ComplexFloat,
-    {
+    ) {
         todo!()
     }
 }

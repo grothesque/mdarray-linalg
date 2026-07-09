@@ -158,7 +158,6 @@
 //! assert_eq!(norm, 8.0);
 //! ```
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use num_complex::ComplexFloat;
 
 /// Matrix-vector multiplication and transformations
 pub trait MatVec<T, D0: Dim, D1: Dim> {
@@ -198,7 +197,12 @@ where
 }
 
 /// Vector operations and basic linear algebra utilities
-pub trait VecOps<T: ComplexFloat, D1: Dim> {
+pub trait VecOps<T, D1: Dim> {
+    /// Real scalar type used for norm results and real rotation coefficients.
+    ///
+    /// This type is chosen by the backend implementation for the scalar type `T`.
+    type Real;
+
     /// Accumulate a scaled vector: `y := α·x + y`
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
@@ -214,27 +218,27 @@ pub trait VecOps<T: ComplexFloat, D1: Dim> {
     fn dotc<Lx: Layout, Ly: Layout>(&self, x: &Slice<T, (D1,), Lx>, y: &Slice<T, (D1,), Ly>) -> T;
 
     /// L2 norm: `√(∑|xᵢ|²)`
-    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real;
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real;
 
     /// L1 norm (Manhattan) for complex numbers: `∑(|re(xᵢ)| + |im(xᵢ)|)`.
     /// For real numbers this reduces to `∑|xᵢ|`.
-    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
-    where
-        T: ComplexFloat;
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real;
 
     /// Givens rotation
     fn rot<Lx: Layout, Ly: Layout>(
         &self,
         x: &mut Slice<T, (D1,), Lx>,
         y: &mut Slice<T, (D1,), Ly>,
-        c: T::Real,
+        c: Self::Real,
         s: T,
-    ) where
-        T: ComplexFloat;
+    );
 }
 
-/// Argmax for tensors, unlike other traits: it requires `T: PartialOrd` and works on tensor of any rank.
-pub trait Argmax<T: ComplexFloat + std::cmp::PartialOrd> {
+/// Argmax for tensors of any rank.
+///
+/// Implementations define the ordering and magnitude semantics they support for `T`;
+/// backend impl bounds should state any Rust scalar traits they rely on.
+pub trait Argmax<T> {
     fn argmax_write<Lx: Layout, S: Shape>(
         &self,
         x: &Slice<T, S, Lx>,

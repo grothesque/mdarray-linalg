@@ -175,6 +175,8 @@ impl<T, D: Dim> VecOps<T, D> for Faer
 where
     T: FaerVectorScalar + Zero + Copy,
 {
+    type Real = <T as ComplexFloat>::Real;
+
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         _alpha: T,
@@ -202,14 +204,11 @@ where
         inner_prod(into_faer_row(x), Conj::Yes, into_faer_col(y), Conj::No)
     }
 
-    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> <T as ComplexFloat>::Real {
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> Self::Real {
         T::from_faer_real(into_faer_col(x).norm_l2())
     }
 
-    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> <T as ComplexFloat>::Real
-    where
-        T: ComplexFloat,
-    {
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> Self::Real {
         T::from_faer_real(into_faer_col(x).norm_l1())
     }
 
@@ -217,11 +216,9 @@ where
         &self,
         _x: &mut Slice<T, (D,), Lx>,
         _y: &mut Slice<T, (D,), Ly>,
-        _c: <T as ComplexFloat>::Real,
+        _c: Self::Real,
         _s: T,
-    ) where
-        T: ComplexFloat,
-    {
+    ) {
         unimplemented!();
     }
 }

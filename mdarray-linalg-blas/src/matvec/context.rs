@@ -88,6 +88,8 @@ where
 impl<T: ComplexFloat + BlasScalar + Add<Output = T> + Mul<Output = T> + Zero + Copy, D1: Dim>
     VecOps<T, D1> for Blas
 {
+    type Real = T::Real;
+
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
@@ -105,14 +107,11 @@ impl<T: ComplexFloat + BlasScalar + Add<Output = T> + Mul<Output = T> + Zero + C
         dotc(x, y)
     }
 
-    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real {
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real {
         nrm2(x)
     }
 
-    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> T::Real
-    where
-        T: ComplexFloat,
-    {
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D1,), Lx>) -> Self::Real {
         asum(x)
     }
 
@@ -120,11 +119,9 @@ impl<T: ComplexFloat + BlasScalar + Add<Output = T> + Mul<Output = T> + Zero + C
         &self,
         _x: &mut Slice<T, (D1,), Lx>,
         _y: &mut Slice<T, (D1,), Ly>,
-        _c: T::Real,
+        _c: Self::Real,
         _s: T,
-    ) where
-        T: ComplexFloat,
-    {
+    ) {
         todo!()
     }
 }

@@ -137,6 +137,8 @@ where
 impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> VecOps<T, D>
     for Naive
 {
+    type Real = T::Real;
+
     fn add_to_scaled<Lx: Layout, Ly: Layout>(
         &self,
         alpha: T,
@@ -164,7 +166,7 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
         result
     }
 
-    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> T::Real {
+    fn norm2<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> Self::Real {
         let mut sum_sq = T::Real::zero();
         for elem in x.into_iter() {
             sum_sq = sum_sq + elem.abs().powi(2);
@@ -172,10 +174,7 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
         sum_sq.sqrt()
     }
 
-    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> T::Real
-    where
-        T: ComplexFloat,
-    {
+    fn norm1<Lx: Layout>(&self, x: &Slice<T, (D,), Lx>) -> Self::Real {
         let mut sum = T::Real::zero();
         for elem in x.into_iter() {
             sum = sum + elem.re().abs() + elem.im().abs();
@@ -187,11 +186,9 @@ impl<T: ComplexFloat + Add<Output = T> + Mul<Output = T> + Zero + Copy, D: Dim> 
         &self,
         x: &mut Slice<T, (D,), Lx>,
         y: &mut Slice<T, (D,), Ly>,
-        c: T::Real,
+        c: Self::Real,
         s: T,
-    ) where
-        T: ComplexFloat,
-    {
+    ) {
         // Apply a Givens rotation to vectors x and y in-place:
         //   x[i] =  c * x[i] + s  * y[i]
         //   y[i] = -s* * x[i] + c * y[i]
