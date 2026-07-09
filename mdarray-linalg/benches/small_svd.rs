@@ -35,21 +35,21 @@ pub fn svd_4x4_nalgebra_static(
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
+pub fn svd_4x4_dyn_backend_lapack(a: &Slice4x4Dyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
+pub fn svd_4x4_dyn_backend_faer(a: &Slice4x4Dyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_dyn_backend_nalgebra(a: &Slice4x4Dyn) -> SVDDecomp<f64, usize> {
+pub fn svd_4x4_dyn_backend_nalgebra(a: &Slice4x4Dyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")
@@ -66,21 +66,21 @@ pub fn svd_4x4_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> 
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_n_dyn_backend_lapack(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
+pub fn svd_n_dyn_backend_lapack(a: &SliceNDyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_n_dyn_backend_faer(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
+pub fn svd_n_dyn_backend_faer(a: &SliceNDyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_n_dyn_backend_nalgebra(a: &SliceNDyn) -> SVDDecomp<f64, usize> {
+pub fn svd_n_dyn_backend_nalgebra(a: &SliceNDyn) -> SVDDecomp<f64, f64, usize> {
     let mut a_copy = a.to_owned();
     let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")
@@ -97,21 +97,21 @@ pub fn svd_n_nalgebra(data: &[f64]) -> SVD<f64, nalgebra::Dyn, nalgebra::Dyn> {
 // ============================================================================
 
 #[inline(never)]
-pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
+pub fn svd_4x4_const_backend_lapack(a: &Slice4x4Const) -> SVDDecomp<f64, f64, Const<4>> {
     let mut a_copy = a.to_owned();
     let bd = Lapack::new();
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
+pub fn svd_4x4_const_backend_faer(a: &Slice4x4Const) -> SVDDecomp<f64, f64, Const<4>> {
     let mut a_copy = a.to_owned();
     let bd = Faer;
     bd.svd(&mut a_copy).expect("SVD failed")
 }
 
 #[inline(never)]
-pub fn svd_4x4_const_backend_nalgebra(a: &Slice4x4Const) -> SVDDecomp<f64, Const<4>> {
+pub fn svd_4x4_const_backend_nalgebra(a: &Slice4x4Const) -> SVDDecomp<f64, f64, Const<4>> {
     let mut a_copy = a.to_owned();
     let bd = Nalgebra;
     bd.svd(&mut a_copy).expect("SVD failed")

@@ -15,14 +15,18 @@ use num_complex::ComplexFloat;
 use super::simple::svd_faer;
 use crate::Faer;
 
-impl<T, D, L> SVD<T, D, L> for Faer
+impl<T, D> SVD<T, D> for Faer
 where
     T: ComplexFloat + ComplexField + Default,
     D: Dim,
-    L: Layout,
 {
+    type SingularValue = T;
+
     /// Compute full SVD with new allocated matrices
-    fn svd(&self, a: &mut Slice<T, (D, D), L>) -> Result<SVDDecomp<T, D>, SVDError> {
+    fn svd<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D, D), L>,
+    ) -> Result<SVDDecomp<T, Self::SingularValue, D>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -63,7 +67,10 @@ where
     }
 
     /// Compute thin SVD with new allocated matrices
-    fn svd_thin(&self, a: &mut Slice<T, (D, D), L>) -> Result<SVDDecomp<T, D>, SVDError> {
+    fn svd_thin<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D, D), L>,
+    ) -> Result<SVDDecomp<T, Self::SingularValue, D>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -90,7 +97,10 @@ where
     }
 
     /// Compute only singular values with new allocated matrix
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
+    fn svd_s<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D, D), L>,
+    ) -> Result<Array<Self::SingularValue, (D,)>, SVDError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -112,10 +122,10 @@ where
     }
 
     /// Compute full SVD, overwriting existing matrices
-    fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D,), Ls>,
+        s: &mut Slice<Self::SingularValue, (D,), Ls>,
         u: &mut Slice<T, (D, D), Lu>,
         vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
@@ -124,10 +134,10 @@ where
     }
 
     /// Compute only singular values, overwriting existing matrix
-    fn svd_write_s<Ls: Layout>(
+    fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D,), Ls>,
+        s: &mut Slice<Self::SingularValue, (D,), Ls>,
     ) -> Result<(), SVDError> {
         svd_faer::<T, D, L, Ls, Dense, Dense>(a, s, None, None, false)
     }

@@ -1,5 +1,5 @@
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError, SVDResult};
+use mdarray_linalg::svd::{SVD, SVDDecomp, SVDError};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
@@ -83,14 +83,18 @@ where
     Ok(())
 }
 
-impl<T, D, L> SVD<T, D, L> for Nalgebra
+impl<T, D> SVD<T, D> for Nalgebra
 where
     T: ComplexFloat + Copy + Zero + nalgebra::ComplexField<RealField = T::Real>,
     T::Real: nalgebra::RealField + Copy,
     D: Dim,
-    L: Layout,
 {
-    fn svd(&self, a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
+    type SingularValue = T;
+
+    fn svd<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D, D), L>,
+    ) -> Result<SVDDecomp<T, Self::SingularValue, D>, SVDError> {
         let shape = *a.shape();
         let m = shape.dim(0);
         let n = shape.dim(1);
@@ -106,11 +110,17 @@ where
         Ok(SVDDecomp { s, u, vt })
     }
 
-    fn svd_thin(&self, _a: &mut Slice<T, (D, D), L>) -> SVDResult<T, D> {
+    fn svd_thin<L: Layout>(
+        &self,
+        _a: &mut Slice<T, (D, D), L>,
+    ) -> Result<SVDDecomp<T, Self::SingularValue, D>, SVDError> {
         unimplemented!()
     }
 
-    fn svd_s(&self, a: &mut Slice<T, (D, D), L>) -> Result<Array<T, (D,)>, SVDError> {
+    fn svd_s<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D, D), L>,
+    ) -> Result<Array<Self::SingularValue, (D,)>, SVDError> {
         let shape = *a.shape();
         let min_mn = shape.dim(0).min(shape.dim(1));
         let mut s = Array::<T, (D,)>::from_elem(<(D,) as Shape>::from_dims(&[min_mn]), T::zero());
@@ -119,20 +129,20 @@ where
         Ok(s)
     }
 
-    fn svd_write<Ls: Layout, Lu: Layout, Lvt: Layout>(
+    fn svd_write<L: Layout, Ls: Layout, Lu: Layout, Lvt: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D,), Ls>,
+        s: &mut Slice<Self::SingularValue, (D,), Ls>,
         u: &mut Slice<T, (D, D), Lu>,
         vt: &mut Slice<T, (D, D), Lvt>,
     ) -> Result<(), SVDError> {
         svd_full_impl(a, s, u, vt)
     }
 
-    fn svd_write_s<Ls: Layout>(
+    fn svd_write_s<L: Layout, Ls: Layout>(
         &self,
         a: &mut Slice<T, (D, D), L>,
-        s: &mut Slice<T, (D,), Ls>,
+        s: &mut Slice<Self::SingularValue, (D,), Ls>,
     ) -> Result<(), SVDError> {
         svd_values_impl(a, s)
     }

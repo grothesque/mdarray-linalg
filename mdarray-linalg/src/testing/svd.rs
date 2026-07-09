@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::{DArray, Dense, Dyn};
+use mdarray::{DArray, Dyn};
 use num_complex::{Complex, ComplexFloat};
 use rand::Rng;
 
@@ -9,7 +9,14 @@ use crate::{
     utils::pretty_print,
 };
 
-fn test_svd_reconstruction<T>(bd: &impl SVD<T, Dyn, Dense>, a: &DArray<T, 2>, debug_print: bool)
+// These reconstruction tests assume that the backend represents singular
+// values with the same scalar type as the input matrix. Backends that use a
+// different `SingularValue` type will need a conversion-aware test helper.
+fn test_svd_reconstruction<T>(
+    bd: &impl SVD<T, Dyn, SingularValue = T>,
+    a: &DArray<T, 2>,
+    debug_print: bool,
+)
 where
     T: ComplexFloat<Real = f64>
         + Default
@@ -60,38 +67,40 @@ where
     assert_matrix_eq!(*a, usvt);
 }
 
-pub fn test_svd_square_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
+pub fn test_svd_square_matrix(bd: &impl SVD<f64, Dyn, SingularValue = f64>) {
     let n = 3;
     let a = DArray::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, true);
 }
 
-pub fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64, Dyn, Dense>) {
+pub fn test_svd_rectangular_m_gt_n(bd: &impl SVD<f64, Dyn, SingularValue = f64>) {
     let (m, n) = (4, 3);
     let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, true);
 }
 
-pub fn test_svd_rectangular_n_gt_m(bd: &impl SVD<f64, Dyn, Dense>) {
+pub fn test_svd_rectangular_n_gt_m(bd: &impl SVD<f64, Dyn, SingularValue = f64>) {
     let (m, n) = (3, 4);
     let a = DArray::<f64, 2>::from_fn([m, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, true);
 }
 
-pub fn test_svd_big_square_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
+pub fn test_svd_big_square_matrix(bd: &impl SVD<f64, Dyn, SingularValue = f64>) {
     let n = 200;
     let a = DArray::<f64, 2>::from_fn([n, n], |i| (i[0] * i[1]) as f64);
     test_svd_reconstruction(bd, &a, false);
 }
 
-pub fn test_svd_random_matrix(bd: &impl SVD<f64, Dyn, Dense>) {
+pub fn test_svd_random_matrix(bd: &impl SVD<f64, Dyn, SingularValue = f64>) {
     let mut rng = rand::rng();
     let n = 4;
     let a = DArray::<f64, 2>::from_fn([n, n], |_| rng.random::<f64>());
     test_svd_reconstruction(bd, &a, true);
 }
 
-pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
+pub fn test_svd_cplx_square_matrix(
+    bd: &impl SVD<Complex<f64>, Dyn, SingularValue = Complex<f64>>,
+) {
     let n = 3;
     let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] * i[1]) as f64, i[1] as f64)
@@ -129,7 +138,9 @@ pub fn test_svd_cplx_square_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
 
 /// Test complex SVD with random matrix having significant imaginary parts.
 /// This test is specifically designed to catch the V^T vs V^H bug.
-pub fn test_svd_cplx_random_matrix(bd: &impl SVD<Complex<f64>, Dyn, Dense>) {
+pub fn test_svd_cplx_random_matrix(
+    bd: &impl SVD<Complex<f64>, Dyn, SingularValue = Complex<f64>>,
+) {
     let mut rng = rand::rng();
     let n = 5;
 
