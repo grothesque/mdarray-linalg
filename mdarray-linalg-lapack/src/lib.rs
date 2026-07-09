@@ -86,8 +86,8 @@
 //! // ----- Solve linear system Ax = b -----
 //! let mut a = array![[2., 1., 0.], [1., 3., 1.], [0., 1., 2.]];
 //! let b = array![[1., 0., 0.], [2., 0., 0.], [1., 0., 0.]];
-//! let result = Lapack::new().solve(&mut a, &b).expect("Solve failed");
-//! println!("x = {:?}", result.x);
+//! let x = Lapack::new().solve(&mut a, &b).expect("Solve failed");
+//! println!("x = {:?}", x);
 //! ```
 //!
 //! > **Note:** Decomposition routines (eig, svd, lu, etc.) **destroy the input matrix**.

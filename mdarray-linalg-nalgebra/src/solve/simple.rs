@@ -27,11 +27,11 @@ where
     Ok(())
 }
 
-/// Solve A * X = B and return the packed LU matrix, the solution, and P.
+/// Solve A * X = B and return the packed LU matrix and solution.
 pub(super) fn solve<T, D, R, La, Lb>(
     a: &Slice<T, (D, D), La>,
     b: &Slice<T, (D, R), Lb>,
-) -> Result<(nalgebra::DMatrix<T>, nalgebra::DMatrix<T>, nalgebra::DMatrix<T>), SolveError>
+) -> Result<(nalgebra::DMatrix<T>, nalgebra::DMatrix<T>), SolveError>
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
     D: Dim,
@@ -54,8 +54,5 @@ where
         SolveError::SingularMatrix { diagonal }
     })?;
 
-    let mut p = nalgebra::DMatrix::identity(n, n);
-    lu.p().permute_rows(&mut p);
-
-    Ok((packed_lu, x, p))
+    Ok((packed_lu, x))
 }

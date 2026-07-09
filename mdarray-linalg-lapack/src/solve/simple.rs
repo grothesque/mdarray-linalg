@@ -10,7 +10,7 @@ use super::scalar::LapackScalar;
 pub(super) fn gesv<La, Lb, T, D, R>(
     a: &mut Slice<T, (D, D), La>,
     b: &mut Slice<T, (D, R), Lb>,
-) -> Result<Vec<i32>, SolveError>
+) -> Result<(), SolveError>
 where
     La: Layout,
     Lb: Layout,
@@ -63,7 +63,7 @@ where
                 }
             }
 
-            Ok(ipiv)
+            Ok(())
         }
         i if i > 0 => {
             // Matrix is singular: U(i,i) is exactly zero

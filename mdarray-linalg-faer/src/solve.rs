@@ -1,25 +1,14 @@
-// Linear system solver using LU decomposition:
+// Linear system solver:
 //     A * X = B
-// is solved by computing the LU decomposition with partial pivoting:
-//     P * A = L * U
-// then solving:
-//     L * Y = P * B  (forward substitution)
-//     U * X = Y      (backward substitution)
 // where:
-//     - A is m × m         (square coefficient matrix, overwritten with LU)
+//     - A is m × m         (square coefficient matrix)
 //     - B is m × n         (right-hand side matrix)
 //     - X is m × n         (solution matrix)
-//     - P is m × m         (permutation matrix)
-//     - L is m × m         (lower triangular with ones on diagonal)
-//     - U is m × m         (upper triangular)
 
 use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::{
-    solve::{Solution, Solve, SolveError},
-    utils::identity,
-};
+use mdarray_linalg::solve::{Solve, SolveError};
 use num_complex::ComplexFloat;
 
 use crate::{Faer, into_faer, into_faer_mut};
@@ -31,14 +20,12 @@ where
         + Default
         + std::convert::From<<T as num_complex::ComplexFloat>::Real>,
 {
-    /// Solves linear system AX = B with new allocated solution matrix
-    /// A is modified (overwritten with LU decomposition)
-    /// Returns the solution X and P the permutation matrix (identity in that case), or error
+    /// Solves linear system AX = B with new allocated solution matrix.
     fn solve<R: Dim, La: Layout, Lb: Layout>(
         &self,
         a: &mut Slice<T, (D, D), La>,
         b: &Slice<T, (D, R), Lb>,
-    ) -> Result<Solution<T, D, R>, SolveError> {
+    ) -> Result<Array<T, (D, R)>, SolveError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -70,21 +57,14 @@ where
             }
         }
 
-        let p_mda = identity(m); // No permutation with this routine
-
-        Ok(Solution { x: x_mda, p: p_mda })
+        Ok(x_mda)
     }
 
-    /// Solves linear system AX = b overwriting existing matrices
-    /// A is overwritten with its LU decomposition
-    /// B is overwritten with the solution X
-    /// P is filled with the permutation matrix such that P*A = L*U (here P = identity)
-    /// Returns Ok(()) on success, Err(SolveError) on failure
-    fn solve_write<R: Dim, La: Layout, Lb: Layout, Lp: Layout>(
+    /// Solves linear system AX = B, overwriting B with the solution X.
+    fn solve_write<R: Dim, La: Layout, Lb: Layout>(
         &self,
         a: &mut Slice<T, (D, D), La>,
         b: &mut Slice<T, (D, R), Lb>,
-        p: &mut Slice<T, (D, D), Lp>,
     ) -> Result<(), SolveError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
@@ -100,7 +80,6 @@ where
             return Err(SolveError::InvalidDimensions);
         }
 
-        let _par = faer::get_global_parallelism();
         let a_faer = into_faer(a);
 
         let solver = a_faer.partial_piv_lu();
@@ -112,17 +91,6 @@ where
         for i in 0..m {
             for j in 0..b_n {
                 b_faer_mut[(i, j)] = x_faer[(i, j)];
-            }
-        }
-
-        let mut p_faer = into_faer_mut(p);
-        for i in 0..m {
-            for j in 0..m {
-                if i != j {
-                    p_faer[(i, j)] = T::zero();
-                } else {
-                    p_faer[(i, j)] = T::one();
-                }
             }
         }
 

@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use mdarray::{array, Array, Const, DArray};
 
 use super::common::random_matrix;
-use crate::solve::{Solution, Solve};
+use crate::solve::Solve;
 
 fn test_solve_verification<T>(original_a: &DArray<T, 2>, x: &DArray<T, 2>, b: &DArray<T, 2>)
 where
@@ -41,7 +41,7 @@ pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize>) {
     let original_a = a.clone();
     let b = random_matrix(n, 1);
 
-    let Solution { x, .. } = bd.solve(&mut a.clone(), &b).expect("");
+    let x = bd.solve(&mut a.clone(), &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -55,10 +55,8 @@ pub fn test_solve_static_rhs_shape(bd: &impl Solve<f64, Const<3>>) {
     let original_a = a.clone();
     let b: Array<f64, (Const<3>, Const<1>)> = array![[1.0], [2.0], [1.0]];
 
-    let Solution { x, p } = bd.solve(&mut a, &b).expect("");
+    let x = bd.solve(&mut a, &b).expect("");
 
-    assert_eq!(p.dim(0), 3);
-    assert_eq!(p.dim(1), 3);
     for i in 0..3 {
         let mut ax_i = 0.0;
         for k in 0..3 {
@@ -75,7 +73,7 @@ pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize>) {
     let original_a = a.clone();
     let b = random_matrix(n, nrhs);
 
-    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
+    let x = bd.solve(&mut a, &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -87,9 +85,8 @@ pub fn test_solve_write(bd: &impl Solve<f64, usize>) {
     let original_a = a.clone();
     let mut b = random_matrix(n, nrhs);
     let original_b = b.clone();
-    let mut p = DArray::<f64, 2>::zeros([n, n]);
 
-    let _ = bd.solve_write(&mut a, &mut b, &mut p);
+    bd.solve_write(&mut a, &mut b).expect("solve_write failed");
 
     // b now contains the solution x
     test_solve_verification(&original_a, &b, &original_b);
@@ -107,7 +104,7 @@ pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize>) {
 
     let b = random_matrix(n, nrhs);
 
-    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
+    let x = bd.solve(&mut a, &b).expect("");
 
     for i in 0..n {
         for j in 0..nrhs {
@@ -140,7 +137,7 @@ pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize>) {
     });
     println!("b={b:?}");
 
-    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
+    let x = bd.solve(&mut a, &b).expect("");
 
     println!("{x:?}");
 

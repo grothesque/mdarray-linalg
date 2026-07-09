@@ -9,7 +9,7 @@
 //!
 //!let xr = Lapack::default().solve(&mut a.clone(), &b);
 //!
-//!let Solution { x, .. } = xr.unwrap();
+//!let x = xr.unwrap();
 //!let ax = Naive.matvec(&a, &x.view(.., 0)).eval(); // Ax = b
 //!```
 use mdarray::{Array, Dim, Layout, Slice};
@@ -28,33 +28,25 @@ pub enum SolveError {
     InvalidDimensions,
 }
 
-/// Holds the results of a linear system solve, including
-/// the solution matrix and permutation matrix.
-pub struct Solution<T, D: Dim, R: Dim> {
-    pub x: Array<T, (D, R)>,
-    pub p: Array<T, (D, D)>,
-}
-
-/// Linear system solver using LU decomposition.
+/// Linear system solver.
 pub trait Solve<T, D: Dim> {
-    /// Solves linear system AX = B, overwriting existing matrices.
-    /// A is overwritten with its LU decomposition.
-    /// B is overwritten with the solution X.
-    /// P is filled with the permutation matrix such that A = P*L*U.
-    /// Returns Ok(()) on success, Err(SolveError) on failure.
-    fn solve_write<R: Dim, La: Layout, Lb: Layout, Lp: Layout>(
+    /// Solves linear system AX = B, overwriting B with the solution X.
+    ///
+    /// The backend may also overwrite A with intermediate factorization data;
+    /// callers should not rely on A's contents after this call.
+    fn solve_write<R: Dim, La: Layout, Lb: Layout>(
         &self,
         a: &mut Slice<T, (D, D), La>,
         b: &mut Slice<T, (D, R), Lb>,
-        p: &mut Slice<T, (D, D), Lp>,
     ) -> Result<(), SolveError>;
 
-    /// Solves linear system AX = B with new allocated solution matrix.
-    /// A is modified (overwritten with LU decomposition).
-    /// Returns the solution X and P the permutation matrix, or error.
+    /// Solves linear system AX = B with a newly allocated solution matrix.
+    ///
+    /// The backend may overwrite A with intermediate factorization data;
+    /// callers should not rely on A's contents after this call.
     fn solve<R: Dim, La: Layout, Lb: Layout>(
         &self,
         a: &mut Slice<T, (D, D), La>,
         b: &Slice<T, (D, R), Lb>,
-    ) -> Result<Solution<T, D, R>, SolveError>;
+    ) -> Result<Array<T, (D, R)>, SolveError>;
 }
