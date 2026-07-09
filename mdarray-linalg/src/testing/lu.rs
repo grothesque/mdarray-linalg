@@ -251,7 +251,7 @@ pub fn test_cholesky_decomposition(bd: &impl LU<f64, usize, usize>) {
     let mut a = random_positive_definite_matrix(n);
     let original_a = a.clone();
 
-    let l = bd.choleski(&mut a).unwrap();
+    let l = bd.cholesky(&mut a).unwrap();
 
     println!("{l:?}");
 
@@ -264,8 +264,8 @@ pub fn test_cholesky_write(bd: &impl LU<f64, usize, usize>) {
     let original_a = a.clone();
     let mut a_copy = a.clone();
 
-    let l = bd.choleski(&mut a_copy.clone()).unwrap();
-    bd.choleski_write(&mut a_copy).unwrap();
+    let l = bd.cholesky(&mut a_copy.clone()).unwrap();
+    bd.cholesky_write(&mut a_copy).unwrap();
 
     println!("{l:?}");
     println!("{a_copy:?}");
@@ -290,7 +290,7 @@ pub fn test_cholesky_not_positive_definite(bd: &impl LU<f64, usize, usize>) {
     }
 
     // This should fail
-    let result = bd.choleski(&mut a);
+    let result = bd.cholesky(&mut a);
     assert!(result.is_err());
 }
 
@@ -303,7 +303,7 @@ pub fn test_cholesky_identity_matrix(bd: &impl LU<f64, usize, usize>) {
         a[[i, i]] = 1.0;
     }
 
-    let l = bd.choleski(&mut a).unwrap();
+    let l = bd.cholesky(&mut a).unwrap();
 
     // Cholesky of identity should be identity
     for i in 0..n {

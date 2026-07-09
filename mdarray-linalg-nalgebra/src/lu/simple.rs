@@ -60,7 +60,7 @@ where
 }
 
 /// Compute the Cholesky factor of a square positive-definite matrix.
-pub(super) fn choleski<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
+pub(super) fn cholesky<T, D0, D1, L>(a: &Slice<T, (D0, D1), L>) -> Result<nalgebra::DMatrix<T>, InvError>
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
     D0: Dim,

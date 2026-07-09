@@ -22,7 +22,7 @@
 //! - **Schur decomposition** — `schur`, `schur_complex`
 //! - **SVD** — `svd`, `svd_thin`, `svd_s`
 //! - **LU decomposition** — `lu`, `det`, `inv`
-//! - **Cholesky decomposition** — `choleski`
+//! - **Cholesky decomposition** — `cholesky`
 //! - **QR decomposition** — `qr`
 //! - **Linear system solving** — `solve`
 //! - **Argmax** — `argmax`, `argmax_abs`

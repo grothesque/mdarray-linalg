@@ -21,7 +21,7 @@
 //! // ----- Cholesky decomposition -----
 //! // For a symmetric positive-definite matrix: A = L * L^T
 //! let s = a.clone() + a.permute([1, 0]); // symmetric matrix
-//! let l = bd.choleski(&mut s).unwrap();
+//! let l = bd.cholesky(&mut s).unwrap();
 //! // Reconstruct: A ≈ L * L^T
 //! let a_reconstructed = l.dot(&l.transpose());
 //! ```
@@ -80,11 +80,11 @@ pub trait LU<T, D0: Dim, D1: Dim> {
     fn det<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> T;
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(
+    fn cholesky<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> Result<Array<T, (D0, D1)>, InvError>;
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
+    fn cholesky_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
 }

@@ -14,7 +14,7 @@ use mdarray_linalg::lu::{InvError, LU};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
-use super::simple::{choleski, det, inv, lu};
+use super::simple::{cholesky, det, inv, lu};
 use crate::{Nalgebra, write_dmatrix};
 
 impl<T, D0: Dim, D1: Dim> LU<T, D0, D1> for Nalgebra
@@ -75,20 +75,20 @@ where
         det(a)
     }
 
-    fn choleski<L: Layout>(
+    fn cholesky<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> Result<Array<T, (D0, D1)>, InvError> {
         let m = a.shape().dim(0);
         let n = a.shape().dim(1);
-        let chol_nalgebra = choleski(a)?;
+        let chol_nalgebra = cholesky(a)?;
         let mut out = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[m, n]), T::zero());
         write_dmatrix(&chol_nalgebra, &mut out);
         Ok(out)
     }
 
-    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
-        let chol_nalgebra = choleski(a)?;
+    fn cholesky_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+        let chol_nalgebra = cholesky(a)?;
         write_dmatrix(&chol_nalgebra, a);
         Ok(())
     }

@@ -207,7 +207,7 @@ where
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(
+    fn cholesky<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
     ) -> Result<Array<T, (D0, D1)>, InvError> {
@@ -222,12 +222,12 @@ where
         }
 
         let mut l = a.to_tensor();
-        self.choleski_write(&mut l)?;
+        self.cholesky_write(&mut l)?;
         Ok(l)
     }
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
-    fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
+    fn cholesky_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
