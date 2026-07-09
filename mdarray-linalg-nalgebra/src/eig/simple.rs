@@ -99,3 +99,26 @@ where
 
     Ok(SchurDecomp { t, z })
 }
+
+pub(super) fn schur_complex<T, D0, D1, L>(
+    a: &Slice<T, (D0, D1), L>,
+) -> Result<SchurDecomp<Complex<T::Real>, D0, D1>, SchurError>
+where
+    T: ComplexFloat + Copy,
+    T::Real: nalgebra::RealField + Copy,
+    D0: Dim,
+    D1: Dim,
+    L: Layout,
+{
+    let schur = to_complex_dmatrix(a).schur();
+    let (z_nalgebra, t_nalgebra) = schur.unpack();
+    let shape = *a.shape();
+
+    let mut t = Array::from_elem(shape, Complex::new(T::Real::zero(), T::Real::zero()));
+    let mut z = Array::from_elem(shape, Complex::new(T::Real::zero(), T::Real::zero()));
+
+    write_complex_dmatrix(&t_nalgebra, &mut t);
+    write_complex_dmatrix(&z_nalgebra, &mut z);
+
+    Ok(SchurDecomp { t, z })
+}

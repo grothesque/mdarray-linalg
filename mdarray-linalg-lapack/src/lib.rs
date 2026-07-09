@@ -13,7 +13,7 @@
 //!
 //! The LAPACK backend covers:
 //!
-//! - **Eigenvalue decomposition** — `eig`, `eig_full`, `eig_values`, `eigh`, `eigs`
+//! - **Eigenvalue decomposition** — `eig`, `eig_full`, `eig_values`, `eigh`
 //! - **Schur decomposition** — `schur`, `schur_complex`
 //! - **SVD** — `svd`, `svd_thin`, `svd_s`
 //! - **LU decomposition** — `lu`, `det`, `inv`
@@ -93,7 +93,7 @@
 //! > **Note:** Decomposition routines (eig, svd, lu, etc.) **destroy the input matrix**.
 //! > Always pass a clone if you need the original data.
 //!
-//! ## Supported types
+//! ## Currently supported types
 //!
 //! `f32`, `f64`, `Complex<f32>`, `Complex<f64>`.
 //!

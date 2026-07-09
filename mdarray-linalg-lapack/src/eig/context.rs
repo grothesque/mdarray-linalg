@@ -14,9 +14,9 @@
 //!     - λ are real eigenvalues
 //!     - v are orthonormal eigenvectors
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dense, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    eig::{Eig, EigDecomp, EigError, EigResult, SchurDecomp, SchurError, SchurResult},
+    eig::{Eig, EigDecomp, EigError, EighDecomp, SchurDecomp, SchurError},
     utils::transpose_in_place,
 };
 use num_complex::{Complex, ComplexFloat};
@@ -31,11 +31,15 @@ use crate::Lapack;
 impl<T, D0: Dim, D1: Dim> Eig<T, D0, D1> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
+    Complex<T::Real>: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = Complex<T::Real>>,
     i8: Into<T::Real>,
     T::Real: Into<T>,
 {
+    type SpectralScalar = Complex<T::Real>;
+    type RealScalar = T::Real;
+
     /// Compute eigenvalues and right eigenvectors with new allocated matrices
-    fn eig<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>
+    fn eig<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<EigDecomp<Self::SpectralScalar, D0, D1>, EigError>
     where
         T: ComplexFloat,
     {
@@ -103,7 +107,7 @@ where
     }
 
     /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
-    fn eig_full<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+    fn eig_full<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<EigDecomp<Self::SpectralScalar, D0, D1>, EigError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -182,7 +186,7 @@ where
     }
 
     /// Compute only eigenvalues with new allocated vectors
-    fn eig_values<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+    fn eig_values<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<Array<Self::SpectralScalar, (D0,)>, EigError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -210,18 +214,14 @@ where
                         Complex::new(eigenvalues_real[i].re(), eigenvalues_imag[i].re());
                 }
 
-                Ok(EigDecomp {
-                    eigenvalues,
-                    left_eigenvectors: None,
-                    right_eigenvectors: None,
-                })
+                Ok(eigenvalues)
             }
             Err(e) => Err(e),
         }
     }
 
-    /// Compute eigenvalues and eigenvectors of a Hermitian matrix
-    fn eigh<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
+    /// Compute eigenvalues and eigenvectors of a self-adjoint matrix
+    fn eigh<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<EighDecomp<T, Self::RealScalar, D0, D1>, EigError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -229,81 +229,21 @@ where
             return Err(EigError::NotSquareMatrix);
         }
 
-        let x = T::default();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
+        let mut eigenvalues = Array::from_elem(ash1, T::Real::zero());
+        let mut eigenvectors = Array::from_elem(ash, T::default());
 
-        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
-        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
-
-        let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
-
-        let x = T::default();
-        let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
-
-        match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
+        match geigh(a, &mut eigenvalues) {
             Ok(_) => {
-                println!("{}", n / 2);
-                for i in 0..(n / 2 + 1) {
-                    eigenvalues[[2 * i]] = Complex::new(eigenvalues_real[i].re(), x.re());
-                    if 2 * i + 1 < n {
-                        eigenvalues[2 * i + 1] = Complex::new(eigenvalues_real[i].im(), x.re());
-                    }
-                }
-
                 for j in 0..n {
                     for i in 0..n {
-                        let re = a[[j, i]];
-                        right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
+                        eigenvectors[[i, j]] = a[[j, i]];
                     }
                 }
 
-                Ok(EigDecomp {
+                Ok(EighDecomp {
                     eigenvalues,
-                    left_eigenvectors: None,
-                    right_eigenvectors: Some(right_eigenvectors),
-                })
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Compute eigenvalues and eigenvectors of a Hermitian matrix
-    fn eigs<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
-
-        if m != n {
-            return Err(EigError::NotSquareMatrix);
-        }
-
-        let x = T::default();
-        let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-
-        let mut eigenvalues_real = Array::from_elem(ash1, T::default());
-        let mut eigenvalues = Array::from_elem(ash1, Complex::new(x.re(), x.re()));
-
-        let mut right_eigenvectors_tmp = Array::from_elem(ash, T::default());
-
-        let x = T::default();
-        let mut right_eigenvectors = Array::from_elem(ash, Complex::new(x.re(), x.re()));
-
-        match geigh(a, &mut eigenvalues_real, &mut right_eigenvectors_tmp) {
-            Ok(_) => {
-                for i in 0..n {
-                    eigenvalues[i] = Complex::new(eigenvalues_real[i].re(), x.re());
-                }
-
-                for j in 0..n {
-                    for i in 0..n {
-                        let re = a[[j, i]];
-                        right_eigenvectors[[i, j]] = Complex::new(re.re(), re.im());
-                    }
-                }
-
-                Ok(EigDecomp {
-                    eigenvalues,
-                    left_eigenvectors: None,
-                    right_eigenvectors: Some(right_eigenvectors),
+                    eigenvectors,
                 })
             }
             Err(e) => Err(e),
@@ -311,7 +251,7 @@ where
     }
 
     /// Compute Schur decomposition with new allocated matrices
-    fn schur<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1> {
+    fn schur<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SchurDecomp<T, D0, D1>, SchurError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -386,7 +326,7 @@ where
     }
 
     /// Compute Schur (complex) decomposition with new allocated matrices
-    fn schur_complex<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1> {
+    fn schur_complex<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<SchurDecomp<Self::SpectralScalar, D0, D1>, SchurError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -394,16 +334,25 @@ where
             return Err(SchurError::NotSquareMatrix);
         }
 
+        let zero = T::Real::zero();
         let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-        let mut eigenvalues = Array::from_elem(ash1, T::default());
-        let mut schur_vectors = Array::from_elem(ash, T::default());
+        let mut eigenvalues = Array::from_elem(ash1, Complex::new(zero, zero));
+        let mut a_complex = Array::from_fn(ash, |idx| {
+            let x = a[idx];
+            Complex::new(x.re(), x.im())
+        });
+        let mut schur_vectors = Array::from_elem(ash, Complex::new(zero, zero));
 
-        match gees_complex::<L, Dense, Dense, T, D0, D1>(a, &mut eigenvalues, &mut schur_vectors) {
+        match gees_complex::<Dense, Dense, Dense, Self::SpectralScalar, D0, D1>(
+            &mut a_complex,
+            &mut eigenvalues,
+            &mut schur_vectors,
+        ) {
             Ok(_) => {
-                let mut t = Array::from_elem(ash, T::default());
+                let mut t = Array::from_elem(ash, Complex::new(zero, zero));
                 for j in 0..n {
                     for i in 0..n {
-                        t[[i, j]] = a[[j, i]];
+                        t[[i, j]] = a_complex[[j, i]];
                     }
                 }
 
@@ -422,29 +371,16 @@ where
     fn schur_complex_write<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        t: &mut Slice<T, (D0, D1), Dense>,
-        z: &mut Slice<T, (D0, D1), Dense>,
+        t: &mut Slice<Self::SpectralScalar, (D0, D1), Dense>,
+        z: &mut Slice<Self::SpectralScalar, (D0, D1), Dense>,
     ) -> Result<(), SchurError> {
-        let ash = *a.shape();
-        let (m, n) = (ash.dim(0), ash.dim(1));
-
-        if m != n {
-            return Err(SchurError::NotSquareMatrix);
+        let SchurDecomp { t: t_result, z: z_result } = self.schur_complex(a)?;
+        for (dst, src) in t.iter_mut().zip(t_result.iter()) {
+            *dst = *src;
         }
-
-        for j in 0..n {
-            for i in 0..n {
-                t[[i, j]] = a[[i, j]];
-            }
+        for (dst, src) in z.iter_mut().zip(z_result.iter()) {
+            *dst = *src;
         }
-
-        let ash1 = <(D0,) as Shape>::from_dims(&[n]);
-        let mut eigenvalues = Array::from_elem(ash1, T::default());
-        let result = gees_complex::<Dense, Dense, Dense, T, D0, D1>(t, &mut eigenvalues, z);
-
-        transpose_in_place(z);
-        transpose_in_place(t);
-
-        result
+        Ok(())
     }
 }

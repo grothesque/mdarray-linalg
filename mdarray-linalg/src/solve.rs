@@ -9,7 +9,7 @@
 //!
 //!let xr = Lapack::default().solve(&mut a.clone(), &b);
 //!
-//!let SolveResult { x, .. } = xr.unwrap();
+//!let Solution { x, .. } = xr.unwrap();
 //!let ax = Naive.matvec(&a, &x.view(.., 0)).eval(); // Ax = b
 //!```
 use mdarray::{Array, Dim, Layout, Slice};
@@ -30,14 +30,10 @@ pub enum SolveError {
 
 /// Holds the results of a linear system solve, including
 /// the solution matrix and permutation matrix
-pub struct SolveResult<T, D0: Dim, D1: Dim> {
+pub struct Solution<T, D0: Dim, D1: Dim> {
     pub x: Array<T, (D0, D1)>,
     pub p: Array<T, (D0, D1)>,
 }
-
-/// Result type for linear system solving, returning either a
-/// `SolveResult` or a `SolveError`
-pub type SolveResultType<T, D0, D1> = Result<SolveResult<T, D0, D1>, SolveError>;
 
 /// Linear system solver using LU decomposition
 pub trait Solve<T, D0: Dim, D1: Dim> {
@@ -60,5 +56,5 @@ pub trait Solve<T, D0: Dim, D1: Dim> {
         &self,
         a: &mut Slice<T, (D0, D1), La>,
         b: &Slice<T, (D0, D1), Lb>,
-    ) -> SolveResultType<T, D0, D1>;
+    ) -> Result<Solution<T, D0, D1>, SolveError>;
 }

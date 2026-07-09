@@ -10,7 +10,7 @@
 //! decomposition through nalgebra's public decomposition API.
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::lu::{InvError, InvResult, LU};
+use mdarray_linalg::lu::{InvError, LU};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
@@ -56,7 +56,10 @@ where
         Ok(())
     }
 
-    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn inv<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let m = a.shape().dim(0);
         let n = a.shape().dim(1);
         let inv_nalgebra = inv(a)?;
@@ -72,7 +75,10 @@ where
         det(a)
     }
 
-    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn choleski<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let m = a.shape().dim(0);
         let n = a.shape().dim(1);
         let chol_nalgebra = choleski(a)?;

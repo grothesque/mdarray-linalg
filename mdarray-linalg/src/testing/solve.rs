@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use mdarray::DArray;
 
 use super::common::random_matrix;
-use crate::solve::{Solve, SolveResult};
+use crate::solve::{Solution, Solve};
 
 fn test_solve_verification<T>(original_a: &DArray<T, 2>, x: &DArray<T, 2>, b: &DArray<T, 2>)
 where
@@ -41,7 +41,7 @@ pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize, usize>) {
     let original_a = a.clone();
     let b = random_matrix(n, 1);
 
-    let SolveResult { x, .. } = bd.solve(&mut a.clone(), &b).expect("");
+    let Solution { x, .. } = bd.solve(&mut a.clone(), &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -53,7 +53,7 @@ pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize, usize>) {
     let original_a = a.clone();
     let b = random_matrix(n, nrhs);
 
-    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
+    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
 
     test_solve_verification(&original_a, &x, &b);
 }
@@ -85,7 +85,7 @@ pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize, usize>) {
 
     let b = random_matrix(n, nrhs);
 
-    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
+    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
 
     for i in 0..n {
         for j in 0..nrhs {
@@ -118,7 +118,7 @@ pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize, usiz
     });
     println!("b={b:?}");
 
-    let SolveResult { x, .. } = bd.solve(&mut a, &b).expect("");
+    let Solution { x, .. } = bd.solve(&mut a, &b).expect("");
 
     println!("{x:?}");
 

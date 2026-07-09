@@ -11,7 +11,7 @@
 //! packed LU factors back into `a` and stores the dense permutation matrix into `p`.
 
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::solve::{Solve, SolveError, SolveResult, SolveResultType};
+use mdarray_linalg::solve::{Solution, Solve, SolveError};
 use num_complex::ComplexFloat;
 use num_traits::Zero;
 
@@ -39,7 +39,7 @@ where
         &self,
         a: &mut Slice<T, (D0, D1), La>,
         b: &Slice<T, (D0, D1), Lb>,
-    ) -> SolveResultType<T, D0, D1> {
+    ) -> Result<Solution<T, D0, D1>, SolveError> {
         let n = a.shape().dim(0);
         let nrhs = b.shape().dim(1);
 
@@ -52,6 +52,6 @@ where
         write_dmatrix(&x_nalgebra, &mut x);
         write_dmatrix(&p_nalgebra, &mut p);
 
-        Ok(SolveResult { x, p })
+        Ok(Solution { x, p })
     }
 }

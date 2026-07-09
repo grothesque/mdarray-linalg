@@ -8,9 +8,9 @@
 //! This decomposition is used to solve linear systems, compute matrix determinants, and matrix inversion.
 //! The function `getrf` (LAPACK) computes the LU factorization of a general m-by-n matrix A using partial pivoting.
 //! The matrix L is lower triangular with unit diagonal, and U is upper triangular.
-use mdarray::{Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    lu::{InvError, InvResult, LU},
+    lu::{InvError, LU},
     utils::{into_i32, ipiv_to_perm_mat, transpose_in_place},
 };
 use num_complex::ComplexFloat;
@@ -100,7 +100,10 @@ where
         }
     }
 
-    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn inv<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -164,7 +167,10 @@ where
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn choleski<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
         assert_eq!(m, n, "Matrix must be square for Cholesky decomposition");

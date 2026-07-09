@@ -4,7 +4,7 @@ use num_complex::{Complex, ComplexFloat};
 
 use super::common::{assert_complex_matrix_eq, assert_matrix_eq, naive_matmul, random_matrix};
 use crate::{
-    eig::{Eig, EigDecomp, SchurDecomp},
+    eig::{Eig, EigDecomp, EighDecomp, SchurDecomp},
     utils::pretty_print,
 };
 
@@ -45,7 +45,37 @@ fn test_eigen_reconstruction<T>(
     }
 }
 
-pub fn test_non_square_matrix(bd: &impl Eig<f64, usize, usize>) {
+fn test_self_adjoint_reconstruction<T>(
+    a: &DArray<T, 2>,
+    eigenvalues: &DArray<T::Real, 1>,
+    eigenvectors: &DArray<T, 2>,
+) where
+    T: Copy + Default + std::fmt::Debug + ComplexFloat<Real = f64>,
+{
+    let (n, _) = *a.shape();
+
+    for i in 0..n {
+        let λ = Complex::new(eigenvalues[i], 0.0);
+        let v = eigenvectors.view(.., i).to_owned();
+
+        let norm: f64 = v.iter().map(|z| z.abs().powi(2)).sum::<f64>().sqrt();
+        assert!(norm > 1e-12, "Null vector found");
+
+        for row in 0..n {
+            let mut av = Complex::new(0.0, 0.0);
+            for col in 0..n {
+                av += Complex::new(a[[row, col]].re(), a[[row, col]].im())
+                    * Complex::new(v[[col]].re(), v[[col]].im());
+            }
+            let λv = λ * Complex::new(v[[row]].re(), v[[row]].im());
+            let diff = av - λv;
+            assert_relative_eq!(diff.re(), 0.0, epsilon = 1e-10);
+            assert_relative_eq!(diff.im(), 0.0, epsilon = 1e-10);
+        }
+    }
+}
+
+pub fn test_non_square_matrix(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
@@ -55,7 +85,7 @@ pub fn test_non_square_matrix(bd: &impl Eig<f64, usize, usize>) {
         .expect("Eigenvalue decomposition failed");
 }
 
-pub fn test_square_matrix(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_square_matrix(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 2;
     let a = random_matrix(n, n);
 
@@ -70,7 +100,7 @@ pub fn test_square_matrix(bd: &impl Eig<f64, usize, usize>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>, usize, usize>) {
+pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 4;
     let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
@@ -89,7 +119,7 @@ pub fn test_eig_cplx_square_matrix(bd: &impl Eig<Complex<f64>, usize, usize>) {
     test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
 }
 
-pub fn test_eig_full(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eig_full(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 4;
     let a = random_matrix(n, n);
 
@@ -108,7 +138,7 @@ pub fn test_eig_full(bd: &impl Eig<f64, usize, usize>) {
     test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
 }
 
-pub fn test_eig_full_complex(bd: &impl Eig<Complex<f64>, usize, usize>) {
+pub fn test_eig_full_complex(bd: &impl Eig<Complex<f64>, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 4;
     let a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1] + 1) as f64)
@@ -129,7 +159,7 @@ pub fn test_eig_full_complex(bd: &impl Eig<Complex<f64>, usize, usize>) {
     test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
 }
 
-pub fn test_eig_full_real_complex_pair(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eig_full_real_complex_pair(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let a = DArray::<f64, 2>::from_fn([3, 3], |i| match (i[0], i[1]) {
         (0, 1) => -1.0,
         (1, 0) => 1.0,
@@ -152,7 +182,7 @@ pub fn test_eig_full_real_complex_pair(bd: &impl Eig<f64, usize, usize>) {
     test_eigen_reconstruction_full_values(&a, &eigenvalues, &left_eigenvectors, &right_eigenvectors);
 }
 
-pub fn test_eig_full_complex_singleton(bd: &impl Eig<Complex<f64>, usize, usize>) {
+pub fn test_eig_full_complex_singleton(bd: &impl Eig<Complex<f64>, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let a = DArray::<Complex<f64>, 2>::from_fn([1, 1], |_| Complex::new(2.0, -3.0));
 
     let EigDecomp {
@@ -214,24 +244,16 @@ pub fn test_eigen_reconstruction_full_values<T>(
     }
 }
 
-pub fn test_eig_values_only(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eig_values_only(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let a = random_matrix(n, n);
 
-    let EigDecomp {
-        eigenvalues,
-        left_eigenvectors,
-        right_eigenvectors,
-    } = bd
+    let eigenvalues = bd
         .eig_values(&mut a.clone())
         .expect("Eigenvalues computation failed");
 
     // Check that eigenvalues are computed
     assert_eq!(*eigenvalues.shape(), (n,));
-
-    // Check that eigenvectors are not computed
-    assert!(left_eigenvectors.is_none());
-    assert!(right_eigenvectors.is_none());
 }
 
 // test on write removed as the function has been temporary removed.
@@ -285,7 +307,7 @@ pub fn test_eig_values_only(bd: &impl Eig<f64, usize, usize>) {
 //     test_eigen_reconstruction(&original_a, &eigenvalues, &complex_eigenvectors);
 // }
 
-pub fn test_eigh_symmetric(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eigh_symmetric(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let mut a = random_matrix(n, n);
 
@@ -300,27 +322,21 @@ pub fn test_eigh_symmetric(bd: &impl Eig<f64, usize, usize>) {
 
     let mut a_clone = a.clone();
 
-    let EigDecomp {
+    let EighDecomp {
         eigenvalues,
-        right_eigenvectors,
-        ..
+        eigenvectors,
     } = bd
-        .eigs(&mut a_clone)
-        .expect("Hermitian eigenvalue decomposition failed");
+        .eigh(&mut a_clone)
+        .expect("Self-adjoint eigenvalue decomposition failed");
 
     println!("{a_clone:?}");
-    println!("{right_eigenvectors:?}");
+    println!("{eigenvectors:?}");
     println!("{eigenvalues:?}");
 
-    // For symmetric real matrices, eigenvalues should be real
-    for i in 0..n {
-        assert_relative_eq!(eigenvalues[i].im(), 0.0, epsilon = 1e-10);
-    }
-
-    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
+    test_self_adjoint_reconstruction(&a, &eigenvalues, &eigenvectors);
 }
 
-pub fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>, usize, usize>) {
+pub fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let mut a = DArray::<Complex<f64>, 2>::from_fn([n, n], |i| {
         Complex::new((i[0] + i[1]) as f64, (i[0] * i[1]) as f64)
@@ -341,26 +357,20 @@ pub fn test_eigh_complex_hermitian(bd: &impl Eig<Complex<f64>, usize, usize>) {
     // println!("{:?}", a);
     pretty_print(&a);
 
-    let EigDecomp {
+    let EighDecomp {
         eigenvalues,
-        right_eigenvectors,
-        ..
+        eigenvectors,
     } = bd
         .eigh(&mut a.clone())
         .expect("Complex Hermitian eigenvalue decomposition failed");
 
-    pretty_print(&right_eigenvectors.clone().unwrap());
+    pretty_print(&eigenvectors);
     println!("{eigenvalues:?}");
 
-    // For Hermitian matrices, eigenvalues should be real
-    for i in 0..n {
-        assert_relative_eq!(eigenvalues[i].im(), 0.0, epsilon = 1e-10);
-    }
-
-    test_eigen_reconstruction(&a, &eigenvalues, &right_eigenvectors.unwrap());
+    test_self_adjoint_reconstruction(&a, &eigenvalues, &eigenvectors);
 }
 
-pub fn test_eig_full_non_square(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eig_full_non_square(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
@@ -370,17 +380,17 @@ pub fn test_eig_full_non_square(bd: &impl Eig<f64, usize, usize>) {
         .expect("Full eigenvalue decomposition failed");
 }
 
-pub fn test_eig_values_non_square(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_eig_values_non_square(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 3;
     let m = 5;
     let a = random_matrix(m, n);
 
-    let EigDecomp { .. } = bd
+    let _ = bd
         .eig_values(&mut a.clone())
         .expect("Eigenvalues computation failed");
 }
 
-pub fn test_schur(bd: &impl Eig<f64, usize, usize>) {
+pub fn test_schur(bd: &impl Eig<f64, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 4;
     let a = random_matrix(n, n);
 
@@ -403,7 +413,7 @@ pub fn test_schur(bd: &impl Eig<f64, usize, usize>) {
     assert_matrix_eq!(&a, &a_reconstructed);
 }
 
-pub fn test_schur_cplx(bd: &impl Eig<Complex<f64>, usize, usize>) {
+pub fn test_schur_cplx(bd: &impl Eig<Complex<f64>, usize, usize, SpectralScalar = Complex<f64>, RealScalar = f64>) {
     let n = 4;
     let a = random_matrix(n, n);
     let b = random_matrix(n, n);

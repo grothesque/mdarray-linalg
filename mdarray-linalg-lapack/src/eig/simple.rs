@@ -119,14 +119,12 @@ where
 pub(super) fn geigh<
     La: Layout,
     Lw: Layout,
-    Lv: Layout,
     T: ComplexFloat + Default + LapackScalar + NeedsRwork<Elem = T>,
     D0: Dim,
     D1: Dim,
 >(
     a: &mut Slice<T, (D0, D1), La>,
-    eigenvalues: &mut Slice<T, (D0,), Lw>,
-    eigenvectors: &mut Slice<T, (D0, D1), Lv>,
+    eigenvalues: &mut Slice<T::Real, (D0,), Lw>,
 ) -> Result<(), EigError>
 where
     T::Real: Into<T>,
@@ -138,16 +136,11 @@ where
         return Err(EigError::NotSquareMatrix);
     }
 
-    // Validate dimensions
-    let eush = *eigenvalues.shape();
-    let nw = eush.dim(0);
-
-    let evsh = *eigenvectors.shape();
-    let (nv, mv) = (evsh.dim(0), evsh.dim(0));
-
-    assert_eq!(nw, n, "Eigenvalues must have n elements");
-    assert_eq!(mv, n, "Eigenvectors must have same number of rows as A");
-    assert_eq!(nv, n, "Eigenvectors must be square (n × n)");
+    assert_eq!(
+        eigenvalues.shape().dim(0),
+        n,
+        "Eigenvalues must have n elements"
+    );
 
     let info = call_syev(
         a,
@@ -260,7 +253,7 @@ fn call_syev<
 >(
     a: &mut Slice<T, (D0, D1), La>,
     n: i32,
-    w_ptr: *mut T,
+    w_ptr: *mut T::Real,
     jobz: char,
     uplo: char,
 ) -> i32
@@ -291,7 +284,7 @@ where
             n,
             a.as_mut_ptr(),
             n,
-            w_ptr,
+            w_ptr.cast(),
             work.as_mut_ptr(),
             lwork,
             rwork.as_mut_ptr() as *mut _,
@@ -310,7 +303,7 @@ where
             n,
             a.as_mut_ptr(),
             n,
-            w_ptr,
+            w_ptr.cast(),
             work.as_mut_ptr(),
             lwork,
             rwork.as_mut_ptr() as *mut _,

@@ -1,4 +1,4 @@
-//! Eigenvalue, eigenvector, and Schur decomposition utilities for general and Hermitian matrices
+//! Eigenvalue, eigenvector, and Schur decomposition utilities for general and self-adjoint matrices
 //!
 //! ```rust,ignore
 //! use mdarray_linalg::prelude::*;
@@ -24,18 +24,16 @@
 //! let right = right_eigenvectors.expect("Right eigenvectors were not computed");
 //!
 //! // ----- Schur decomposition -----
-//! // A = Z * T * Z^T  where T is quasi-upper-triangular and Z is orthogonal.
+//! // A = Z * T * Z^H, with `Z^H` reducing to `Z^T` for real Schur decompositions.
 //! let SchurDecomp { t, z } = bd
 //!     .schur(&mut a.clone())
 //!     .expect("Schur decomposition failed");
 //!
-//! // Reconstruct A from the decomposition:
-//! // A ≈ Z * T * Z^T
-//! let a_reconstructed = z.dot(&t).dot(&z.transpose());
+//! // Reconstruct A from the decomposition with the conjugate transpose Z^H:
+//! // A ≈ Z * T * Z^H
 //! ```
 
 use mdarray::{Array, Dense, Dim, Layout, Slice};
-use num_complex::{Complex, ComplexFloat};
 use thiserror::Error;
 
 /// Error types related to eigenvalue decomposition
@@ -51,17 +49,25 @@ pub enum EigError {
     NotSquareMatrix,
 }
 
-/// Holds the results of an eigenvalue decomposition, including
-/// eigenvalues (complex) and optionally left and right eigenvectors
-pub struct EigDecomp<T: ComplexFloat, D0: Dim, D1: Dim> {
-    pub eigenvalues: Array<Complex<T::Real>, (D0,)>,
-    pub left_eigenvectors: Option<Array<Complex<T::Real>, (D0, D1)>>,
-    pub right_eigenvectors: Option<Array<Complex<T::Real>, (D0, D1)>>,
+/// Holds the results of a general eigenvalue decomposition.
+///
+/// The scalar type `S` is the backend's spectral scalar for the input matrix
+/// scalar. For a real matrix this is typically a complex scalar, while for a
+/// complex matrix it is usually the matrix scalar itself.
+pub struct EigDecomp<S, D0: Dim, D1: Dim> {
+    pub eigenvalues: Array<S, (D0,)>,
+    pub left_eigenvectors: Option<Array<S, (D0, D1)>>,
+    pub right_eigenvectors: Option<Array<S, (D0, D1)>>,
 }
 
-/// Result type for eigenvalue decomposition, returning either an
-/// `EigDecomp` or an `EigError`
-pub type EigResult<T, D0, D1> = Result<EigDecomp<T, D0, D1>, EigError>;
+/// Holds the results of a self-adjoint eigenvalue decomposition.
+///
+/// Self-adjoint eigenvalues are real, while eigenvectors live in the input
+/// matrix scalar field.
+pub struct EighDecomp<T, R, D0: Dim, D1: Dim> {
+    pub eigenvalues: Array<R, (D0,)>,
+    pub eigenvectors: Array<T, (D0, D1)>,
+}
 
 /// Error types related to Schur decomposition
 #[derive(Debug, Error)]
@@ -78,54 +84,60 @@ pub enum SchurError {
 
 /// Holds the results of a Schur decomposition: A = Z * T * Z^H
 /// where Z is unitary and T is upper-triangular (complex) or quasi-upper triangular (real)
-pub struct SchurDecomp<T: ComplexFloat, D0: Dim, D1: Dim> {
+pub struct SchurDecomp<T, D0: Dim, D1: Dim> {
     /// Schur form T (upper-triangular for complex, quasi-upper triangular for real)
     pub t: Array<T, (D0, D1)>,
     /// Unitary Schur transformation matrix Z
     pub z: Array<T, (D0, D1)>,
 }
 
-/// Result type for Schur decomposition, returning either a
-/// `SchurDecomp` or a `SchurError`
-pub type SchurResult<T, D0, D1> = Result<SchurDecomp<T, D0, D1>, SchurError>;
+/// Eigenvalue decomposition operations of general and self-adjoint matrices.
+///
+/// Backends choose the spectral scalar model through associated types.
+/// General eigendecompositions and complex Schur decompositions use
+/// [`Self::SpectralScalar`], while self-adjoint eigendecompositions use
+/// [`Self::RealScalar`] for eigenvalues and the input scalar `T` for
+/// eigenvectors.
+pub trait Eig<T, D0: Dim, D1: Dim> {
+    /// Spectral scalar type used for general eigenvalues/eigenvectors and complex Schur decompositions.
+    type SpectralScalar;
 
-/// Eigenvalue decomposition operations of general and Hermitian/symmetric matrices
-pub trait Eig<T: ComplexFloat, D0: Dim, D1: Dim> {
-    /// Compute eigenvalues and right eigenvectors with new allocated matrices
-    /// The matrix `A` satisfies: `A * v = λ * v` where v are the right eigenvectors
-    fn eig<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>;
+    /// Real scalar type used for self-adjoint eigenvalues.
+    type RealScalar;
 
-    /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
-    /// The matrix A satisfies: `A * vr = λ * vr` and `vl^H * A = λ * vl^H`
-    /// where `vr` are right eigenvectors and `vl` are left eigenvectors
-    fn eig_full<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>;
+    /// Compute eigenvalues and right eigenvectors with new allocated matrices.
+    /// The matrix `A` satisfies: `A * v = λ * v` where v are the right eigenvectors.
+    fn eig<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<EigDecomp<Self::SpectralScalar, D0, D1>, EigError>;
 
-    /// Compute only eigenvalues with new allocated vectors
-    fn eig_values<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>;
+    /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices.
+    /// The matrix A satisfies: `A * vr = λ * vr` and `vl^H * A = λ * vl^H`.
+    fn eig_full<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<EigDecomp<Self::SpectralScalar, D0, D1>, EigError>;
 
-    // Note of october 2025: this method has been
-    // temporary removed as it was very hard to provide a coherent
-    // interface for the user that deals with all the cases and all
-    // the backends.
+    /// Compute only eigenvalues with a newly allocated vector.
+    fn eig_values<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<Self::SpectralScalar, (D0,)>, EigError>;
 
-    // // Compute eigenvalues and right eigenvectors, overwriting existing matrices
-    // fn eig_write<L: Layout, Lr: Layout, Li: Layout, Lv: Layout>(
-    //     &self,
-    //     a: &mut Slice<T, (D0, D1), L>,
-    //     eigenvalues: &mut Slice<Complex<T::Real>, (D0, D1), Dense>,
-    //     right_eigenvectors: &mut Slice<Complex<T::Real>, (D0, D1), Dense>,
-    // ) -> Result<(), EigError>;
+    /// Compute eigenvalues and eigenvectors of a self-adjoint matrix.
+    fn eigh<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<EighDecomp<T, Self::RealScalar, D0, D1>, EigError>;
 
-    /// Compute eigenvalues and eigenvectors of a Hermitian matrix (input should be complex)
-    fn eigh<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>;
+    /// Compute Schur decomposition over the input scalar field.
+    fn schur<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<SchurDecomp<T, D0, D1>, SchurError>;
 
-    /// Compute eigenvalues and eigenvectors of a symmetric matrix (input should be real)
-    fn eigs<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> EigResult<T, D0, D1>;
-
-    /// Compute Schur decomposition with new allocated matrices
-    fn schur<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1>;
-
-    /// Compute Schur decomposition overwriting existing matrices
+    /// Compute Schur decomposition overwriting existing matrices.
     fn schur_write<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
@@ -133,14 +145,17 @@ pub trait Eig<T: ComplexFloat, D0: Dim, D1: Dim> {
         z: &mut Slice<T, (D0, D1), Dense>,
     ) -> Result<(), SchurError>;
 
-    /// Compute Schur (complex) decomposition with new allocated matrices
-    fn schur_complex<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> SchurResult<T, D0, D1>;
+    /// Compute Schur decomposition over the spectral scalar field.
+    fn schur_complex<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<SchurDecomp<Self::SpectralScalar, D0, D1>, SchurError>;
 
-    /// Compute Schur (complex) decomposition overwriting existing matrices
+    /// Compute Schur decomposition over the spectral scalar field, overwriting existing matrices.
     fn schur_complex_write<L: Layout>(
         &self,
         a: &mut Slice<T, (D0, D1), L>,
-        t: &mut Slice<T, (D0, D1), Dense>,
-        z: &mut Slice<T, (D0, D1), Dense>,
+        t: &mut Slice<Self::SpectralScalar, (D0, D1), Dense>,
+        z: &mut Slice<Self::SpectralScalar, (D0, D1), Dense>,
     ) -> Result<(), SchurError>;
 }

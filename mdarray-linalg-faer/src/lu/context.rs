@@ -9,7 +9,7 @@
 use dyn_stack::{MemBuffer, MemStack};
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
-use mdarray_linalg::lu::{InvError, InvResult, LU};
+use mdarray_linalg::lu::{InvError, LU};
 use num_complex::ComplexFloat;
 
 use super::simple::lu_faer;
@@ -68,7 +68,10 @@ where
     }
 
     /// Computes inverse with new allocated matrix
-    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn inv<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -204,7 +207,10 @@ where
     }
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1> {
+    fn choleski<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 

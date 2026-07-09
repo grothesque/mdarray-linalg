@@ -17,7 +17,7 @@ use faer::linalg::solvers::Solve as FaerSolve;
 use faer_traits::ComplexField;
 use mdarray::{Array, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    solve::{Solve, SolveError, SolveResult, SolveResultType},
+    solve::{Solution, Solve, SolveError},
     utils::identity,
 };
 use num_complex::ComplexFloat;
@@ -38,7 +38,7 @@ where
         &self,
         a: &mut Slice<T, (D0, D1), La>,
         b: &Slice<T, (D0, D1), Lb>,
-    ) -> SolveResultType<T, D0, D1> {
+    ) -> Result<Solution<T, D0, D1>, SolveError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -71,7 +71,7 @@ where
 
         let p_mda = identity(m); // No permutation with this routine
 
-        Ok(SolveResult { x: x_mda, p: p_mda })
+        Ok(Solution { x: x_mda, p: p_mda })
     }
 
     /// Solves linear system AX = b overwriting existing matrices

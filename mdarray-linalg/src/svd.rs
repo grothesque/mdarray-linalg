@@ -49,8 +49,8 @@ pub struct SVDDecomp<T, S, D: Dim> {
 pub trait SVD<T, D: Dim> {
     /// Scalar type used for singular values.
     ///
-    /// Singular values are mathematically real. Backends may choose a
-    /// real scalar type or, for compatibility, the matrix scalar type `T`.
+    /// Singular values are mathematically real. Backends choose their
+    /// representation; some current backends use the matrix scalar type `T`.
     type SingularValue;
 
     /// Compute full SVD with new allocated matrices

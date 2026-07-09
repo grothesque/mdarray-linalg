@@ -49,9 +49,6 @@ pub enum InvError {
     NotPositiveDefinite { lpm: i32 },
 }
 
-/// Result type for matrix inversion
-pub type InvResult<T, D0, D1> = Result<Array<T, (D0, D1)>, InvError>;
-
 ///  LU decomposition and matrix inversion
 pub trait LU<T, D0: Dim, D1: Dim> {
     /// Computes LU decomposition overwriting existing matrices
@@ -73,14 +70,20 @@ pub trait LU<T, D0: Dim, D1: Dim> {
     fn inv_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;
 
     /// Computes inverse with new allocated matrix
-    fn inv<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1>;
+    fn inv<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError>;
 
     /// Computes the determinant of a square matrix. Panics if the
     /// matrix is non-square.
     fn det<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> T;
 
     /// Computes the Cholesky decomposition, returning a lower-triangular matrix
-    fn choleski<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> InvResult<T, D0, D1>;
+    fn choleski<L: Layout>(
+        &self,
+        a: &mut Slice<T, (D0, D1), L>,
+    ) -> Result<Array<T, (D0, D1)>, InvError>;
 
     /// Computes the Cholesky decomposition in-place, overwriting the input matrix
     fn choleski_write<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<(), InvError>;

@@ -10,9 +10,9 @@
 //! It computes the LU factorization of A and then uses it to solve the linear system.
 //! The matrix A is overwritten by its LU factorization, and B is overwritten by the solution X.
 
-use mdarray::{Dense, Dim, Layout, Shape, Slice, Array};
+use mdarray::{Array, Dense, Dim, Layout, Shape, Slice};
 use mdarray_linalg::{
-    solve::{Solve, SolveError, SolveResult, SolveResultType},
+    solve::{Solution, Solve, SolveError},
     utils::ipiv_to_perm_mat,
 };
 use num_complex::ComplexFloat;
@@ -48,7 +48,7 @@ where
         &self,
         a: &mut Slice<T, (D0, D1), La>,
         b: &Slice<T, (D0, D1), Lb>,
-    ) -> SolveResultType<T, D0, D1> {
+    ) -> Result<Solution<T, D0, D1>, SolveError> {
         let ash = *a.shape();
         let bsh = *b.shape();
 
@@ -65,7 +65,7 @@ where
         }
 
         match gesv::<_, Dense, T, D0, D1>(a, &mut b_copy) {
-            Ok(ipiv) => Ok(SolveResult {
+            Ok(ipiv) => Ok(Solution {
                 x: b_copy,
                 p: ipiv_to_perm_mat(&ipiv, n),
             }),
