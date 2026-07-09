@@ -148,6 +148,14 @@ pub mod svd;
 
 pub mod utils;
 
+pub use contract::Contract;
+pub use eig::Eig;
+pub use lu::LU;
+pub use matvec::{Argmax, MatVec, Outer, VecOps};
+pub use qr::QR;
+pub use solve::Solve;
+pub use svd::SVD;
+
 mod naive;
 pub use naive::Naive;
 

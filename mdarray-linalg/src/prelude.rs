@@ -2,13 +2,8 @@
 //! namespace.
 
 pub use super::{
-    eig::Eig as _,
-    lu::LU as _,
-    contract::{Contract as _, ContractBuilder as _, MatmulBuilder as _},
-    matvec::{
-        Argmax as _, MatVec as _, MatVecBuilder as _, Outer as _, OuterBuilder as _, VecOps as _,
-    },
-    qr::QR as _,
-    solve::Solve as _,
-    svd::SVD as _,
+    Argmax as _, Contract as _, Eig as _, LU as _, MatVec as _, Outer as _, QR as _, SVD as _,
+    Solve as _, VecOps as _,
+    contract::{ContractBuilder as _, MatmulBuilder as _},
+    matvec::{MatVecBuilder as _, OuterBuilder as _},
 };
