@@ -9,5 +9,6 @@ pub use super::{
         Argmax as _, MatVec as _, MatVecBuilder as _, Outer as _, OuterBuilder as _, VecOps as _,
     },
     qr::QR as _,
+    solve::Solve as _,
     svd::SVD as _,
 };
