@@ -6,7 +6,7 @@ use faer_traits::ComplexField;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::contract::{
     _contract, _hypercontract, einsum_to_contract_axes, extract_axes, Axes, Contract,
-    ContractAxes, ContractBuilder, MatMulBuilder,
+    ContractAxes, ContractBuilder, MatmulBuilder,
 };
 use mdarray_linalg::{finish_contraction, prepare_contraction};
 use num_complex::ComplexFloat;
@@ -14,7 +14,7 @@ use num_traits::{MulAdd, One, Zero};
 
 use crate::{Faer, into_faer, into_faer_mut};
 
-struct FaerMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+struct FaerMatmulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -47,8 +47,8 @@ where
     requested_output_labels: Option<Vec<u8>>,
 }
 
-impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
-    for FaerMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+impl<'a, T, D0, D1, D2, La, Lb> MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for FaerMatmulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -237,7 +237,7 @@ where
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    ) -> impl MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -245,7 +245,7 @@ where
         D1: Dim,
         D2: Dim,
     {
-        FaerMatMulBuilder {
+        FaerMatmulBuilder {
             alpha: T::one(),
             a,
             b,

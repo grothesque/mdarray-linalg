@@ -4,7 +4,7 @@
 pub use super::{
     eig::Eig as _,
     lu::LU as _,
-    contract::{Contract as _, ContractBuilder as _, MatMulBuilder as _},
+    contract::{Contract as _, ContractBuilder as _, MatmulBuilder as _},
     matvec::{
         Argmax as _, MatVec as _, MatVecBuilder as _, Outer as _, OuterBuilder as _, VecOps as _,
     },

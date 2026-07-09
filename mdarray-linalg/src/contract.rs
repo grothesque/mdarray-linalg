@@ -58,7 +58,7 @@ pub trait Contract<T> {
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    ) -> impl MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         D0: Dim,
         D1: Dim,
@@ -150,7 +150,7 @@ pub trait Contract<T> {
 }
 
 /// Builder interface for configuring matrix-matrix operations
-pub trait MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+pub trait MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     T: 'a,
     D0: Dim,

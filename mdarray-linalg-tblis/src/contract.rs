@@ -1,5 +1,5 @@
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::contract::{Axes, Contract, ContractBuilder, MatMulBuilder};
+use mdarray_linalg::contract::{Axes, Contract, ContractBuilder, MatmulBuilder};
 use num_traits::{MulAdd, One, Zero};
 use tblis::{
     containers::TblisTensor,
@@ -10,7 +10,7 @@ use tblis::{
 
 use crate::Tblis;
 
-struct TblisMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+struct TblisMatmulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -45,8 +45,8 @@ enum ContractMode<'a> {
     },
 }
 
-impl<'a, T, D0, D1, D2, La, Lb> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
-    for TblisMatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+impl<'a, T, D0, D1, D2, La, Lb> MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for TblisMatmulBuilder<'a, T, D0, D1, D2, La, Lb>
 where
     La: Layout,
     Lb: Layout,
@@ -231,7 +231,7 @@ where
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    ) -> impl MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -239,7 +239,7 @@ where
         D1: Dim,
         D2: Dim,
     {
-        TblisMatMulBuilder {
+        TblisMatmulBuilder {
             alpha: T::one(),
             a,
             b,

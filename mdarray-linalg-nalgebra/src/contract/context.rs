@@ -4,7 +4,7 @@ use std::ops::AddAssign;
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
 use mdarray_linalg::contract::{
     _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
-    MatMulBuilder,
+    MatmulBuilder,
 };
 use num_complex::ComplexFloat;
 use num_traits::{MulAdd, One, Zero};
@@ -13,7 +13,7 @@ use simba::scalar::{ClosedAddAssign, ClosedMulAssign};
 use super::simple::gemm;
 use crate::Nalgebra;
 
-struct NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+struct NalgebraMatmulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     La: Layout,
     Lb: Layout,
@@ -44,8 +44,8 @@ where
     requested_output_labels: Option<Vec<u8>>,
 }
 
-impl<'a, T, La, Lb, D0, D1, D2> MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
-    for NalgebraMatMulBuilder<'a, T, La, Lb, D0, D1, D2>
+impl<'a, T, La, Lb, D0, D1, D2> MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
+    for NalgebraMatmulBuilder<'a, T, La, Lb, D0, D1, D2>
 where
     T: nalgebra::Scalar + ComplexFloat + Zero + One + ClosedAddAssign + ClosedMulAssign + Copy,
     La: Layout,
@@ -192,7 +192,7 @@ where
         &self,
         a: &'a Slice<T, (D0, D1), La>,
         b: &'a Slice<T, (D1, D2), Lb>,
-    ) -> impl MatMulBuilder<'a, T, D0, D1, D2, La, Lb>
+    ) -> impl MatmulBuilder<'a, T, D0, D1, D2, La, Lb>
     where
         La: Layout,
         Lb: Layout,
@@ -200,7 +200,7 @@ where
         D1: Dim,
         D2: Dim,
     {
-        NalgebraMatMulBuilder {
+        NalgebraMatmulBuilder {
             alpha: T::one(),
             a,
             b,
