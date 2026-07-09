@@ -24,7 +24,7 @@ use num_complex::ComplexFloat;
 
 use crate::{Faer, into_faer, into_faer_mut};
 
-impl<T, D0: Dim, D1: Dim> Solve<T, D0, D1> for Faer
+impl<T, D: Dim> Solve<T, D> for Faer
 where
     T: ComplexFloat
         + ComplexField
@@ -34,11 +34,11 @@ where
     /// Solves linear system AX = B with new allocated solution matrix
     /// A is modified (overwritten with LU decomposition)
     /// Returns the solution X and P the permutation matrix (identity in that case), or error
-    fn solve<La: Layout, Lb: Layout>(
+    fn solve<R: Dim, La: Layout, Lb: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &Slice<T, (D0, D1), Lb>,
-    ) -> Result<Solution<T, D0, D1>, SolveError> {
+        a: &mut Slice<T, (D, D), La>,
+        b: &Slice<T, (D, R), Lb>,
+    ) -> Result<Solution<T, D, R>, SolveError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
 
@@ -60,7 +60,8 @@ where
         let b_faer = into_faer(b);
         let x_faer = solver.solve(b_faer);
 
-        let mut x_mda = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[m, b_n]), T::default());
+        let mut x_mda =
+            Array::from_elem(<(D, R) as Shape>::from_dims(&[m, b_n]), T::default());
 
         let mut x_faer_mut = into_faer_mut(&mut x_mda);
         for i in 0..m {
@@ -79,11 +80,11 @@ where
     /// B is overwritten with the solution X
     /// P is filled with the permutation matrix such that P*A = L*U (here P = identity)
     /// Returns Ok(()) on success, Err(SolveError) on failure
-    fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
+    fn solve_write<R: Dim, La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &mut Slice<T, (D0, D1), Lb>,
-        p: &mut Slice<T, (D0, D1), Lp>,
+        a: &mut Slice<T, (D, D), La>,
+        b: &mut Slice<T, (D, R), Lb>,
+        p: &mut Slice<T, (D, D), Lp>,
     ) -> Result<(), SolveError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));

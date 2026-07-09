@@ -18,15 +18,15 @@ use num_traits::Zero;
 use super::simple::solve;
 use crate::{Nalgebra, write_dmatrix};
 
-impl<T, D0: Dim, D1: Dim> Solve<T, D0, D1> for Nalgebra
+impl<T, D: Dim> Solve<T, D> for Nalgebra
 where
     T: nalgebra::ComplexField + ComplexFloat + Zero + Copy,
 {
-    fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
+    fn solve_write<R: Dim, La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &mut Slice<T, (D0, D1), Lb>,
-        p: &mut Slice<T, (D0, D1), Lp>,
+        a: &mut Slice<T, (D, D), La>,
+        b: &mut Slice<T, (D, R), Lb>,
+        p: &mut Slice<T, (D, D), Lp>,
     ) -> Result<(), SolveError> {
         let (packed_lu, x, p_nalgebra) = solve(a, b)?;
         write_dmatrix(&packed_lu, a);
@@ -35,19 +35,19 @@ where
         Ok(())
     }
 
-    fn solve<La: Layout, Lb: Layout>(
+    fn solve<R: Dim, La: Layout, Lb: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &Slice<T, (D0, D1), Lb>,
-    ) -> Result<Solution<T, D0, D1>, SolveError> {
+        a: &mut Slice<T, (D, D), La>,
+        b: &Slice<T, (D, R), Lb>,
+    ) -> Result<Solution<T, D, R>, SolveError> {
         let n = a.shape().dim(0);
         let nrhs = b.shape().dim(1);
 
         let (packed_lu, x_nalgebra, p_nalgebra) = solve(a, b)?;
         write_dmatrix(&packed_lu, a);
 
-        let mut x = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::zero());
-        let mut p = Array::from_elem(<(D0, D1) as Shape>::from_dims(&[n, n]), T::zero());
+        let mut x = Array::from_elem(<(D, R) as Shape>::from_dims(&[n, nrhs]), T::zero());
+        let mut p = Array::from_elem(<(D, D) as Shape>::from_dims(&[n, n]), T::zero());
 
         write_dmatrix(&x_nalgebra, &mut x);
         write_dmatrix(&p_nalgebra, &mut p);

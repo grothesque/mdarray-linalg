@@ -155,7 +155,7 @@ pub fn ipiv_to_perm_mat<T: ComplexFloat, D0: Dim, D1: Dim>(
 /// a new matrix of shape `(n × m)`, where each element at position `(i, j)` in the
 /// original is moved to position `(j, i)` in the result.
 #[doc(hidden)]
-pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Array<T, (D0, D1)>
+pub fn to_col_major<T, D0: Dim, D1: Dim, L>(c: &Slice<T, (D0, D1), L>) -> Array<T, (D1, D0)>
 where
     T: ComplexFloat + Default + Clone,
     L: Layout,
@@ -163,8 +163,8 @@ where
     let csh = *c.shape();
     let (m, n) = (csh.dim(0), csh.dim(1));
 
-    let shape = <(D0, D1) as Shape>::from_dims(&[n, m]);
-    let mut result = Array::<T, (D0, D1)>::zeros(shape);
+    let shape = <(D1, D0) as Shape>::from_dims(&[n, m]);
+    let mut result = Array::<T, (D1, D0)>::zeros(shape);
 
     for i in 0..m {
         for j in 0..n {

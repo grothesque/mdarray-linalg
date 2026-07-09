@@ -7,6 +7,11 @@ fn solve_single_rhs() {
 }
 
 #[test]
+fn solve_static_rhs_shape() {
+    test_solve_static_rhs_shape(&Nalgebra::default());
+}
+
+#[test]
 fn solve_multiple_rhs() {
     test_solve_multiple_rhs(&Nalgebra::default());
 }

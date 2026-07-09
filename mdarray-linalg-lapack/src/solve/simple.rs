@@ -7,14 +7,17 @@ use num_complex::ComplexFloat;
 
 use super::scalar::LapackScalar;
 
-pub(super) fn gesv<La: Layout, Lb: Layout, T: ComplexFloat + Default + LapackScalar, D0, D1>(
-    a: &mut Slice<T, (D0, D1), La>,
-    b: &mut Slice<T, (D0, D1), Lb>,
+pub(super) fn gesv<La, Lb, T, D, R>(
+    a: &mut Slice<T, (D, D), La>,
+    b: &mut Slice<T, (D, R), Lb>,
 ) -> Result<Vec<i32>, SolveError>
 where
+    La: Layout,
+    Lb: Layout,
+    T: ComplexFloat + Default + LapackScalar,
     T::Real: Into<T>,
-    D0: Dim,
-    D1: Dim,
+    D: Dim,
+    R: Dim,
 {
     let ash = *a.shape();
     let (n_a, m_a) = (ash.dim(0), ash.dim(1));

@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use mdarray::DArray;
+use mdarray::{array, Array, Const, DArray};
 
 use super::common::random_matrix;
 use crate::solve::{Solution, Solve};
@@ -35,7 +35,7 @@ where
     }
 }
 
-pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize, usize>) {
+pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize>) {
     let n = 4;
     let a = random_matrix(n, n);
     let original_a = a.clone();
@@ -46,7 +46,29 @@ pub fn test_solve_single_rhs(bd: &impl Solve<f64, usize, usize>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize, usize>) {
+pub fn test_solve_static_rhs_shape(bd: &impl Solve<f64, Const<3>>) {
+    let mut a: Array<f64, (Const<3>, Const<3>)> = array![
+        [2.0, 1.0, 0.0],
+        [1.0, 3.0, 1.0],
+        [0.0, 1.0, 2.0],
+    ];
+    let original_a = a.clone();
+    let b: Array<f64, (Const<3>, Const<1>)> = array![[1.0], [2.0], [1.0]];
+
+    let Solution { x, p } = bd.solve(&mut a, &b).expect("");
+
+    assert_eq!(p.dim(0), 3);
+    assert_eq!(p.dim(1), 3);
+    for i in 0..3 {
+        let mut ax_i = 0.0;
+        for k in 0..3 {
+            ax_i += original_a[[i, k]] * x[[k, 0]];
+        }
+        assert_relative_eq!(ax_i, b[[i, 0]], epsilon = 1e-10);
+    }
+}
+
+pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize>) {
     let n = 5;
     let nrhs = 3;
     let mut a = random_matrix(n, n);
@@ -58,7 +80,7 @@ pub fn test_solve_multiple_rhs(bd: &impl Solve<f64, usize, usize>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_write(bd: &impl Solve<f64, usize, usize>) {
+pub fn test_solve_write(bd: &impl Solve<f64, usize>) {
     let n = 4;
     let nrhs = 2;
     let mut a = random_matrix(n, n);
@@ -73,7 +95,7 @@ pub fn test_solve_write(bd: &impl Solve<f64, usize, usize>) {
     test_solve_verification(&original_a, &b, &original_b);
 }
 
-pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize, usize>) {
+pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize>) {
     let n = 3;
     let nrhs = 2;
 
@@ -97,7 +119,7 @@ pub fn test_solve_identity_matrix(bd: &impl Solve<f64, usize, usize>) {
     test_solve_verification(&original_a, &x, &b);
 }
 
-pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize, usize>) {
+pub fn test_solve_complex(bd: &impl Solve<num_complex::Complex<f64>, usize>) {
     use num_complex::Complex;
 
     let n = 4;

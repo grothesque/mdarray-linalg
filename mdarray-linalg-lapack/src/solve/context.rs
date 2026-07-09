@@ -20,18 +20,18 @@ use num_complex::ComplexFloat;
 use super::{scalar::LapackScalar, simple::gesv};
 use crate::Lapack;
 
-impl<T, D0: Dim, D1: Dim> Solve<T, D0, D1> for Lapack
+impl<T, D: Dim> Solve<T, D> for Lapack
 where
     T: ComplexFloat + Default + LapackScalar,
     T::Real: Into<T>,
 {
-    fn solve_write<La: Layout, Lb: Layout, Lp: Layout>(
+    fn solve_write<R: Dim, La: Layout, Lb: Layout, Lp: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &mut Slice<T, (D0, D1), Lb>,
-        p: &mut Slice<T, (D0, D1), Lp>,
+        a: &mut Slice<T, (D, D), La>,
+        b: &mut Slice<T, (D, R), Lb>,
+        p: &mut Slice<T, (D, D), Lp>,
     ) -> Result<(), SolveError> {
-        let ipiv = gesv::<_, Lb, T, D0, D1>(a, b).unwrap();
+        let ipiv = gesv::<_, Lb, T, D, R>(a, b)?;
         let ash = *a.shape();
         let n = ash.dim(0);
 
@@ -44,19 +44,18 @@ where
         Ok(())
     }
 
-    fn solve<La: Layout, Lb: Layout>(
+    fn solve<R: Dim, La: Layout, Lb: Layout>(
         &self,
-        a: &mut Slice<T, (D0, D1), La>,
-        b: &Slice<T, (D0, D1), Lb>,
-    ) -> Result<Solution<T, D0, D1>, SolveError> {
+        a: &mut Slice<T, (D, D), La>,
+        b: &Slice<T, (D, R), Lb>,
+    ) -> Result<Solution<T, D, R>, SolveError> {
         let ash = *a.shape();
         let bsh = *b.shape();
 
         let n = ash.dim(0);
         let nrhs = bsh.dim(1);
 
-        let mut b_copy =
-            Array::from_elem(<(D0, D1) as Shape>::from_dims(&[n, nrhs]), T::default());
+        let mut b_copy = Array::from_elem(<(D, R) as Shape>::from_dims(&[n, nrhs]), T::default());
 
         for i in 0..n {
             for j in 0..nrhs {
@@ -64,7 +63,7 @@ where
             }
         }
 
-        match gesv::<_, Dense, T, D0, D1>(a, &mut b_copy) {
+        match gesv::<_, Dense, T, D, R>(a, &mut b_copy) {
             Ok(ipiv) => Ok(Solution {
                 x: b_copy,
                 p: ipiv_to_perm_mat(&ipiv, n),
