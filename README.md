@@ -60,6 +60,14 @@ To use an optimized backend, add one of the backend crates as well.
 Note that some backends have non-Rust dependencies that need to be satisfied:
 see the backend documentation.
 
+The documentation contains doctest examples.
+Two stand-alone examples are also included:
+[`library`](mdarray-linalg/examples/library.rs) and
+[`tool`](mdarray-linalg/examples/tool.rs).
+Run them from a repo checkout with
+`cargo run --example library` or `cargo run --example tool`.
+They can also be used directly as a starting point for a project.
+
 ## Local development
 
 This repository is a workspace that contains the main `mdarray-linalg` crate
