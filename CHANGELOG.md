@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## [0.2.0] - 2026-07-09
+
+- Consider this version an API rewrite.
+  Many helpers that were public in 0.1 are now internal.
+  The public API is now much cleaner and more streamlined.
 
 - Native BLAS, LAPACK, and TBLIS backends no longer hardcode the library to link against.
 
