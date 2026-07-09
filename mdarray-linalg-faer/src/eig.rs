@@ -189,63 +189,6 @@ where
         }
     }
 
-    // /// Compute eigenvalues and both left/right eigenvectors with new allocated matrices
-    // /// The matrix A satisfies: `A * vr = λ * vr` and `vl^H * A = λ * vl^H`
-    // /// where `vr` are right eigenvectors and `vl` are left eigenvectors
-    // fn eig_full<L: Layout>(
-    //     &self,
-    //     a: &mut Slice<T, (D0, D1), L>,
-    // ) -> Result<EigDecomp<Complex<T::Real>, D0, D1>, EigError> {
-    //     let ash = *a.shape();
-    //     let (m, n) = (ash.dim(0), ash.dim(1));
-
-    //     if m != n {
-    //         return Err(EigError::NotSquareMatrix);
-    //     }
-
-    //     let a_faer = into_faer(a);
-
-    //     let eig_result = a_faer.eigen();
-
-    //     match eig_result {
-    //         Ok(eig) => {
-    //             let eigenvalues = eig.S();
-    //             let right_vecs = eig.U();
-
-    //             let x = T::default();
-    //             let mut eigenvalues_mda = tensor![[Complex::new(x.re(), x.re()); n]; 1];
-    //             let mut right_vecs_mda = tensor![[Complex::new(x.re(), x.re());n]; n];
-
-    //             for i in 0..n {
-    //                 eigenvalues_mda[[0, i]] = complex_from_faer!(&eigenvalues[i], T);
-    //             }
-
-    //             let mut right_vecs_faer = into_faer_mut(&mut right_vecs_mda);
-    //             for i in 0..n {
-    //                 for j in 0..n {
-    //                     right_vecs_faer[(i, j)] = complex_from_faer!(right_vecs[(i, j)], T);
-    //                 }
-    //             }
-
-    //             let mut left_vecs_mda = tensor![[Complex::new(x.re(), x.re());n]; n];
-
-    //             let mut left_vecs_faer = into_faer_mut(&mut left_vecs_mda);
-    //             for i in 0..n {
-    //                 for j in 0..n {
-    //                     left_vecs_faer[(i, j)] = complex_from_faer!(right_vecs[(i, j)].conj(), T);
-    //                 }
-    //             }
-
-    //             Ok(EigDecomp {
-    //                 eigenvalues: eigenvalues_mda,
-    //                 left_eigenvectors: Some(left_vecs_mda),
-    //                 right_eigenvectors: Some(right_vecs_mda),
-    //             })
-    //         }
-    //         Err(_) => Err(EigError::BackendDidNotConverge { iterations: 0 }),
-    //     }
-    // }
-
     fn eig_full<L: Layout>(&self, a: &mut Slice<T, (D0, D1), L>) -> Result<EigDecomp<Self::SpectralScalar, D0, D1>, EigError> {
         let ash = *a.shape();
         let (m, n) = (ash.dim(0), ash.dim(1));
