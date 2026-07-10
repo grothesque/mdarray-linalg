@@ -39,3 +39,7 @@ thiserror = "2.0.12"
 tblis = "0.2.6"
 # Use system TBLIS for tests.  This is the default.
 tblis-src = "0.2.6"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
