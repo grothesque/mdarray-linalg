@@ -26,8 +26,8 @@ lapack-src = { version = "0.11", features = ["openblas"] }
 lapack-sys = "0.15.0"
 # matamorph = { git = "https://gitlab.com/starcluster/matamorph/", features=["full"] }
 matamorph = { version = "0.2.0", features=["full"] }
-mdarray = "0.8.0"
-mdarray-linalg = { version = "0.2.0", path = "mdarray-linalg" }
+mdarray = "0.8.1"
+mdarray-linalg = { version = "0.2.1", path = "mdarray-linalg" }
 nalgebra = "0.34.1"
 num-complex = "0.4.6"
 num-traits = "0.2.19"

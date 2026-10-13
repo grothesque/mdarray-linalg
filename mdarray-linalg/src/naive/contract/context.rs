@@ -9,8 +9,8 @@ use super::simple::naive_matmul;
 use crate::{
     Naive,
     contract::{
-        _contract, _hypercontract, einsum_to_contract_axes, Axes, Contract, ContractBuilder,
-        MatmulBuilder,
+        _contract, _empty_einsum_shape, _hypercontract, Axes, Contract, ContractBuilder,
+        MatmulBuilder, einsum_to_contract_axes,
     },
 };
 
@@ -39,6 +39,7 @@ where
     b: &'a Slice<T, Sb, Lb>,
     axes: Axes<'a>,
     einsum: bool,
+    empty_output_shape: Option<Vec<usize>>,
     einsum_axes_a: Option<Vec<usize>>,
     einsum_axes_b: Option<Vec<usize>>,
     current_output_labels: Option<Vec<u8>>,
@@ -96,6 +97,9 @@ where
     }
 
     fn eval(self) -> Array<T, DynRank> {
+        if let Some(shape) = self.empty_output_shape {
+            return Array::from_elem(shape, T::zero());
+        }
         if self.einsum {
             let a = self.a.to_array().into_dyn();
             let b = self.b.to_array().into_dyn();
@@ -158,6 +162,9 @@ where
                 c.dim(i)
             );
         }
+        if c.is_empty() {
+            return;
+        }
         for (dst, src) in c.iter_mut().zip(result.iter()) {
             *dst = *src;
         }
@@ -178,6 +185,9 @@ where
                 result.dim(i),
                 c.dim(i)
             );
+        }
+        if c.is_empty() {
+            return;
         }
         for (dst, src) in c.iter_mut().zip(result.iter()) {
             *dst = beta * *dst + *src;
@@ -242,6 +252,7 @@ where
             b,
             axes: Axes::LastFirst { k: n },
             einsum: false,
+            empty_output_shape: None,
             einsum_axes_a: None,
             einsum_axes_b: None,
             current_output_labels: None,
@@ -269,6 +280,7 @@ where
             b,
             axes: Axes::Specific(axes_a, axes_b),
             einsum: false,
+            empty_output_shape: None,
             einsum_axes_a: None,
             einsum_axes_b: None,
             current_output_labels: None,
@@ -322,6 +334,7 @@ where
             b,
             axes: Axes::SpecificOwned(Vec::new(), Vec::new()),
             einsum: true,
+            empty_output_shape: _empty_einsum_shape(a, b, indices_a, indices_b, indices_c),
             einsum_axes_a: Some(einsum_axes_a),
             einsum_axes_b: Some(einsum_axes_b),
             current_output_labels: Some(current_output_labels),

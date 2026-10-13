@@ -278,3 +278,23 @@ fn contract_einsum_cross_diagonal() {
 fn contract_einsum_vector_result() {
     contract_einsum_vector_result_impl(&Blas)
 }
+
+#[test]
+fn contract_empty_einsum() {
+    contract_empty_einsum_impl(&Blas);
+}
+
+#[test]
+fn contract_empty_structured() {
+    contract_empty_structured_impl(&Blas);
+}
+
+#[test]
+fn contract_empty_builders() {
+    contract_empty_builders_impl(&Blas);
+}
+
+#[test]
+fn contract_empty_invalid_shapes() {
+    contract_empty_invalid_shapes_impl(&Blas);
+}

@@ -1,4 +1,4 @@
-use mdarray::{array, expr, expr::Expression as _, tensor};
+use mdarray::{Array, array, expr, expr::Expression as _, tensor};
 use num_complex::Complex64;
 
 use super::common::*;
@@ -173,6 +173,168 @@ pub fn contract_outer_should_match_manual_kronecker_impl(backend: &impl Contract
     let expected = tensor![[3., 4.], [6., 8.]].into_dyn();
     let result = backend.contract_n(&a, &b, 0).eval();
     assert_eq!(result, expected);
+}
+
+// --- Empty-input regression helpers ---
+
+pub fn contract_empty_einsum_impl(backend: &impl Contract<f64>) {
+    // Includes the tensoratu reproducer, empty right inputs and empty sums
+    // whose output is nonempty. from_fn().eval() itself is broken in mdarray 0.8.0.
+    for (shape_a, shape_b) in [
+        ([0, 2], [2, 2]),
+        ([2, 2], [0, 2]),
+        ([2, 0], [3, 0]),
+        ([0, 0], [3, 0]),
+        ([0, 2], [0, 2]),
+    ] {
+        let a = Array::from_elem(shape_a, 1.0).into_dyn();
+        let b = Array::from_elem(shape_b, 2.0).into_dyn();
+        for output in [[0, 1], [1, 0]] {
+            let shape = if output == [0, 1] {
+                [shape_a[0], shape_b[0]]
+            } else {
+                [shape_b[0], shape_a[0]]
+            };
+            let expected = Array::from_elem(shape, 0.0).into_dyn();
+            let result = backend
+                .contract(&a, &b, &[0, 2], &[1, 2], &output)
+                .scale(2.0)
+                .eval();
+            assert_eq!(result, expected);
+            // The guard must run before copying even an identity strided view.
+            let a_view = a.permute([0, 1]);
+            let b_view = b.permute([0, 1]);
+            let result = backend
+                .contract(&a_view, &b_view, &[0, 2], &[1, 2], &output)
+                .eval();
+            assert_eq!(result, expected);
+        }
+    }
+
+    let a = Array::from_elem([0], 1.0).into_dyn();
+    assert_eq!(
+        backend
+            .contract(&a, &a, &[0], &[0], &[])
+            .eval()
+            .into_scalar(),
+        0.0
+    );
+
+    // One-sided reduction and repeated-label diagonal reduction.
+    let b = Array::from_elem([2], 1.0).into_dyn();
+    let expected = Array::from_elem([3, 2], 0.0).into_dyn();
+    let a = Array::from_elem([0, 3], 1.0).into_dyn();
+    assert_eq!(
+        backend.contract(&a, &b, &[0, 1], &[2], &[1, 2]).eval(),
+        expected
+    );
+    let a = Array::from_elem([0, 0, 3], 1.0).into_dyn();
+    assert_eq!(
+        backend.contract(&a, &b, &[0, 0, 1], &[2], &[1, 2]).eval(),
+        expected
+    );
+}
+
+pub fn contract_empty_structured_impl(backend: &impl Contract<f64>) {
+    for (shape_a, shape_b) in [([0, 2], [2, 3]), ([2, 0], [0, 3]), ([2, 3], [3, 0])] {
+        let a = Array::from_elem(shape_a, 1.0).into_dyn();
+        let b = Array::from_elem(shape_b, 2.0).into_dyn();
+        let expected = Array::from_elem([shape_a[0], shape_b[1]], 0.0).into_dyn();
+        assert_eq!(backend.contract_n(&a, &b, 1).eval(), expected);
+        let a_view = a.permute([0, 1]);
+        let b_view = b.permute([0, 1]);
+        assert_eq!(
+            backend.contract_pairs(&a_view, &b_view, &[1], &[0]).eval(),
+            expected
+        );
+    }
+    let a = Array::from_elem([0, 2], 1.0).into_dyn();
+    assert_eq!(backend.contract_all(&a, &a), 0.0);
+    let b = Array::from_elem([2, 3], 1.0).into_dyn();
+    assert_eq!(
+        backend.contract_n(&a, &b, 0).eval(),
+        Array::from_elem([0, 2, 2, 3], 0.0).into_dyn()
+    );
+}
+
+pub fn contract_empty_builders_impl(backend: &impl Contract<f64>) {
+    let a = Array::from_elem([0, 2], 1.0).into_dyn();
+    let b = Array::from_elem([2, 2], 1.0).into_dyn();
+    let mut c = Array::from_elem([0, 2], 0.0).into_dyn();
+    let mut c_view = c.permute_mut([0, 1]);
+    backend
+        .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+        .write(&mut c_view);
+    backend
+        .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+        .add_to(&mut c_view);
+    backend
+        .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+        .add_to_scaled(&mut c_view, 2.0);
+    backend
+        .contract_pairs(&a, &b, &[1], &[1])
+        .write(&mut c_view);
+    backend
+        .contract_pairs(&a, &b, &[1], &[1])
+        .add_to(&mut c_view);
+    backend
+        .contract_pairs(&a, &b, &[1], &[1])
+        .add_to_scaled(&mut c_view, 2.0);
+
+    let a = Array::from_elem([2, 0], 1.0).into_dyn();
+    let b = Array::from_elem([3, 0], 1.0).into_dyn();
+    let mut c = Array::from_elem([2, 3], 5.0).into_dyn();
+    backend
+        .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+        .write(&mut c);
+    assert_eq!(c, Array::from_elem([2, 3], 0.0).into_dyn());
+    c.assign(expr::fill(5.0));
+    backend
+        .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+        .add_to_scaled(&mut c, 2.0);
+    assert_eq!(c, Array::from_elem([2, 3], 10.0).into_dyn());
+    backend.contract_pairs(&a, &b, &[1], &[1]).write(&mut c);
+    assert_eq!(c, Array::from_elem([2, 3], 0.0).into_dyn());
+    c.assign(expr::fill(5.0));
+    backend
+        .contract_pairs(&a, &b, &[1], &[1])
+        .add_to_scaled(&mut c, 2.0);
+    assert_eq!(c, Array::from_elem([2, 3], 10.0).into_dyn());
+}
+
+pub fn contract_empty_invalid_shapes_impl(backend: &impl Contract<f64>) {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+    let a = Array::from_elem([0, 2], 1.0).into_dyn();
+    let b = Array::from_elem([3, 3], 1.0).into_dyn();
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            backend.contract(&a, &b, &[0, 2], &[1, 2], &[0, 1]).eval()
+        }))
+        .is_err()
+    );
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            backend.contract_pairs(&a, &b, &[1], &[0]).eval()
+        }))
+        .is_err()
+    );
+    // Repeated labels still require equal dimensions on an empty input.
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            backend.contract(&a, &b, &[0, 0], &[1, 2], &[1, 2]).eval()
+        }))
+        .is_err()
+    );
+    let b = Array::from_elem([2, 2], 1.0).into_dyn();
+    let mut c = Array::from_elem([0, 3], 0.0).into_dyn();
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            backend
+                .contract(&a, &b, &[0, 2], &[1, 2], &[0, 1])
+                .write(&mut c)
+        }))
+        .is_err()
+    );
 }
 
 // --- Einsum-style contraction helpers ---

@@ -204,6 +204,7 @@ where
 // They are hidden from generated documentation and may be redesigned before
 // the public API stabilizes.
 #[doc(hidden)]
+#[derive(Clone)]
 pub enum Axes<'a> {
     All,
     LastFirst { k: usize },
@@ -402,11 +403,134 @@ where
     Sa: Shape,
     Sb: Shape,
 {
+    if let Some(shape) = _empty_contract_shape(a, b, &axes) {
+        return Array::from_elem(shape, T::zero());
+    }
+
     let (a_2d, b_2d, keep_shape_a, keep_shape_b) = prepare_contraction!(axes, a, b);
 
     let ab = bd.matmul(&a_2d, &b_2d).scale(alpha).eval();
 
     finish_contraction!(ab, keep_shape_a, keep_shape_b)
+}
+
+// Retain the guard against mdarray 0.8.0's empty strided-expression iteration
+// bug (fixed in 0.8.1). Check before any copy, materialization or backend call.
+// Empty inputs give either an empty output or a nonempty sum of zero terms.
+#[doc(hidden)]
+pub fn _empty_contract_shape<T, Sa, Sb, La, Lb>(
+    a: &Slice<T, Sa, La>,
+    b: &Slice<T, Sb, Lb>,
+    axes: &Axes<'_>,
+) -> Option<Vec<usize>>
+where
+    T: Zero + ComplexFloat + MulAdd<Output = T>,
+    Sa: Shape,
+    Sb: Shape,
+    La: Layout,
+    Lb: Layout,
+{
+    if !a.is_empty() && !b.is_empty() {
+        return None;
+    }
+    // Still validate contracted dimensions, even when the result is empty.
+    let axes = extract_axes(axes.clone(), a, b);
+    let mut shape = axes.keep_shape_a;
+    shape.extend(axes.keep_shape_b);
+    Some(shape)
+}
+
+#[doc(hidden)]
+pub fn _empty_einsum_shape<T, Sa, Sb, La, Lb>(
+    a: &Slice<T, Sa, La>,
+    b: &Slice<T, Sb, Lb>,
+    indices_a: &[u8],
+    indices_b: &[u8],
+    indices_c: &[u8],
+) -> Option<Vec<usize>>
+where
+    Sa: Shape,
+    Sb: Shape,
+    La: Layout,
+    Lb: Layout,
+{
+    if !a.is_empty() && !b.is_empty() {
+        return None;
+    }
+    assert_eq!(
+        indices_a.len(),
+        a.rank(),
+        "einsum indices_a length must match A rank"
+    );
+    assert_eq!(
+        indices_b.len(),
+        b.rank(),
+        "einsum indices_b length must match B rank"
+    );
+
+    let mut dimensions = std::collections::HashMap::new();
+    for (label, dim) in indices_a
+        .iter()
+        .copied()
+        .zip((0..a.rank()).map(|i| a.dim(i)))
+        .chain(
+            indices_b
+                .iter()
+                .copied()
+                .zip((0..b.rank()).map(|i| b.dim(i))),
+        )
+    {
+        if let Some(previous) = dimensions.insert(label, dim) {
+            assert_eq!(previous, dim, "dimension mismatch for einsum label {label}");
+        }
+    }
+    let mut seen = std::collections::HashSet::new();
+    Some(
+        indices_c
+            .iter()
+            .map(|label| {
+                assert!(seen.insert(*label), "duplicate output label {label}");
+                *dimensions
+                    .get(label)
+                    .expect("output label not present in inputs")
+            })
+            .collect(),
+    )
+}
+
+fn _empty_hypercontract_shape<T, Sa, Sb, La, Lb>(
+    a: &Slice<T, Sa, La>,
+    b: &Slice<T, Sb, Lb>,
+    axes_a: &[usize],
+    axes_b: &[usize],
+) -> Option<Vec<usize>>
+where
+    Sa: Shape,
+    Sb: Shape,
+    La: Layout,
+    Lb: Layout,
+{
+    if !a.is_empty() && !b.is_empty() {
+        return None;
+    }
+    let mut dimensions = std::collections::HashMap::new();
+    let mut shape = Vec::new();
+    for (label, dim) in axes_a
+        .iter()
+        .copied()
+        .zip((0..a.rank()).map(|i| a.dim(i)))
+        .chain(axes_b.iter().copied().zip((0..b.rank()).map(|i| b.dim(i))))
+    {
+        if label == FREE_AXIS {
+            shape.push(dim);
+        } else if let Some(previous) = dimensions.insert(label, dim) {
+            assert_eq!(
+                previous, dim,
+                "dimension mismatch for contraction label {label}"
+            );
+        }
+    }
+    Some(shape)
 }
 
 #[doc(hidden)]
@@ -442,6 +566,10 @@ where
         axes_b.len(),
         b.rank()
     );
+
+    if let Some(shape) = _empty_hypercontract_shape(&a, &b, axes_a, axes_b) {
+        return Array::from_elem(shape, T::zero());
+    }
 
     let edges = axes_to_hyperedges(axes_a, axes_b);
 

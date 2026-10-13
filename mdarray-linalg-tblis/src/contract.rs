@@ -1,5 +1,7 @@
 use mdarray::{Array, Dim, DynRank, Layout, Shape, Slice};
-use mdarray_linalg::contract::{Axes, Contract, ContractBuilder, MatmulBuilder};
+use mdarray_linalg::contract::{
+    _empty_einsum_shape, Axes, Contract, ContractBuilder, MatmulBuilder,
+};
 use num_traits::{MulAdd, One, Zero};
 use tblis::{
     containers::TblisTensor,
@@ -186,6 +188,20 @@ where
         c: &mut Slice<T, Sc, Lc>,
         beta: T,
     ) {
+        if c.is_empty() {
+            return;
+        }
+        if self.a.is_empty() || self.b.is_empty() {
+            for value in c.iter_mut() {
+                *value = if beta.is_zero() {
+                    T::zero()
+                } else {
+                    beta * *value
+                };
+            }
+            return;
+        }
+
         let a_t = slice_to_tblis_tensor(self.a);
         let b_t = slice_to_tblis_tensor(self.b);
         let mut c_t = slice_to_tblis_tensor_mut(c);
@@ -203,6 +219,10 @@ where
     fn eval_einsum(&self, indices_a: &[u8], indices_b: &[u8], indices_c: &[u8]) -> Array<T, DynRank> {
         assert_eq!(indices_a.len(), self.a.rank(), "einsum indices_a length must match A rank");
         assert_eq!(indices_b.len(), self.b.rank(), "einsum indices_b length must match B rank");
+
+        if let Some(shape) = _empty_einsum_shape(self.a, self.b, indices_a, indices_b, indices_c) {
+            return Array::from_elem(shape, T::zero());
+        }
 
         let subscripts = build_einsum_subscripts(indices_a, indices_b, indices_c);
         let a_t = slice_to_tblis_tensor(self.a);
@@ -512,6 +532,9 @@ where
     Lc: Layout,
 {
     assert_output_shape(c, result.shape().dims());
+    if c.is_empty() {
+        return;
+    }
     for (dst, src) in c.iter_mut().zip(result.iter()) {
         *dst = *src;
     }
@@ -524,6 +547,9 @@ where
     Lc: Layout,
 {
     assert_output_shape(c, result.shape().dims());
+    if c.is_empty() {
+        return;
+    }
     for (dst, src) in c.iter_mut().zip(result.iter()) {
         *dst = beta.mul_add(*dst, *src);
     }
