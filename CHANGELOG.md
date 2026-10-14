@@ -3,11 +3,6 @@
 ## [0.2.1] - 2026-10-13
 
 - Update mdarray to 0.8.1, which fixes iteration over empty strided expressions.
-- Retain defensive guards for zero-length-axis contractions in all backends.
-  Preserve output shapes, return zeros for empty sums, and validate dimensions
-  before copying inputs or calling a backend.
-- Add regression tests for empty inputs, strided views, output permutations,
-  reductions, and contraction builder methods across all contraction backends.
 
 ## [0.2.0] - 2026-07-09
 
